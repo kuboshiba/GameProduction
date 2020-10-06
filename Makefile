@@ -10,3 +10,6 @@ HEADS = header/define.h
 
 $(TARGET): $(OBJS)
 $(OBJS): $(HEADS)
+
+clean:
+	@rm -f $(TARGET) $(OBJS) core *~
