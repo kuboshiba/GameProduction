@@ -1,8 +1,7 @@
 #include "header/define.h"
 
-#include <stdio.h>
-
 int main(int argc, char* argv[])
 {
+    Initialize();
     return 0;
 }
