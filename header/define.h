@@ -7,17 +7,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-m #include<SDL2 / SDL.h>             // SDLを用いるために必要なヘッダファイル
+#include <SDL2 / SDL.h>              // SDLを用いるために必要なヘッダファイル
 #include <SDL2/SDL2_gfxPrimitives.h> // 描画関係のヘッダファイル
 
 #include <libcwiimote/wiimote.h>     // Wiiリモコンを用いるために必要なヘッダファイル
 #include <libcwiimote/wiimote_api.h> // Wiiリモコンを用いるために必要なヘッダファイル
 
-    // ウインドウサイズ
-    enum {
-        WD_Width  = 1000,
-        WD_Height = 400
-    };
+// ウインドウサイズ
+enum {
+    WD_Width  = 1000,
+    WD_Height = 400
+};
 
 extern SDL_Window* window;          // ウィンドウデータを格納する構造体
 extern SDL_Renderer* renderer;      // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
