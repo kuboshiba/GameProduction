@@ -2,10 +2,10 @@ CC = gcc
 
 CFLAGS = -Wall $(COPTIONS)
 
-LDLIBS = -lm -lSDL2 -lSDL2_image -lSDL2_ttf -Wl,-rpath,/usr/local/lib
+LDLIBS = -lm -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_gfx -lcwiimote -Wl,-rpath,/usr/local/lib
 
 TARGET = main
-OBJS = $(TARGET).o system.o
+OBJS = $(TARGET).o system.o input.o define.o
 HEADS = header/define.h
 
 $(TARGET): $(OBJS)
