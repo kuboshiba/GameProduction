@@ -14,7 +14,6 @@ int wii_func(void *args)
             if (wiimote.keys.home) {
                 wiimote_disconnect(&wiimote); // Wiiリモコンとの接続を解除
             }
-
             SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
         } else {
             wiimote_disconnect(&wiimote);
