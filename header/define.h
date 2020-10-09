@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <SDL2 / SDL.h>              // SDLを用いるために必要なヘッダファイル
+#include <SDL2/SDL.h>                // SDLを用いるために必要なヘッダファイル
 #include <SDL2/SDL2_gfxPrimitives.h> // 描画関係のヘッダファイル
 
 #include <libcwiimote/wiimote.h>     // Wiiリモコンを用いるために必要なヘッダファイル
