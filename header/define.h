@@ -29,7 +29,7 @@ typedef enum {
 // ゲームの状態
 typedef struct {
     MODE mode;
-} GameStatus;
+} GameInfo;
 
 extern SDL_Window* window;          // ウィンドウデータを格納する構造体
 extern SDL_Renderer* renderer;      // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
