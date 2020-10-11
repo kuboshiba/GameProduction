@@ -25,6 +25,7 @@ extern SDL_Thread* wii_thread;      // wii_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 extern SDL_mutex* mtx;              // 相互排除（Mutex）
 extern SDL_Event event;             // SDLによるイベントを検知するための構造体
+extern SDL_TimerID timer_id;        // タイマーID
 
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 

@@ -22,23 +22,6 @@ void init_sys(int argc, char* argv[])
         exit(-1);
     }
 
-    // Wiiリモコン初期化
-    if (argc < 2) {
-        Error("WiiリモコンのMACアドレスを引数に指定してください");
-        exit(1);
-    }
-
-    // コマンド引数に指定したWiiリモコン識別情報を渡して接続
-    if (wiimote_connect(&wiimote, argv[1]) < 0) {
-        printf("unable to open wiimote: %s\n", wiimote_get_error());
-        exit(1);
-    }
-
-    wiimote.led.one  = 1; // WiiリモコンのLEDの一番左を点灯させる（接続を知らせるために）
-    wiimote.mode.acc = 1; // センサからのデータを受け付けるモードに変更
-
-    wiimote_update(&wiimote); // Wiiリモコンの状態更新
-
     // ウィンドウ生成
     if ((window = SDL_CreateWindow("No Title", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
         Error("ウィンドウの生成に失敗しました");
@@ -50,6 +33,30 @@ void init_sys(int argc, char* argv[])
         Error("レンダラーの生成に失敗しました");
         exit(-1);
     }
+
+    // 初期画面
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);                                                // 生成したRCに描画色として青を設定
+    SDL_RenderClear(renderer);                                                                       // 設定色でRCをクリア
+    stringColor(renderer, 0, 0, "Press buttons 1 and 2 on the wiimote now to connect.", 0xffffffff); // 文字列を描画
+    SDL_RenderPresent(renderer);
+
+    // Wiiリモコン処理
+    if (argc < 2) { // Wiiリモコン識別情報がコマンド引数で与えられなければ
+        Error("WiiリモコンのMACアドレスを引数に指定してください");
+        exit(1);
+    }
+
+    // Wiiリモコンの接続（１つのみ）
+    // コマンド引数に指定したWiiリモコン識別情報を渡して接続
+    if (wiimote_connect(&wiimote, argv[1]) < 0) {
+        Error("Wiiリモコンの接続に失敗しました");
+        exit(1);
+    }
+
+    wiimote.led.one  = 1; // WiiリモコンのLEDの一番左を点灯させる（接続を知らせるために）
+    wiimote.mode.acc = 1; // センサからのデータを受け付けるモードに変更
+
+    wiimote_update(&wiimote); // Wiiリモコンの状態更新
 
     // 相互排除（Mutex）あり
     mtx = SDL_CreateMutex(); // 相互排除（Mutex）を用いる
