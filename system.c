@@ -41,13 +41,13 @@ void init_sys(int argc, char* argv[])
 
     // ウィンドウ生成
     if ((window = SDL_CreateWindow("No Title", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
-        printf("failed to create window.\n");
+        Error("ウィンドウの生成に失敗しました");
         exit(-1);
     }
 
     // レンダリングコンテキスト（RC）作成
     if ((renderer = SDL_CreateRenderer(window, -1, 0)) == NULL) {
-        printf("failed to create renderer.\n");
+        Error("レンダラーの生成に失敗しました");
         exit(-1);
     }
 
@@ -57,12 +57,11 @@ void init_sys(int argc, char* argv[])
     // スレッドを作成・実行
     wii_thread      = SDL_CreateThread(wii_func, "wii_thread", mtx);
     keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", mtx);
+}
 
-    while (wiimote_is_open(&wiimote)) {
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        SDL_RenderPresent(renderer);
-    }
-
+// 開放処理を行う関数
+void opening_process()
+{
     // 各スレッドが終了するまでmain関数の処理を中断
     SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ

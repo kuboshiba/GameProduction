@@ -29,6 +29,7 @@ extern SDL_Event event;             // SDLによるイベントを検知する�
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
+extern void opening_process();        // 開放処理を行う関数
 extern int wii_func(void* args);      // Wiiリモコンの入力制御関数
 extern int keyboard_func(void* args); // キーボードの入力制御関数
 
