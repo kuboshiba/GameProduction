@@ -16,8 +16,20 @@
 // ウインドウサイズ
 enum {
     WD_Width  = 1000,
-    WD_Height = 400
+    WD_Height = 500
 };
+
+// 画面のモード
+typedef enum {
+    MENU    = 0, // メニュー
+    PLAYING = 1, // プレイ画面
+    RESULT  = 2  // 結果画面
+} MODE;
+
+// ゲームの状態
+typedef struct {
+    MODE mode;
+} GameStatus;
 
 extern SDL_Window* window;          // ウィンドウデータを格納する構造体
 extern SDL_Renderer* renderer;      // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
