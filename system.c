@@ -1,12 +1,17 @@
 #include "header/define.h"
 
-SDL_Window* window;          // ウィンドウデータを格納する構造体
-SDL_Renderer* renderer;      // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
+GameInfo gGame;
+
 SDL_Thread* wii_thread;      // wii_threadを用いる
 SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 SDL_mutex* mtx;              // 相互排除（Mutex）
+SDL_Surface* image_bg;       // 背景画像用のサーフェイス
+SDL_Event event;             // SDLによるイベントを検知するための構造体
 
-SDL_Event event; // SDLによるイベントを検知するための構造体
+SDL_Rect src_rect_bg = { 0, 0, WD_Width, WD_Height };
+SDL_Rect dst_rect_bg = { 0, 0 };
+
+Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
 wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
 
@@ -15,6 +20,10 @@ void init_sys(int argc, char* argv[])
 {
     // SDL初期化
     SDL_Init(SDL_INIT_VIDEO);
+    // SDL_IMG初期化
+    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+
+    image_bg = IMG_Load("./image/bg.png");
 
     // SDL初期化
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
@@ -23,22 +32,22 @@ void init_sys(int argc, char* argv[])
     }
 
     // ウィンドウ生成
-    if ((window = SDL_CreateWindow("No Title", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
+    if ((gGame.window = SDL_CreateWindow("No Title", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
         Error("ウィンドウの生成に失敗しました");
         exit(-1);
     }
 
     // レンダリングコンテキスト（RC）作成
-    if ((renderer = SDL_CreateRenderer(window, -1, 0)) == NULL) {
+    if ((gGame.renderer = SDL_CreateRenderer(gGame.window, -1, 0)) == NULL) {
         Error("レンダラーの生成に失敗しました");
         exit(-1);
     }
 
     // 初期画面
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);                                                // 生成したRCに描画色として青を設定
-    SDL_RenderClear(renderer);                                                                       // 設定色でRCをクリア
-    stringColor(renderer, 0, 0, "Press buttons 1 and 2 on the wiimote now to connect.", 0xffffffff); // 文字列を描画
-    SDL_RenderPresent(renderer);
+    SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);                                                  // 生成したRCに描画色として青を設定
+    SDL_RenderClear(gGame.renderer);                                                                       // 設定色でRCをクリア
+    stringColor(gGame.renderer, 0, 0, "Press buttons 1 and 2 on the wiimote now to connect.", 0xffffffff); // 文字列を描画
+    SDL_RenderPresent(gGame.renderer);
 
     // Wiiリモコン処理
     if (argc < 2) { // Wiiリモコン識別情報がコマンド引数で与えられなければ
@@ -64,6 +73,22 @@ void init_sys(int argc, char* argv[])
     // スレッドを作成・実行
     wii_thread      = SDL_CreateThread(wii_func, "wii_thread", mtx);
     keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", mtx);
+
+// マスクを設定
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+
+    // 合成画像作成用サーフェイスを作成
+    gGame.surface = SDL_CreateRGBSurface(0, WD_Width, WD_Height, 32, rmask, gmask, bmask, amask);
 }
 
 // 開放処理を行う関数
@@ -76,7 +101,7 @@ void opening_process()
     SDL_DestroyMutex(mtx); // Mutexを破棄
 
     // 終了処理
-    SDL_DestroyRenderer(renderer); // RCの破棄（解放）
-    SDL_DestroyWindow(window);     // 生成したウィンドウの破棄（消去）
+    SDL_DestroyRenderer(gGame.renderer); // RCの破棄（解放）
+    SDL_DestroyWindow(gGame.window);     // 生成したウィンドウの破棄（消去）
     SDL_Quit();
 }

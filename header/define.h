@@ -9,6 +9,7 @@
 
 #include <SDL2/SDL.h>                // SDLを用いるために必要なヘッダファイル
 #include <SDL2/SDL2_gfxPrimitives.h> // 描画関係のヘッダファイル
+#include <SDL2/SDL_image.h>
 
 #include <libcwiimote/wiimote.h>     // Wiiリモコンを用いるために必要なヘッダファイル
 #include <libcwiimote/wiimote_api.h> // Wiiリモコンを用いるために必要なヘッダファイル
@@ -21,25 +22,35 @@ enum {
 
 // 画面のモード
 typedef enum {
-    MENU    = 0, // メニュー
-    PLAYING = 1, // プレイ画面
-    RESULT  = 2  // 結果画面
+    MD_MENU    = 0, // メニュー
+    MD_PLAYING = 1, // プレイ画面
+    MD_RESULT  = 2  // 結果画面
 } MODE;
 
 // ゲームの状態
 typedef struct {
-    MODE mode;
+    MODE mode;              // 画面のモード
+    SDL_Window* window;     // ウィンドウデータを格納する構造体
+    SDL_Renderer* renderer; // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
+    SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
+    SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
 } GameInfo;
 
-extern SDL_Window* window;          // ウィンドウデータを格納する構造体
-extern SDL_Renderer* renderer;      // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
+extern GameInfo gGame;
+
+extern SDL_Surface* image_bg;       // 背景画像用のサーフェイス
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 extern SDL_mutex* mtx;              // 相互排除（Mutex）
 extern SDL_Event event;             // SDLによるイベントを検知するための構造体
 extern SDL_TimerID timer_id;        // タイマーID
 
+extern SDL_Rect src_rect_bg;
+extern SDL_Rect dst_rect_bg;
+
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
+
+extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
 extern void opening_process();        // 開放処理を行う関数
