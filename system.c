@@ -56,11 +56,18 @@ void init_sys(int argc, char* argv[])
     // 初期画面
     SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255); // 生成したRCに描画色として青を設定
     SDL_RenderClear(gGame.renderer);                      // 設定色でRCをクリア
-    gGame.surface = TTF_RenderUTF8_Blended(font, "Press buttons 1 and 2 on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
+    gGame.surface = TTF_RenderUTF8_Blended(font, "Press buttons 1 and 2", (SDL_Color) { 255, 255, 255, 255 });
     gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
     SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
     pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+    SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+    gGame.surface = TTF_RenderUTF8_Blended(font, "on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
+    gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+    SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+    txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+    pasteRect = (SDL_Rect) { 10, 50, iw, ih };
     SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
     SDL_RenderPresent(gGame.renderer);
 
@@ -105,6 +112,8 @@ void init_sys(int argc, char* argv[])
     // 合成画像作成用サーフェイスを作成
     gGame.surface = SDL_CreateRGBSurface(0, WD_Width, WD_Height, 32, rmask, gmask, bmask, amask);
 
+    // 状態初期化
+    gGame.mode = MD_MENU;
     for (int i = 0; i < 4; i++) {
         gPlayer[i].mode  = MD_MENU; // 最初はメニュー画面なのでモードを設定
         gPlayer[i].score = 0;       // スコアは0に設定

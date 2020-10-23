@@ -1,18 +1,42 @@
 #include "header/define.h"
 
+char menu_str[3][10] = { "SOLO", "MULTIPLE", "SETTING" };
+int menu_mode        = 0;
+
 int main(int argc, char *argv[])
 {
     init_sys(argc, argv); // システム初期化
 
     // Wiiリモコンが接続状態の時はループ
     while (wiimote_is_open(&wiimote)) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
-        SDL_FillRect(gGame.surface, NULL, 0x00000000);
-        SDL_BlitSurface(image_bg, &src_rect_bg, gGame.surface, &dst_rect_bg);
-        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface); // 合成画像（サーフェイス）をテクスチャに転送
-        SDL_RenderCopy(gGame.renderer, gGame.texture, NULL, NULL);                   // テクスチャをレンダラーにコピー
+        switch (gGame.mode) {
+        case MD_MENU:
+            for (int i = 0; i < 3; i++) {
+                gGame.surface = TTF_RenderUTF8_Blended(font, menu_str[i], (SDL_Color) { 255, 255, 255, 255 });
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+                txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+                pasteRect = (SDL_Rect) { 700, 100 + i * 50, iw, ih };
+                SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+            }
+            gGame.surface = TTF_RenderUTF8_Blended(font, "> ", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 650, 100 + menu_mode * 50, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+            break;
+        case MD_PLAYING:
+            break;
+        default:
+            break;
+        }
+
         SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(50);
     }
 
     opening_process(); // システム開放

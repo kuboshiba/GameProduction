@@ -34,6 +34,7 @@ typedef struct {
     SDL_Renderer* renderer; // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
     SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
     SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
+    MODE mode;
 } GameInfo;
 
 // プレイヤーの状態
@@ -50,11 +51,12 @@ extern SDL_Thread* wii_thread;      // wii_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 extern SDL_mutex* mtx;              // 相互排除（Mutex）
 extern SDL_Event event;             // SDLによるイベントを検知するための構造体
-extern SDL_TimerID timer_id;        // タイマーID
+extern SDL_TimerID timer_id;        // タイマーIDextern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
-extern SDL_Surface* image_bg; // 背景画像用のサーフェイス
-extern SDL_Rect src_rect_bg;  // 画像の切り取り範囲
-extern SDL_Rect dst_rect_bg;  // 画像の描画位置
+extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
+extern SDL_Surface* image_bg;             // 背景画像用のサーフェイス
+extern SDL_Rect src_rect_bg;              // 画像の切り取り範囲
+extern SDL_Rect dst_rect_bg;              // 画像の描画位置
 
 extern TTF_Font* font;     // TrueTypeフォントデータを格納する構造体
 extern int iw, ih;         // 文字を描画する際に使用
@@ -63,7 +65,8 @@ extern SDL_Rect pasteRect; // 文字を描画する際に使用
 
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
-extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
+extern char menu_str[3][10]; // メニューの選択ボタンの文字列を格納
+extern int menu_mode;        // メニューモード
 
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
 extern void opening_process();        // 開放処理を行う関数
@@ -73,7 +76,7 @@ extern int keyboard_func(void* args); // キーボードの入力制御関数
 extern void Error(); // エラーを色付きで出力する関数
 extern void Log();   // ログを色付きで出力する関数
 
-#define FONT_PATH "./font/COOL9BIT.TTF" // フォントのパス
+#define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
 
 // カラーコード
 #define COLOR_BG_BLACK "\x1b[40m"

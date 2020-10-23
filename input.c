@@ -14,6 +14,24 @@ int wii_func(void *args)
             if (wiimote.keys.home) {
                 wiimote_disconnect(&wiimote); // Wiiリモコンとの接続を解除
             }
+
+            switch (gGame.mode) {
+            case MD_MENU:
+                if (wiimote.keys.up) {
+                    if (menu_mode != 0)
+                        menu_mode--;
+                    while (wiimote.keys.up)
+                        wiimote_update(&wiimote);
+                } else if (wiimote.keys.down) {
+                    if (menu_mode != 2)
+                        menu_mode++;
+                    while (wiimote.keys.down)
+                        wiimote_update(&wiimote);
+                }
+                break;
+            default:
+                break;
+            }
             SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
         } else {
             wiimote_disconnect(&wiimote);
