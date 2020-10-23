@@ -1,6 +1,7 @@
 #include "header/define.h"
 
-GameInfo gGame;
+GameInfo gGame;    // ゲームの描画関係
+Player gPlayer[4]; // プレイヤーの情報
 
 SDL_Thread* wii_thread;      // wii_threadを用いる
 SDL_Thread* keyboard_thread; // keyboard_threadを用いる
@@ -8,8 +9,8 @@ SDL_mutex* mtx;              // 相互排除（Mutex）
 SDL_Surface* image_bg;       // 背景画像用のサーフェイス
 SDL_Event event;             // SDLによるイベントを検知するための構造体
 
-SDL_Rect src_rect_bg = { 0, 0, WD_Width, WD_Height };
-SDL_Rect dst_rect_bg = { 0, 0 };
+SDL_Rect src_rect_bg = { 0, 0, WD_Width, WD_Height }; // 画像の切り取り範囲
+SDL_Rect dst_rect_bg = { 0, 0 };                      // 描画位置
 
 Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
@@ -89,6 +90,8 @@ void init_sys(int argc, char* argv[])
 
     // 合成画像作成用サーフェイスを作成
     gGame.surface = SDL_CreateRGBSurface(0, WD_Width, WD_Height, 32, rmask, gmask, bmask, amask);
+
+    gPlayer[0].mode = MD_MENU; // 最初はメニュー画面なのでモードを設定
 }
 
 // 開放処理を行う関数

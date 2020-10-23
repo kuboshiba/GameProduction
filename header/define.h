@@ -29,14 +29,18 @@ typedef enum {
 
 // ゲームの状態
 typedef struct {
-    MODE mode;              // 画面のモード
     SDL_Window* window;     // ウィンドウデータを格納する構造体
     SDL_Renderer* renderer; // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
     SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
     SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
 } GameInfo;
 
+typedef struct {
+    MODE mode;
+} Player;
+
 extern GameInfo gGame;
+extern Player gPlayer[4];
 
 extern SDL_Surface* image_bg;       // 背景画像用のサーフェイス
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
