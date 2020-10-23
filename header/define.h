@@ -38,6 +38,7 @@ typedef struct {
 
 typedef struct {
     MODE mode;
+    int score;
 } Player;
 
 extern GameInfo gGame;
