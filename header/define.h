@@ -36,13 +36,15 @@ typedef struct {
     SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
 } GameInfo;
 
+// プレイヤーの状態
 typedef struct {
     MODE mode;
     int score;
 } Player;
 
-extern GameInfo gGame;
-extern Player gPlayer[4];
+extern GameInfo gGame;    // ゲームの状態
+extern Player gPlayer[4]; // プレイヤーの状態
+extern int player_num;    // プレイヤーの数
 
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
@@ -71,7 +73,7 @@ extern int keyboard_func(void* args); // キーボードの入力制御関数
 extern void Error(); // エラーを色付きで出力する関数
 extern void Log();   // ログを色付きで出力する関数
 
-#define FONT_PATH "./font/COOL9BIT.TTF"
+#define FONT_PATH "./font/COOL9BIT.TTF" // フォントのパス
 
 // カラーコード
 #define COLOR_BG_BLACK "\x1b[40m"
