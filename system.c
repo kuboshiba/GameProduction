@@ -1,7 +1,8 @@
 #include "header/define.h"
 
-GameInfo gGame;    // ゲームの描画関係
-Player gPlayer[4]; // プレイヤーの情報
+GameInfo gGame;     // ゲームの描画関係
+Player gPlayer[4];  // プレイヤーの情報
+int player_num = 1; // プレイヤーの数
 
 SDL_Thread* wii_thread;      // wii_threadを用いる
 SDL_Thread* keyboard_thread; // keyboard_threadを用いる
@@ -104,7 +105,10 @@ void init_sys(int argc, char* argv[])
     // 合成画像作成用サーフェイスを作成
     gGame.surface = SDL_CreateRGBSurface(0, WD_Width, WD_Height, 32, rmask, gmask, bmask, amask);
 
-    gPlayer[0].mode = MD_MENU; // 最初はメニュー画面なのでモードを設定
+    for (int i = 0; i < 4; i++) {
+        gPlayer[i].mode  = MD_MENU; // 最初はメニュー画面なのでモードを設定
+        gPlayer[i].score = 0;       // スコアは0に設定
+    }
 }
 
 // 開放処理を行う関数
