@@ -24,7 +24,7 @@ void init_sys(int argc, char* argv[])
     // SDL_IMG初期化
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 
-    image_bg = IMG_Load("./image/bg.png");
+    image_bg = IMG_Load("./image/bg1.png");
 
     // SDL初期化
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
