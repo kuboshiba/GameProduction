@@ -10,6 +10,7 @@
 #include <SDL2/SDL.h>                // SDLを用いるために必要なヘッダファイル
 #include <SDL2/SDL2_gfxPrimitives.h> // 描画関係のヘッダファイル
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <libcwiimote/wiimote.h>     // Wiiリモコンを用いるために必要なヘッダファイル
 #include <libcwiimote/wiimote_api.h> // Wiiリモコンを用いるために必要なヘッダファイル
@@ -42,15 +43,20 @@ typedef struct {
 extern GameInfo gGame;
 extern Player gPlayer[4];
 
-extern SDL_Surface* image_bg;       // 背景画像用のサーフェイス
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 extern SDL_mutex* mtx;              // 相互排除（Mutex）
 extern SDL_Event event;             // SDLによるイベントを検知するための構造体
 extern SDL_TimerID timer_id;        // タイマーID
 
-extern SDL_Rect src_rect_bg;
-extern SDL_Rect dst_rect_bg;
+extern SDL_Surface* image_bg; // 背景画像用のサーフェイス
+extern SDL_Rect src_rect_bg;  // 画像の切り取り範囲
+extern SDL_Rect dst_rect_bg;  // 画像の描画位置
+
+extern TTF_Font* font;     // TrueTypeフォントデータを格納する構造体
+extern int iw, ih;         // 文字を描画する際に使用
+extern SDL_Rect txtRect;   // 文字を描画する際に使用
+extern SDL_Rect pasteRect; // 文字を描画する際に使用
 
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
@@ -63,6 +69,8 @@ extern int keyboard_func(void* args); // キーボードの入力制御関数
 
 extern void Error(); // エラーを色付きで出力する関数
 extern void Log();   // ログを色付きで出力する関数
+
+#define FONT_PATH "./font/COOL9BIT.TTF"
 
 // カラーコード
 #define COLOR_BG_BLACK "\x1b[40m"

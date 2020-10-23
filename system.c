@@ -9,6 +9,11 @@ SDL_mutex* mtx;              // 相互排除（Mutex）
 SDL_Surface* image_bg;       // 背景画像用のサーフェイス
 SDL_Event event;             // SDLによるイベントを検知するための構造体
 
+TTF_Font* font;     // TrueTypeフォントデータを格納する構造体
+int iw, ih;         // 文字を描画する際に使用
+SDL_Rect txtRect;   // 文字を描画する際に使用
+SDL_Rect pasteRect; // 文字を描画する際に使用
+
 SDL_Rect src_rect_bg = { 0, 0, WD_Width, WD_Height }; // 画像の切り取り範囲
 SDL_Rect dst_rect_bg = { 0, 0 };                      // 描画位置
 
@@ -23,6 +28,9 @@ void init_sys(int argc, char* argv[])
     SDL_Init(SDL_INIT_VIDEO);
     // SDL_IMG初期化
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+    // SDL_TTF初期化
+    TTF_Init();
+    font = TTF_OpenFont(FONT_PATH, 25);
 
     image_bg = IMG_Load("./image/bg1.png");
 
@@ -45,9 +53,14 @@ void init_sys(int argc, char* argv[])
     }
 
     // 初期画面
-    SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);                                                  // 生成したRCに描画色として青を設定
-    SDL_RenderClear(gGame.renderer);                                                                       // 設定色でRCをクリア
-    stringColor(gGame.renderer, 0, 0, "Press buttons 1 and 2 on the wiimote now to connect.", 0xffffffff); // 文字列を描画
+    SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255); // 生成したRCに描画色として青を設定
+    SDL_RenderClear(gGame.renderer);                      // 設定色でRCをクリア
+    gGame.surface = TTF_RenderUTF8_Blended(font, "Press buttons 1 and 2 on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
+    gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+    SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+    txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+    pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+    SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
     SDL_RenderPresent(gGame.renderer);
 
     // Wiiリモコン処理
@@ -107,4 +120,7 @@ void opening_process()
     SDL_DestroyRenderer(gGame.renderer); // RCの破棄（解放）
     SDL_DestroyWindow(gGame.window);     // 生成したウィンドウの破棄（消去）
     SDL_Quit();
+
+    TTF_CloseFont(font);
+    TTF_Quit();
 }
