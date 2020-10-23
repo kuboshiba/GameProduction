@@ -15,18 +15,54 @@ int wii_func(void *args)
                 wiimote_disconnect(&wiimote); // Wiiリモコンとの接続を解除
             }
 
+            // メニュー画面で選択されているモードで条件分岐
             switch (gGame.mode) {
             case MD_MENU:
+                // Wiiリモコンの 十字キー上 が押されたとき
                 if (wiimote.keys.up) {
                     if (menu_mode != 0)
                         menu_mode--;
                     while (wiimote.keys.up)
                         wiimote_update(&wiimote);
-                } else if (wiimote.keys.down) {
+                }
+                // Wiiリモコンの 十字キー下 が押されたとき
+                else if (wiimote.keys.down) {
                     if (menu_mode != 2)
                         menu_mode++;
                     while (wiimote.keys.down)
                         wiimote_update(&wiimote);
+                }
+                // Wiiリモコンの Aボタン が押されたとき
+                else if (wiimote.keys.a) {
+                    switch (menu_mode) {
+                    case 0: // SOLO PLAY
+                        player_num      = 1;
+                        gGame.mode      = MD_SOLO_PLAY;
+                        gPlayer[0].mode = MD_SOLO_PLAY;
+                        break;
+                    case 1: // MULTI PLAY
+                        break;
+                    case 2: // SETTING
+                        break;
+                    default:
+                        break;
+                    }
+                    while (wiimote.keys.a)
+                        wiimote_update(&wiimote);
+                }
+                break;
+            case MD_SOLO_PLAY:
+                if (wiimote.keys.up) {
+                    if (menu_sel != 0)
+                        menu_sel--;
+                    while (wiimote.keys.up)
+                        wiimote_update(&wiimote);
+                } else if (wiimote.keys.down) {
+                    if (menu_sel != 1)
+                        menu_sel++;
+                    while (wiimote.keys.down)
+                        wiimote_update(&wiimote);
+                } else if (wiimote.keys.a) {
                 }
                 break;
             default:

@@ -23,9 +23,12 @@ enum {
 
 // 画面のモード
 typedef enum {
-    MD_MENU    = 0, // メニュー
-    MD_PLAYING = 1, // プレイ画面
-    MD_RESULT  = 2  // 結果画面
+    MD_MENU          = 0, // メニュー
+    MD_SOLO_PLAY     = 1, // ソロプレイ
+    MD_SOLO_PLAYING  = 2,
+    MD_MULTI_PLAY    = 3, // マルチプレイ
+    MD_MULTI_PLAYING = 4,
+    MD_WAIT          = 99 // 待機
 } MODE;
 
 // ゲームの状態
@@ -67,6 +70,7 @@ extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
 extern char menu_str[3][10]; // メニューの選択ボタンの文字列を格納
 extern int menu_mode;        // メニューモード
+extern int menu_sel;         // メニューのボタンのセレクト位置
 
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
 extern void opening_process();        // 開放処理を行う関数
