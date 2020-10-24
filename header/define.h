@@ -29,10 +29,10 @@ enum {
 // 画面のモード
 typedef enum {
     MD_MENU          = 0, // メニュー
-    MD_SOLO_PLAY     = 1, // ソロプレイ
-    MD_SOLO_PLAYING  = 2,
-    MD_MULTI_PLAY    = 3, // マルチプレイ
-    MD_MULTI_PLAYING = 4,
+    MD_SOLO_PLAY     = 1, // ソロプレイ待機
+    MD_SOLO_PLAYING  = 2, // ソロプレイ中
+    MD_MULTI_PLAY    = 3, // マルチプレイ待機
+    MD_MULTI_PLAYING = 4, // マルチプレイ中
     MD_WAIT          = 99 // 待機
 } MODE;
 
@@ -73,7 +73,7 @@ extern SDL_Rect pasteRect; // 文字を描画する際に使用
 
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
-extern char menu_str[3][10]; // メニューの選択ボタンの文字列を格納
+extern char menu_str[5][10]; // メニューの選択ボタンの文字列を格納
 extern int menu_mode;        // メニューモード
 extern int menu_sel;         // メニューのボタンのセレクト位置
 

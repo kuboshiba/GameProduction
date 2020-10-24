@@ -41,6 +41,8 @@ int wii_func(void *args)
                         gPlayer[0].mode = MD_SOLO_PLAY;
                         break;
                     case 1: // MULTI PLAY
+                        gGame.mode      = MD_MULTI_PLAY;
+                        gPlayer[0].mode = MD_MULTI_PLAY;
                         break;
                     case 2: // SETTING
                         break;
@@ -65,6 +67,9 @@ int wii_func(void *args)
                 } else if (wiimote.keys.a) {
                     switch (menu_sel) {
                     case SEL_OK:
+                        player_num      = 1;
+                        gGame.mode      = MD_SOLO_PLAYING;
+                        gPlayer[0].mode = MD_SOLO_PLAYING;
                         break;
                     case SEL_CANCEL:
                         player_num      = 1;
