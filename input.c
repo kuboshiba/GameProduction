@@ -63,6 +63,20 @@ int wii_func(void *args)
                     while (wiimote.keys.down)
                         wiimote_update(&wiimote);
                 } else if (wiimote.keys.a) {
+                    switch (menu_sel) {
+                    case SEL_OK:
+                        break;
+                    case SEL_CANCEL:
+                        player_num      = 1;
+                        gGame.mode      = MD_MENU;
+                        gPlayer[0].mode = MD_MENU;
+                        break;
+                    default:
+                        break;
+                    }
+                    menu_sel = SEL_OK;
+                    while (wiimote.keys.a)
+                        wiimote_update(&wiimote);
                 }
                 break;
             default:

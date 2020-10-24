@@ -21,6 +21,11 @@ enum {
     WD_Height = 500
 };
 
+enum {
+    SEL_OK     = 0,
+    SEL_CANCEL = 1
+};
+
 // 画面のモード
 typedef enum {
     MD_MENU          = 0, // メニュー
