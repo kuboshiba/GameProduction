@@ -1,11 +1,18 @@
 #ifndef _DEFINE_H_
 #define _DEFINE_H_
 
+#include <arpa/inet.h>
+#include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <SDL2/SDL.h>                // SDLを用いるために必要なヘッダファイル
 #include <SDL2/SDL2_gfxPrimitives.h> // 描画関係のヘッダファイル
@@ -23,15 +30,17 @@ enum {
 
 enum {
     SEL_OK     = 0,
-    SEL_CANCEL = 1
+    SEL_CANCEL = 1,
+    SEL_HOST   = 0,
+    SEL_CLIENT = 1,
 };
 
 // 画面のモード
 typedef enum {
     MD_MENU          = 0, // メニュー
-    MD_SOLO_PLAY     = 1, // ソロプレイ待機
+    MD_SOLO_WAIT     = 1, // ソロプレイ待機
     MD_SOLO_PLAYING  = 2, // ソロプレイ中
-    MD_MULTI_PLAY    = 3, // マルチプレイ待機
+    MD_MULTI_WAIT    = 3, // マルチプレイ待機
     MD_MULTI_PLAYING = 4, // マルチプレイ中
     MD_WAIT          = 99 // 待機
 } MODE;
@@ -73,9 +82,8 @@ extern SDL_Rect pasteRect; // 文字を描画する際に使用
 
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
-extern char menu_str[5][10]; // メニューの選択ボタンの文字列を格納
-extern int menu_mode;        // メニューモード
-extern int menu_sel;         // メニューのボタンのセレクト位置
+extern int menu_mode; // メニューモード
+extern int menu_sel;  // メニューのボタンのセレクト位置
 
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
 extern void opening_process();        // 開放処理を行う関数
