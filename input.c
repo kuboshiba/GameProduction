@@ -99,7 +99,7 @@ int wii_func(void *args)
                     default:
                         break;
                     }
-                    menu_sel = SEL_OK; // セレクターを初期化
+                    menu_sel = 0; // セレクターを初期化
 
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.a)
@@ -130,18 +130,28 @@ int wii_func(void *args)
                 else if (wiimote.keys.a) {
                     // セレクターによって条件分岐
                     switch (menu_sel) {
+                    // ホストが選択されたとき
                     case SEL_HOST:
                         puts("host");
                         break;
+                    // クライアントが選択されたとき
                     case SEL_CLIENT:
                         puts("client");
                         break;
+                    // キャンセルボタンが選択されたとき
                     case 2:
-                        puts("cancel");
+                        player_num      = 1;       // プレイヤーの数取り敢えず１に初期化
+                        gGame.mode      = MD_MENU; // モードをメニューに設定
+                        gPlayer[0].mode = MD_MENU; // モードをメニューに設定
                         break;
                     default:
                         break;
                     }
+                    menu_sel = menu_mode = 0; // セレクターを初期化
+
+                    // チャタリング防止のための待機用ループ
+                    while (wiimote.keys.a)
+                        wiimote_update(&wiimote);
                 }
                 break;
             default:

@@ -10,7 +10,8 @@ SDL_mutex* mtx;              // 相互排除（Mutex）
 SDL_Surface* image_bg;       // 背景画像用のサーフェイス
 SDL_Event event;             // SDLによるイベントを検知するための構造体
 
-TTF_Font* font;     // TrueTypeフォントデータを格納する構造体
+TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
+TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
 int iw, ih;         // 文字を描画する際に使用
 SDL_Rect txtRect;   // 文字を描画する際に使用
 SDL_Rect pasteRect; // 文字を描画する際に使用
@@ -31,7 +32,8 @@ void init_sys(int argc, char* argv[])
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
     // SDL_TTF初期化
     TTF_Init();
-    font = TTF_OpenFont(FONT_PATH, 25);
+    font25 = TTF_OpenFont(FONT_PATH, 25);
+    font50 = TTF_OpenFont(FONT_PATH, 50);
 
     image_bg = IMG_Load("./image/bg1.png");
 
@@ -56,14 +58,14 @@ void init_sys(int argc, char* argv[])
     // 初期画面
     SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255); // 生成したRCに描画色として青を設定
     SDL_RenderClear(gGame.renderer);                      // 設定色でRCをクリア
-    gGame.surface = TTF_RenderUTF8_Blended(font, "Press buttons 1 and 2", (SDL_Color) { 255, 255, 255, 255 });
+    gGame.surface = TTF_RenderUTF8_Blended(font25, "Press buttons 1 and 2", (SDL_Color) { 255, 255, 255, 255 });
     gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
     SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
     pasteRect = (SDL_Rect) { 10, 10, iw, ih };
     SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
-    gGame.surface = TTF_RenderUTF8_Blended(font, "on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
+    gGame.surface = TTF_RenderUTF8_Blended(font25, "on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
     gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
     SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -134,6 +136,7 @@ void opening_process()
     SDL_DestroyWindow(gGame.window);     // 生成したウィンドウの破棄（消去）
     SDL_Quit();
 
-    TTF_CloseFont(font);
+    TTF_CloseFont(font25);
+    TTF_CloseFont(font50);
     TTF_Quit();
 }

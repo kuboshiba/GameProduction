@@ -19,26 +19,33 @@ int main(int argc, char *argv[])
         switch (gGame.mode) {
         // メニュー画面描画
         case MD_MENU:
-            // セレクトボタンを配置
-            for (int i = 0; i < 3; i++) {
-                gGame.surface = TTF_RenderUTF8_Blended(font, menu_str[i], (SDL_Color) { 255, 255, 255, 255 });
-                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
-                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
-                txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-                pasteRect = (SDL_Rect) { 700, 100 + i * 50, iw, ih };
-                SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
-            }
-            // セレクターを描画
-            gGame.surface = TTF_RenderUTF8_Blended(font, "> ", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.surface = TTF_RenderUTF8_Blended(font50, "NO TITLE", (SDL_Color) { 255, 255, 255, 255 });
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-            pasteRect = (SDL_Rect) { 650, 100 + menu_mode * 50, iw, ih };
+            pasteRect = (SDL_Rect) { 90, 250, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+            // セレクトボタンを配置
+            for (int i = 0; i < 3; i++) {
+                gGame.surface = TTF_RenderUTF8_Blended(font25, menu_str[i], (SDL_Color) { 255, 255, 255, 255 });
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+                txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+                pasteRect = (SDL_Rect) { 700, 200 + i * 50, iw, ih };
+                SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+            }
+            // セレクターを描画
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "> ", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 650, 200 + menu_mode * 50, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
             break;
         // ソロプレイをプレイするかどうかを描画
         case MD_SOLO_WAIT:
-            gGame.surface = TTF_RenderUTF8_Blended(font, "[SOLO PLAY] Are you ready?", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "[SOLO PLAY] Are you ready?", (SDL_Color) { 255, 255, 255, 255 });
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -46,14 +53,14 @@ int main(int argc, char *argv[])
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
             // セレクトボタンを描画
-            gGame.surface = TTF_RenderUTF8_Blended(font, "OK", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "OK", (SDL_Color) { 255, 255, 255, 255 });
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
             pasteRect = (SDL_Rect) { 400, 200, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
-            gGame.surface = TTF_RenderUTF8_Blended(font, "CANCEL", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "CANCEL", (SDL_Color) { 255, 255, 255, 255 });
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -61,7 +68,7 @@ int main(int argc, char *argv[])
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
             // セレクターを描画
-            gGame.surface = TTF_RenderUTF8_Blended(font, "> ", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "> ", (SDL_Color) { 255, 255, 255, 255 });
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -72,29 +79,36 @@ int main(int argc, char *argv[])
         case MD_SOLO_PLAYING:
             break;
         case MD_MULTI_WAIT:
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "[MULTI PLAY] Choose host or client.", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 80, 100, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
             // セレクトボタンを配置
             for (int i = 0; i < 2; i++) {
-                gGame.surface = TTF_RenderUTF8_Blended(font, menu_multi_str[i], (SDL_Color) { 255, 255, 255, 255 });
+                gGame.surface = TTF_RenderUTF8_Blended(font25, menu_multi_str[i], (SDL_Color) { 255, 255, 255, 255 });
                 gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
                 SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
                 txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-                pasteRect = (SDL_Rect) { 400, 100 + i * 50, iw, ih };
+                pasteRect = (SDL_Rect) { 400, 200 + i * 50, iw, ih };
                 SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
             }
 
-            gGame.surface = TTF_RenderUTF8_Blended(font, "CANCEL", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "CANCEL", (SDL_Color) { 255, 255, 255, 255 });
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-            pasteRect = (SDL_Rect) { 400, 200, iw, ih };
+            pasteRect = (SDL_Rect) { 400, 300, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
             // セレクターを描画
-            gGame.surface = TTF_RenderUTF8_Blended(font, "> ", (SDL_Color) { 255, 255, 255, 255 });
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "> ", (SDL_Color) { 255, 255, 255, 255 });
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-            pasteRect = (SDL_Rect) { 350, 100 + menu_sel * 50, iw, ih };
+            pasteRect = (SDL_Rect) { 350, 200 + menu_sel * 50, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
             break;
         case MD_MULTI_PLAYING:

@@ -75,7 +75,8 @@ extern SDL_Surface* image_bg;             // 背景画像用のサーフェイ�
 extern SDL_Rect src_rect_bg;              // 画像の切り取り範囲
 extern SDL_Rect dst_rect_bg;              // 画像の描画位置
 
-extern TTF_Font* font;     // TrueTypeフォントデータを格納する構造体
+extern TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
+extern TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
 extern int iw, ih;         // 文字を描画する際に使用
 extern SDL_Rect txtRect;   // 文字を描画する際に使用
 extern SDL_Rect pasteRect; // 文字を描画する際に使用
