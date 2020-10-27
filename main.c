@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-            pasteRect = (SDL_Rect) { 100, 200, iw, ih };
+            pasteRect = (SDL_Rect) { 125, 200, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
             // セレクトボタンを配置
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
             gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
             SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-            pasteRect = (SDL_Rect) { 650, 150 + menu_mode * 50, iw, ih };
+            pasteRect = (SDL_Rect) { 650, 150 + menu_sel * 50, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
             break;
         // ソロプレイをプレイするかどうかを描画
