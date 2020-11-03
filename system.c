@@ -1,28 +1,5 @@
 #include "header/define.h"
 
-GameInfo gGame;     // ゲームの描画関係
-Player gPlayer[4];  // プレイヤーの情報
-int player_num = 1; // プレイヤーの数
-
-SDL_Thread* wii_thread;      // wii_threadを用いる
-SDL_Thread* keyboard_thread; // keyboard_threadを用いる
-SDL_mutex* mtx;              // 相互排除（Mutex）
-SDL_Surface* image_bg;       // 背景画像用のサーフェイス
-SDL_Event event;             // SDLによるイベントを検知するための構造体
-
-TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
-TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
-int iw, ih;         // 文字を描画する際に使用
-SDL_Rect txtRect;   // 文字を描画する際に使用
-SDL_Rect pasteRect; // 文字を描画する際に使用
-
-SDL_Rect src_rect_bg = { 0, 0, WD_Width, WD_Height }; // 画像の切り取り範囲
-SDL_Rect dst_rect_bg = { 0, 0 };                      // 描画位置
-
-Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
-
-wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
-
 // SDLやWiiリモコンを初期化する関数
 void init_sys(int argc, char* argv[])
 {
@@ -32,10 +9,12 @@ void init_sys(int argc, char* argv[])
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
     // SDL_TTF初期化
     TTF_Init();
-    font25 = TTF_OpenFont(FONT_PATH, 25);
-    font50 = TTF_OpenFont(FONT_PATH, 50);
 
-    image_bg = IMG_Load("./image/bg1.png");
+    font25 = TTF_OpenFont(FONT_PATH, 25); // フォントサイズ25読み込み
+    font50 = TTF_OpenFont(FONT_PATH, 50); // フォントサイズ50読み込み
+
+    image_bg_1    = IMG_Load("./image/bg1.png");     // 背景画像読み込み
+    image_menu_bg = IMG_Load("./image/menu_bg.png"); // メニュー背景画像読み込み
 
     // SDL初期化
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {

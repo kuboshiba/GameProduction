@@ -71,7 +71,8 @@ extern SDL_Event event;             // SDLによるイベントを検知する�
 extern SDL_TimerID timer_id;        // タイマーIDextern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
 extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
-extern SDL_Surface* image_bg;             // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_1;           // 背景画像用のサーフェイス
+extern SDL_Surface* image_menu_bg;        // メニュー画像陽のサーフェイス
 extern SDL_Rect src_rect_bg;              // 画像の切り取り範囲
 extern SDL_Rect dst_rect_bg;              // 画像の描画位置
 
@@ -83,8 +84,7 @@ extern SDL_Rect pasteRect; // 文字を描画する際に使用
 
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
-extern int menu_mode; // メニューモード
-extern int menu_sel;  // メニューのボタンのセレクト位置
+extern int menu_sel; // メニューのボタンのセレクト位置
 
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
 extern void opening_process();        // 開放処理を行う関数

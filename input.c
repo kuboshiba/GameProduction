@@ -40,7 +40,7 @@ int wii_func(void *args)
                 else if (wiimote.keys.a) {
                     // メニューのモードによって条件分岐
                     // 0: ソロプレイ，1: マルチプレイ, 2: 設定
-                    switch (menu_mode) {
+                    switch (menu_sel) {
                     case 0: // ソロプレイのボタンが押されたとき
                         player_num      = 1;
                         gGame.mode      = MD_SOLO_WAIT;
@@ -149,7 +149,7 @@ int wii_func(void *args)
                     default:
                         break;
                     }
-                    menu_sel = menu_mode = 0; // セレクターを初期化
+                    menu_sel = 0; // セレクターを初期化
 
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.a)

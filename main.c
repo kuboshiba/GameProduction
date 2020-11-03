@@ -3,10 +3,33 @@
 char menu_str[5][10]       = { "SOLO", "MULTIPLE", "SETTING" };
 char menu_multi_str[5][10] = { "HOST", "CLIENT", "2 player", " 3 player", " 4 player" };
 
-int menu_mode = 0;
-int menu_sel  = 0;
+int menu_sel = 0; // メニューのセレクター
 
-int main(int argc, char *argv[])
+GameInfo gGame;     // ゲームの描画関係
+Player gPlayer[4];  // プレイヤーの情報
+int player_num = 1; // プレイヤーの数
+
+SDL_Thread* wii_thread;      // wii_threadを用いる
+SDL_Thread* keyboard_thread; // keyboard_threadを用いる
+SDL_mutex* mtx;              // 相互排除（Mutex）
+SDL_Surface* image_bg_1;     // 背景画像用のサーフェイス
+SDL_Surface* image_menu_bg;  // メニュー画像陽のサーフェイス
+SDL_Event event;             // SDLによるイベントを検知するための構造体
+
+TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
+TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
+int iw, ih;         // 文字を描画する際に使用
+SDL_Rect txtRect;   // 文字を描画する際に使用
+SDL_Rect pasteRect; // 文字を描画する際に使用
+
+SDL_Rect src_rect_bg = { 0, 0, WD_Width, WD_Height }; // 画像の切り取り範囲
+SDL_Rect dst_rect_bg = { 0, 0 };                      // 描画位置
+
+Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
+
+wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
+
+int main(int argc, char* argv[])
 {
     init_sys(argc, argv); // システム初期化
 
