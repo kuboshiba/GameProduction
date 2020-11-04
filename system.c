@@ -23,7 +23,7 @@ void init_sys(int argc, char* argv[])
     }
 
     // ウィンドウ生成
-    if ((gGame.window = SDL_CreateWindow("No Title", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
+    if ((gGame.window = SDL_CreateWindow("21-SHOOT", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
         Error("ウィンドウの生成に失敗しました");
         exit(-1);
     }
@@ -41,14 +41,14 @@ void init_sys(int argc, char* argv[])
     gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
     SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-    pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+    pasteRect = (SDL_Rect) { 100, 100, iw, ih };
     SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
     gGame.surface = TTF_RenderUTF8_Blended(font25, "on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
     gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
     SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-    pasteRect = (SDL_Rect) { 10, 50, iw, ih };
+    pasteRect = (SDL_Rect) { 100, 150, iw, ih };
     SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
     SDL_RenderPresent(gGame.renderer);
 
@@ -60,7 +60,9 @@ void init_sys(int argc, char* argv[])
 
     // Wiiリモコンの接続（１つのみ）
     // コマンド引数に指定したWiiリモコン識別情報を渡して接続
-    if (wiimote_connect(&wiimote, argv[1]) < 0) {
+    while (wiimote_connect(&wiimote, argv[1]) < 0) { }
+
+    if (!wiimote_is_open(&wiimote)) {
         Error("Wiiリモコンの接続に失敗しました");
         exit(1);
     }
@@ -104,6 +106,8 @@ void init_sys(int argc, char* argv[])
 // 開放処理を行う関数
 void opening_process()
 {
+    wiimote_disconnect(&wiimote); // Wiiリモコン接続解除
+
     // 各スレッドが終了するまでmain関数の処理を中断
     SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ

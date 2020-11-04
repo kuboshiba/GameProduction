@@ -37,12 +37,14 @@ enum {
 
 // 画面のモード
 typedef enum {
-    MD_MENU          = 0, // メニュー
-    MD_SOLO_WAIT     = 1, // ソロプレイ待機
-    MD_SOLO_PLAYING  = 2, // ソロプレイ中
-    MD_MULTI_WAIT    = 3, // マルチプレイ待機
-    MD_MULTI_PLAYING = 4, // マルチプレイ中
-    MD_WAIT          = 99 // 待機
+    MD_MENU          = 0,  // メニュー
+    MD_SOLO_WAIT     = 1,  // ソロプレイ待機
+    MD_SOLO_PLAYING  = 2,  // ソロプレイ中
+    MD_MULTI_WAIT    = 3,  // マルチプレイ待機
+    MD_MULTI_PLAYING = 4,  // マルチプレイ中
+    MD_EXIT_WAIT     = 97, // 終了待機
+    MD_EXIT          = 98, // 終了
+    MD_WAIT          = 99  // 待機
 } MODE;
 
 // ゲームの状態

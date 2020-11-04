@@ -16,7 +16,7 @@ int wii_func(void *args)
 
             // メニュー画面で選択されているモードで条件分岐
             switch (gGame.mode) {
-            // メニュー
+            // [モード] メニュー
             case MD_MENU:
                 // Wiiリモコンの 十字キー上 が押されたとき
                 if (wiimote.keys.up) {
@@ -30,7 +30,7 @@ int wii_func(void *args)
                 // Wiiリモコンの 十字キー下 が押されたとき
                 else if (wiimote.keys.down) {
                     // メニューのモードをインクリメント
-                    if (menu_sel != 2)
+                    if (menu_sel != 3)
                         menu_sel++;
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.down)
@@ -52,6 +52,10 @@ int wii_func(void *args)
                         break;
                     case 2: // 設定のボタンが押されたとき
                         break;
+                    case 3: // 終了ボタンが押されたとき
+                        gGame.mode      = MD_EXIT_WAIT;
+                        gPlayer[0].mode = MD_EXIT_WAIT;
+                        break;
                     default:
                         break;
                     }
@@ -62,7 +66,7 @@ int wii_func(void *args)
                         wiimote_update(&wiimote);
                 }
                 break;
-            // ソロプレイの待機
+            // [モード] ソロプレイの待機
             case MD_SOLO_WAIT:
                 // 十字キー上が押されたとき
                 if (wiimote.keys.up) {
@@ -94,7 +98,7 @@ int wii_func(void *args)
                         break;
                     // CANCELボタンが押されたとき
                     case SEL_CANCEL:
-                        player_num      = 1;       // プレイヤーの数取り敢えず１に初期化
+                        player_num      = 1;       // プレイヤーの数を取り敢えず１に初期化
                         gGame.mode      = MD_MENU; // モードをメニューに設定
                         gPlayer[0].mode = MD_MENU; // モードをメニューに設定
                         break;
@@ -108,7 +112,7 @@ int wii_func(void *args)
                         wiimote_update(&wiimote);
                 }
                 break;
-            // マルチプレイの待機
+            // [モード] マルチプレイの待機
             case MD_MULTI_WAIT:
                 // 十字キー上が押されたとき
                 if (wiimote.keys.up) {
@@ -154,6 +158,58 @@ int wii_func(void *args)
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.a)
                         wiimote_update(&wiimote);
+                }
+                break;
+            // [モード] 終了待機
+            case MD_EXIT_WAIT:
+                // 十字キー上が押されたとき
+                if (wiimote.keys.up) {
+                    // セレクターをデクリメント
+                    if (menu_sel != 0)
+                        menu_sel--;
+                    // チャタリング防止のため待機用ループ
+                    while (wiimote.keys.up)
+                        wiimote_update(&wiimote);
+                }
+                // 十字キー下が押されたとき
+                else if (wiimote.keys.down) {
+                    // セレクターをインクリメント
+                    if (menu_sel != 1)
+                        menu_sel++;
+                    // チャタリング防止のため待機用ループ
+                    while (wiimote.keys.down)
+                        wiimote_update(&wiimote);
+                }
+                // Aボタンが押されたとき
+                else if (wiimote.keys.a) {
+                    // セレクターによって条件分岐
+                    switch (menu_sel) {
+                    // ホストが選択されたとき
+                    case 0:
+                        gGame.mode      = MD_EXIT;
+                        gPlayer[0].mode = MD_EXIT;
+                        break;
+                    case 1:
+                        player_num      = 1;       // プレイヤーの数取り敢えず１に初期化
+                        gGame.mode      = MD_MENU; // モードをメニューに設定
+                        gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+                        break;
+                    default:
+                        break;
+                    }
+                    menu_sel = 0; // セレクターを初期化
+
+                    // チャタリング防止のための待機用ループ
+                    while (wiimote.keys.a)
+                        wiimote_update(&wiimote);
+                }
+                break;
+            // [モード] 終了
+            case MD_EXIT:
+                // Wiiリモコンが接続状態であればループ
+                while (wiimote_is_open(&wiimote)) {
+                    wiimote_update(&wiimote);     // Wiiリモコンの状態をアップデート
+                    wiimote_disconnect(&wiimote); // Wiiリモコンの接続を解除
                 }
                 break;
             default:
