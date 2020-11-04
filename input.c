@@ -23,6 +23,8 @@ int wii_func(void *args)
                     // メニューのモードをデクリメント
                     if (menu_sel != 0)
                         menu_sel--;
+                    else
+                        menu_sel = 3;
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.up)
                         wiimote_update(&wiimote);
@@ -32,6 +34,8 @@ int wii_func(void *args)
                     // メニューのモードをインクリメント
                     if (menu_sel != 3)
                         menu_sel++;
+                    else
+                        menu_sel = 0;
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.down)
                         wiimote_update(&wiimote);
@@ -73,6 +77,8 @@ int wii_func(void *args)
                     // セレクターをデクリメント
                     if (menu_sel != 0)
                         menu_sel--;
+                    else
+                        menu_sel = 1;
                     // チャタリング防止のため待機用ループ
                     while (wiimote.keys.up)
                         wiimote_update(&wiimote);
@@ -82,6 +88,8 @@ int wii_func(void *args)
                     // セレクターをインクリメント
                     if (menu_sel != 1)
                         menu_sel++;
+                    else
+                        menu_sel = 0;
                     // チャタリング防止のため待機用ループ
                     while (wiimote.keys.down)
                         wiimote_update(&wiimote);
@@ -119,6 +127,8 @@ int wii_func(void *args)
                     // セレクターをデクリメント
                     if (menu_sel != 0)
                         menu_sel--;
+                    else
+                        menu_sel = 2;
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.up)
                         wiimote_update(&wiimote);
@@ -128,6 +138,8 @@ int wii_func(void *args)
                     // セレクターをインクリメント
                     if (menu_sel != 2)
                         menu_sel++;
+                    else
+                        menu_sel = 0;
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.down)
                         wiimote_update(&wiimote);
@@ -167,6 +179,8 @@ int wii_func(void *args)
                     // セレクターをデクリメント
                     if (menu_sel != 0)
                         menu_sel--;
+                    else
+                        menu_sel = 1;
                     // チャタリング防止のため待機用ループ
                     while (wiimote.keys.up)
                         wiimote_update(&wiimote);
@@ -176,6 +190,8 @@ int wii_func(void *args)
                     // セレクターをインクリメント
                     if (menu_sel != 1)
                         menu_sel++;
+                    else
+                        menu_sel = 0;
                     // チャタリング防止のため待機用ループ
                     while (wiimote.keys.down)
                         wiimote_update(&wiimote);

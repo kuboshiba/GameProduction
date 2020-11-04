@@ -1,6 +1,6 @@
 #include "header/define.h"
 
-char menu_str[5][10]       = { "SOLO", "MULTIPLE", "SETTING", "EXIT" };
+char menu_str[5][10]       = { "SOLO", "MULTI", "SETTING", "EXIT" };
 char menu_multi_str[5][10] = { "HOST", "CLIENT", "2 player", " 3 player", " 4 player" };
 
 int menu_sel = 0; // メニューのセレクター
@@ -112,10 +112,18 @@ int main(int argc, char* argv[])
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
             pasteRect = (SDL_Rect) { 400, 340 + menu_sel * 50, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "[SOLO PLAY]", (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 725, 445, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
             break;
-        // ソロプレイ開始
+        // ソロプレイ中
         case MD_SOLO_PLAYING:
             break;
+        // マルチプレイ待機
         case MD_MULTI_WAIT:
             // メニュー画像を描画
             menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_menu_bg);
@@ -157,9 +165,18 @@ int main(int argc, char* argv[])
             txtRect   = (SDL_Rect) { 0, 0, iw, ih };
             pasteRect = (SDL_Rect) { 350, 320 + menu_sel * 50, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "[MULTI PLAY]", (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 700, 445, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
             break;
+        // マルチプレイ中
         case MD_MULTI_PLAYING:
             break;
+        // 終了待機
         case MD_EXIT_WAIT:
             // メニュー画像を描画
             menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_menu_bg);
@@ -199,15 +216,17 @@ int main(int argc, char* argv[])
             pasteRect = (SDL_Rect) { 350, 350 + menu_sel * 50, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
             break;
+        // 終了
         case MD_EXIT:
             Log("Wiiリモコンとの接続を解除します");
+            while (wiimote_is_open(&wiimote)) { } // Wiiリモコンの接続が解除されるまで待機
             break;
         default:
             break;
         }
 
         SDL_RenderPresent(gGame.renderer);
-        SDL_Delay(100);
+        SDL_Delay(10);
     }
 
     opening_process(); // システム開放
