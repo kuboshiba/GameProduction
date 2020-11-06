@@ -1,28 +1,5 @@
 #include "header/define.h"
 
-GameInfo gGame;     // ゲームの描画関係
-Player gPlayer[4];  // プレイヤーの情報
-int player_num = 1; // プレイヤーの数
-
-SDL_Thread* wii_thread;      // wii_threadを用いる
-SDL_Thread* keyboard_thread; // keyboard_threadを用いる
-SDL_mutex* mtx;              // 相互排除（Mutex）
-SDL_Surface* image_bg;       // 背景画像用のサーフェイス
-SDL_Event event;             // SDLによるイベントを検知するための構造体
-
-TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
-TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
-int iw, ih;         // 文字を描画する際に使用
-SDL_Rect txtRect;   // 文字を描画する際に使用
-SDL_Rect pasteRect; // 文字を描画する際に使用
-
-SDL_Rect src_rect_bg = { 0, 0, WD_Width, WD_Height }; // 画像の切り取り範囲
-SDL_Rect dst_rect_bg = { 0, 0 };                      // 描画位置
-
-Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
-
-wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
-
 // SDLやWiiリモコンを初期化する関数
 void init_sys(int argc, char* argv[])
 {
@@ -32,10 +9,12 @@ void init_sys(int argc, char* argv[])
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
     // SDL_TTF初期化
     TTF_Init();
-    font25 = TTF_OpenFont(FONT_PATH, 25);
-    font50 = TTF_OpenFont(FONT_PATH, 50);
 
-    image_bg = IMG_Load("./image/bg1.png");
+    font25 = TTF_OpenFont(FONT_PATH, 25); // フォントサイズ25読み込み
+    font50 = TTF_OpenFont(FONT_PATH, 50); // フォントサイズ50読み込み
+
+    image_bg_1    = IMG_Load("./image/bg1.png");     // 背景画像読み込み
+    image_menu_bg = IMG_Load("./image/menu_bg.png"); // メニュー背景画像読み込み
 
     // SDL初期化
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
@@ -44,7 +23,7 @@ void init_sys(int argc, char* argv[])
     }
 
     // ウィンドウ生成
-    if ((gGame.window = SDL_CreateWindow("No Title", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
+    if ((gGame.window = SDL_CreateWindow("21-SHOOT", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
         Error("ウィンドウの生成に失敗しました");
         exit(-1);
     }
@@ -62,14 +41,14 @@ void init_sys(int argc, char* argv[])
     gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
     SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-    pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+    pasteRect = (SDL_Rect) { 100, 100, iw, ih };
     SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
     gGame.surface = TTF_RenderUTF8_Blended(font25, "on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
     gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
     SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-    pasteRect = (SDL_Rect) { 10, 50, iw, ih };
+    pasteRect = (SDL_Rect) { 100, 150, iw, ih };
     SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
     SDL_RenderPresent(gGame.renderer);
 
@@ -81,13 +60,19 @@ void init_sys(int argc, char* argv[])
 
     // Wiiリモコンの接続（１つのみ）
     // コマンド引数に指定したWiiリモコン識別情報を渡して接続
-    if (wiimote_connect(&wiimote, argv[1]) < 0) {
+    Log("Wiiリモコンの接続試行中...");
+    while (wiimote_connect(&wiimote, argv[1]) < 0) { }
+
+    if (!wiimote_is_open(&wiimote)) {
         Error("Wiiリモコンの接続に失敗しました");
         exit(1);
     }
 
+    Log("Wiiリモコンの接続に成功しました");
+
     wiimote.led.one  = 1; // WiiリモコンのLEDの一番左を点灯させる（接続を知らせるために）
     wiimote.mode.acc = 1; // センサからのデータを受け付けるモードに変更
+    wiimote.mode.ir  = 1; // 赤外線センサをON
 
     wiimote_update(&wiimote); // Wiiリモコンの状態更新
 
@@ -96,6 +81,7 @@ void init_sys(int argc, char* argv[])
 
     // スレッドを作成・実行
     wii_thread      = SDL_CreateThread(wii_func, "wii_thread", mtx);
+    wii_ir_thread   = SDL_CreateThread(wii_ir_func, "wii_ir_thread", mtx);
     keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", mtx);
 
 // マスクを設定
@@ -125,13 +111,20 @@ void init_sys(int argc, char* argv[])
 // 開放処理を行う関数
 void opening_process()
 {
+    Log("Wiiリモコンの接続を解除します");
+    wiimote_disconnect(&wiimote); // Wiiリモコン接続解除
+
     // 各スレッドが終了するまでmain関数の処理を中断
+    Log("各スレッドの終了待ち");
     SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
+    SDL_WaitThread(wii_ir_thread, NULL);   // wii_ir_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ
 
+    Log("Mutexを破棄します");
     SDL_DestroyMutex(mtx); // Mutexを破棄
 
     // 終了処理
+    Log("レンダラーとウィンドウを破棄します");
     SDL_DestroyRenderer(gGame.renderer); // RCの破棄（解放）
     SDL_DestroyWindow(gGame.window);     // 生成したウィンドウの破棄（消去）
     SDL_Quit();
