@@ -18,9 +18,9 @@ SDL_Surface* image_menu_bg;  // メニュー画像用のサーフェイス
 SDL_Texture* menu_texture;   // メニュー用のテクスチャ
 SDL_Event event;             // SDLによるイベントを検知するための構造体
 
+int iw, ih;         // 文字を描画する際に使用
 TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
 TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
-int iw, ih;         // 文字を描画する際に使用
 SDL_Rect txtRect;   // 文字を描画する際に使用
 SDL_Rect pasteRect; // 文字を描画する際に使用
 
@@ -33,7 +33,7 @@ Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデ
 
 wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
 
-bool flag_loop = true;
+bool flag_loop = true; // メインループのループフラグ
 
 int main(int argc, char* argv[])
 {

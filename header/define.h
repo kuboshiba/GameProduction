@@ -88,8 +88,8 @@ extern SDL_Rect pasteRect; // 文字を描画する際に使用
 
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
-extern int menu_sel; // メニューのボタンのセレクト位置
-extern bool flag_loop;
+extern int menu_sel;   // メニューのボタンのセレクト位置
+extern bool flag_loop; // メインループのループフラグ
 
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
 extern void opening_process();        // 開放処理を行う関数
