@@ -71,6 +71,12 @@ int main(int argc, char* argv[])
             pasteRect = (SDL_Rect) { 350, 270 + menu_sel * 50, iw, ih };
             SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
+            gGame.surface = TTF_RenderUTF8_Blended(font25, "[MENU]", (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 800, 445, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
             break;
         // ソロプレイをプレイするかどうかを描画
         case MD_SOLO_WAIT:

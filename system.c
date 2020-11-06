@@ -69,6 +69,7 @@ void init_sys(int argc, char* argv[])
 
     wiimote.led.one  = 1; // WiiリモコンのLEDの一番左を点灯させる（接続を知らせるために）
     wiimote.mode.acc = 1; // センサからのデータを受け付けるモードに変更
+    wiimote.mode.ir  = 1; // 赤外線センサをON
 
     wiimote_update(&wiimote); // Wiiリモコンの状態更新
 
