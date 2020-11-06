@@ -67,10 +67,12 @@ extern Player gPlayer[4]; // プレイヤーの状態
 extern int player_num;    // プレイヤーの数
 
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
+extern SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
-extern SDL_mutex* mtx;              // 相互排除（Mutex）
-extern SDL_Event event;             // SDLによるイベントを検知するための構造体
-extern SDL_TimerID timer_id;        // タイマーIDextern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
+
+extern SDL_mutex* mtx;       // 相互排除（Mutex）
+extern SDL_Event event;      // SDLによるイベントを検知するための構造体
+extern SDL_TimerID timer_id; // タイマーIDextern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
 extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 extern SDL_Surface* image_bg_1;           // 背景画像用のサーフェイス
@@ -87,10 +89,12 @@ extern SDL_Rect pasteRect; // 文字を描画する際に使用
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
 extern int menu_sel; // メニューのボタンのセレクト位置
+extern bool flag_loop;
 
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
 extern void opening_process();        // 開放処理を行う関数
 extern int wii_func(void* args);      // Wiiリモコンの入力制御関数
+extern int wii_ir_func(void* args);   // Wiiリモコンの入力制御関数
 extern int keyboard_func(void* args); // キーボードの入力制御関数
 
 extern void Error(); // エラーを色付きで出力する関数

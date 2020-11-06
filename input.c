@@ -6,13 +6,13 @@ int wii_func(void *args)
     SDL_mutex *mtx = (SDL_mutex *)args; // 引数型はmtxに変更
 
     // Wiiリモコンがオープン（接続状態）であればループ
-    while (wiimote_is_open(&wiimote)) {
+    while (flag_loop) {
         // Wiiリモコンの状態を取得・更新する
         if (wiimote_update(&wiimote)) {
             SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
             // Wii Homeボタンが押された時
             if (wiimote.keys.home)
-                wiimote_disconnect(&wiimote); // Wiiリモコンとの接続を解除
+                flag_loop = false;
 
             // メニュー画面で選択されているモードで条件分岐
             switch (gGame.mode) {
@@ -214,28 +214,27 @@ int wii_func(void *args)
                         break;
                     }
                     menu_sel = 0; // セレクターを初期化
-
-                    // チャタリング防止のための待機用ループ
-                    while (wiimote.keys.a)
-                        wiimote_update(&wiimote);
                 }
                 break;
             // [モード] 終了
             case MD_EXIT:
                 // Wiiリモコンが接続状態であればループ
-                while (wiimote_is_open(&wiimote)) {
-                    wiimote_update(&wiimote);     // Wiiリモコンの状態をアップデート
-                    wiimote_disconnect(&wiimote); // Wiiリモコンの接続を解除
-                }
-                break;
+                flag_loop = false;
             default:
                 break;
             }
             SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
         } else {
-            wiimote_disconnect(&wiimote);
+            flag_loop = false;
         }
     }
+    return 0;
+}
+
+// Wiiリモコンの赤外線センサの値取得
+int wii_ir_func(void *args)
+{
+
     return 0;
 }
 
@@ -245,7 +244,7 @@ int keyboard_func(void *args)
     SDL_mutex *mtx = (SDL_mutex *)args; // 注意：引数はmtx
 
     // Wiiリモコンがオープン（接続状態）であればループ
-    while (wiimote_is_open(&wiimote)) {
+    while (flag_loop) {
         // キーボードの状態を取得・更新する
         if (SDL_PollEvent(&event)) {
             SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
@@ -254,7 +253,7 @@ int keyboard_func(void *args)
             case SDL_KEYDOWN: // キーボードが押された時
                 switch (event.key.keysym.sym) {
                 case SDLK_ESCAPE: // Escキーが押された時
-                    wiimote_disconnect(&wiimote);
+                    flag_loop = false;
                     break;
                 default:
                     break;
@@ -263,7 +262,6 @@ int keyboard_func(void *args)
             default:
                 break;
             }
-
             SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
         }
     }

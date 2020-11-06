@@ -9,5 +9,5 @@ void Error(char* message)
 // ログを色付きで出力する関数
 void Log(char* message)
 {
-    printf("%sLog: %s%s\n", COLOR_FG_LBLUE, message, COLOR_RESET);
+    printf("%sLog: %s%s\n", COLOR_FG_LMAGENTA, message, COLOR_RESET);
 }

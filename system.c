@@ -60,12 +60,15 @@ void init_sys(int argc, char* argv[])
 
     // Wiiリモコンの接続（１つのみ）
     // コマンド引数に指定したWiiリモコン識別情報を渡して接続
+    Log("Wiiリモコンの接続試行中...");
     while (wiimote_connect(&wiimote, argv[1]) < 0) { }
 
     if (!wiimote_is_open(&wiimote)) {
         Error("Wiiリモコンの接続に失敗しました");
         exit(1);
     }
+
+    Log("Wiiリモコンの接続に成功しました");
 
     wiimote.led.one  = 1; // WiiリモコンのLEDの一番左を点灯させる（接続を知らせるために）
     wiimote.mode.acc = 1; // センサからのデータを受け付けるモードに変更
@@ -78,6 +81,7 @@ void init_sys(int argc, char* argv[])
 
     // スレッドを作成・実行
     wii_thread      = SDL_CreateThread(wii_func, "wii_thread", mtx);
+    wii_ir_thread   = SDL_CreateThread(wii_ir_func, "wii_ir_thread", mtx);
     keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", mtx);
 
 // マスクを設定
@@ -107,15 +111,20 @@ void init_sys(int argc, char* argv[])
 // 開放処理を行う関数
 void opening_process()
 {
+    Log("Wiiリモコンの接続を解除します");
     wiimote_disconnect(&wiimote); // Wiiリモコン接続解除
 
     // 各スレッドが終了するまでmain関数の処理を中断
+    Log("各スレッドの終了待ち");
     SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
+    SDL_WaitThread(wii_ir_thread, NULL);   // wii_ir_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ
 
+    Log("Mutexを破棄します");
     SDL_DestroyMutex(mtx); // Mutexを破棄
 
     // 終了処理
+    Log("レンダラーとウィンドウを破棄します");
     SDL_DestroyRenderer(gGame.renderer); // RCの破棄（解放）
     SDL_DestroyWindow(gGame.window);     // 生成したウィンドウの破棄（消去）
     SDL_Quit();

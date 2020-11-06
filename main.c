@@ -10,6 +10,7 @@ Player gPlayer[4];  // プレイヤーの情報
 int player_num = 1; // プレイヤーの数
 
 SDL_Thread* wii_thread;      // wii_threadを用いる
+SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
 SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 SDL_mutex* mtx;              // 相互排除（Mutex）
 SDL_Surface* image_bg_1;     // 背景画像用のサーフェイス
@@ -32,12 +33,14 @@ Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデ
 
 wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
 
+bool flag_loop = true;
+
 int main(int argc, char* argv[])
 {
     init_sys(argc, argv); // システム初期化
 
     // Wiiリモコンが接続状態の時はループ
-    while (wiimote_is_open(&wiimote)) {
+    while (flag_loop) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
@@ -224,8 +227,8 @@ int main(int argc, char* argv[])
             break;
         // 終了
         case MD_EXIT:
-            Log("Wiiリモコンとの接続を解除します");
-            while (wiimote_is_open(&wiimote)) { } // Wiiリモコンの接続が解除されるまで待機
+            Log("プログラムを終了します");
+            flag_loop = false;
             break;
         default:
             break;
@@ -236,6 +239,6 @@ int main(int argc, char* argv[])
     }
 
     opening_process(); // システム開放
-
+    printf("\n%s%s%s%s\n", COLOR_BOLD, COLOR_FG_LBLUE, "Bye.", COLOR_RESET);
     return 0;
 }
