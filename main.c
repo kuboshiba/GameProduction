@@ -10,7 +10,6 @@ Player gPlayer[4];  // プレイヤーの情報
 int player_num = 1; // プレイヤーの数
 
 SDL_Thread* wii_thread;      // wii_threadを用いる
-SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
 SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 SDL_mutex* mtx;              // 相互排除（Mutex）
 SDL_Surface* image_bg_1;     // 背景画像用のサーフェイス
@@ -30,10 +29,12 @@ SDL_Rect imageRect;
 SDL_Rect drawRect;
 
 Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
-
-wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
+wiimote_t wiimote = WIIMOTE_INIT;  // Wiiリモコンの状態格納用
 
 bool flag_loop = true; // メインループのループフラグ
+
+SDL_Rect pointer      = { 0, 0, 15, 15 }; // ポインター
+SDL_Rect pointer_prev = { 0, 0, 15, 15 };
 
 int main(int argc, char* argv[])
 {
@@ -233,6 +234,45 @@ int main(int argc, char* argv[])
         default:
             break;
         }
+
+        // 赤外線センサの値を連続にする（x座標）
+        if (512 <= wiimote.ir2.x && wiimote.ir2.x <= 767)
+            wiimote.ir2.x -= 256;
+        else if (1024 <= wiimote.ir2.x && wiimote.ir2.x <= 1279)
+            wiimote.ir2.x -= 512;
+        else if (1536 <= wiimote.ir2.x && wiimote.ir2.x <= 1791)
+            wiimote.ir2.x -= 768;
+
+        wiimote.ir2.x = abs(1023 - wiimote.ir2.x); // x値反転
+
+        // 赤外線センサの値を連続にする（y座標）
+        if (512 <= wiimote.ir2.y && wiimote.ir2.y <= 767)
+            wiimote.ir2.y -= 256;
+        else if (1024 <= wiimote.ir2.y && wiimote.ir2.y <= 1279)
+            wiimote.ir2.y -= 512;
+        else if (1536 <= wiimote.ir2.y && wiimote.ir2.y <= 1791)
+            wiimote.ir2.y -= 768;
+
+        // map関数でウィンドウサイズに調整
+        pointer.x = map(wiimote.ir2.x, 100, 900, -50, 1050);
+        pointer.y = map(wiimote.ir2.y, 200, 700, -50, 550);
+
+        // ノイズ除去
+        if ((abs(pointer.x - pointer_prev.x) <= 5))
+            pointer.x = pointer_prev.x;
+        if (abs(pointer.y - pointer_prev.y) <= 5)
+            pointer.y = pointer_prev.y;
+
+        // 前回の座標として記憶
+        pointer_prev.x = pointer.x;
+        pointer_prev.y = pointer.y;
+
+        // printf("wiimote.x => %d, wiimote.y => %d\n", wiimote.ir2.x, wiimote.ir2.y);
+        // printf("pointer.x => %d, pointer.y => %d\n", pointer.x, pointer.y);
+
+        // ポインターをウィンドウに描画
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderFillRect(gGame.renderer, &pointer);
 
         SDL_RenderPresent(gGame.renderer);
         SDL_Delay(10);

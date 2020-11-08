@@ -81,7 +81,6 @@ void init_sys(int argc, char* argv[])
 
     // スレッドを作成・実行
     wii_thread      = SDL_CreateThread(wii_func, "wii_thread", mtx);
-    wii_ir_thread   = SDL_CreateThread(wii_ir_func, "wii_ir_thread", mtx);
     keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", mtx);
 
 // マスクを設定
@@ -117,7 +116,6 @@ void opening_process()
     // 各スレッドが終了するまでmain関数の処理を中断
     Log("各スレッドの終了待ち");
     SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
-    SDL_WaitThread(wii_ir_thread, NULL);   // wii_ir_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ
 
     Log("Mutexを破棄します");

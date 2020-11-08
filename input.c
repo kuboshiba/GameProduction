@@ -231,13 +231,6 @@ int wii_func(void *args)
     return 0;
 }
 
-// Wiiリモコンの赤外線センサの値取得
-int wii_ir_func(void *args)
-{
-
-    return 0;
-}
-
 // キーボードの入力制御関数
 int keyboard_func(void *args)
 {

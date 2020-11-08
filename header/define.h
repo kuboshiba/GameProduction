@@ -67,7 +67,6 @@ extern Player gPlayer[4]; // プレイヤーの状態
 extern int player_num;    // プレイヤーの数
 
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
-extern SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 
 extern SDL_mutex* mtx;       // 相互排除（Mutex）
@@ -94,11 +93,11 @@ extern bool flag_loop; // メインループのループフラグ
 extern void init_sys();               // SDLやWiiリモコンを初期化する関数
 extern void opening_process();        // 開放処理を行う関数
 extern int wii_func(void* args);      // Wiiリモコンの入力制御関数
-extern int wii_ir_func(void* args);   // Wiiリモコンの入力制御関数
 extern int keyboard_func(void* args); // キーボードの入力制御関数
 
-extern void Error(); // エラーを色付きで出力する関数
-extern void Log();   // ログを色付きで出力する関数
+extern void Error();                                                     // エラーを色付きで出力する関数
+extern void Log();                                                       // ログを色付きで出力する関数
+extern int map(int x, int in_min, int in_max, int out_min, int out_max); // map関数
 
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
 
