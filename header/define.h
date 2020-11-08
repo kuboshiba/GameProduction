@@ -78,6 +78,8 @@ extern SDL_Surface* image_bg_1;           // 背景画像用のサーフェイ�
 extern SDL_Surface* image_menu_bg;        // メニュー画像陽のサーフェイス
 extern SDL_Rect src_rect_bg;              // 画像の切り取り範囲
 extern SDL_Rect dst_rect_bg;              // 画像の描画位置
+extern SDL_Rect pointer;
+extern SDL_Rect pointer_prev;
 
 extern TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
 extern TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
