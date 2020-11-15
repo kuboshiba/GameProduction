@@ -13,7 +13,9 @@ void init_sys(int argc, char* argv[])
     font25 = TTF_OpenFont(FONT_PATH, 25); // フォントサイズ25読み込み
     font50 = TTF_OpenFont(FONT_PATH, 50); // フォントサイズ50読み込み
 
-    image_bg_1    = IMG_Load("./image/bg1.png");     // 背景画像読み込み
+    image_bg_1    = IMG_Load("./image/bg1.jpg");     // 背景画像読み込み
+    image_bg_2    = IMG_Load("./image/bg2.jpg");     // 背景画像読み込み
+    image_bg_3    = IMG_Load("./image/bg3.jpg");     // 背景画像読み込み
     image_menu_bg = IMG_Load("./image/menu_bg.png"); // メニュー背景画像読み込み
 
     // SDL初期化
@@ -117,6 +119,9 @@ void opening_process()
     Log("各スレッドの終了待ち");
     SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ
+
+    SDL_RemoveTimer(timer_id_1);
+    SDL_RemoveTimer(timer_id_2);
 
     Log("Mutexを破棄します");
     SDL_DestroyMutex(mtx); // Mutexを破棄

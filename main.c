@@ -4,10 +4,13 @@ SDL_Thread* wii_thread;      // wii_threadを用いる
 SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 SDL_mutex* mtx;              // 相互排除（Mutex）
 SDL_Surface* image_bg_1;     // 背景画像用のサーフェイス
+SDL_Surface* image_bg_2;     // 背景画像用のサーフェイス
+SDL_Surface* image_bg_3;     // 背景画像用のサーフェイス
 SDL_Surface* image_menu_bg;  // メニュー画像用のサーフェイス
 SDL_Texture* menu_texture;   // メニュー用のテクスチャ
 SDL_Event event;             // SDLによるイベントを検知するための構造体
-SDL_TimerID timer_id;        // min_flips_callback用のタイマー
+SDL_TimerID timer_id_1;      // min_flips_callback用のタイマー
+SDL_TimerID timer_id_2;      // min_flips_callback用のタイマー
 
 TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
 TTF_Font* font50; // TrueTypeフォントデータを格納する構造体
@@ -49,8 +52,8 @@ int main(int argc, char* argv[])
 {
     init_sys(argc, argv); // システム初期化
 
-    int flips = 0;                                              // 1秒あたりの描画回数
-    timer_id  = SDL_AddTimer(1000, min_flips_callback, &flips); // 1秒あたりの最小描画回数を計算
+    int flips  = 0;                                              // 1秒あたりの描画回数
+    timer_id_1 = SDL_AddTimer(1000, min_flips_callback, &flips); // 1秒あたりの最小描画回数を計算
 
     // Wiiリモコンが接続状態の時はループ
     while (flag_loop) {
@@ -97,7 +100,7 @@ int main(int argc, char* argv[])
 
         SDL_RenderPresent(gGame.renderer);
 
-        flips += 1; // 表示回数
+        // flips += 1; // 表示回数
         SDL_Delay(interval);
     }
 
@@ -108,6 +111,14 @@ int main(int argc, char* argv[])
 
 void md_solo_playing()
 {
+    // メニュー画像を描画
+    menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+    SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+    imageRect = (SDL_Rect) { 0, 0, iw, ih };
+    drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+    SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+    SDL_RenderClear(gGame.renderer);
+    SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
 }
 
 void md_menu()
@@ -295,7 +306,7 @@ Uint32 min_flips_callback(Uint32 flip_interval, void* param)
         min_flips = flips;
     }
     // 描画回数を表示する
-    fprintf(stderr, "Flips per sec: %d\n", flips);
+    // fprintf(stderr, "Flips per sec: %d\n", flips);
     *(int*)param = 0;
     return flip_interval;
 }

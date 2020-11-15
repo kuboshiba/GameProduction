@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <SDL2/SDL.h>                // SDLを用いるために必要なヘッダファイル
@@ -60,6 +61,7 @@ typedef struct {
 typedef struct {
     MODE mode;
     int score;
+    char name[100];
 } Player;
 
 extern GameInfo gGame;    // ゲームの状態
@@ -68,11 +70,14 @@ extern Player gPlayer[4]; // プレイヤーの状態
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 
-extern SDL_mutex* mtx;       // 相互排除（Mutex）
-extern SDL_Event event;      // SDLによるイベントを検知するための構造体
-extern SDL_TimerID timer_id; // min_flips_callback用のタイマー
+extern SDL_mutex* mtx;         // 相互排除（Mutex）
+extern SDL_Event event;        // SDLによるイベントを検知するための構造体
+extern SDL_TimerID timer_id_1; // min_flips_callback用のタイマー
+extern SDL_TimerID timer_id_2; // カウントダウン用
 
 extern SDL_Surface* image_bg_1;    // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_2;    // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_3;    // 背景画像用のサーフェイス
 extern SDL_Surface* image_menu_bg; // メニュー画像陽のサーフェイス
 
 extern TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
