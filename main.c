@@ -28,6 +28,8 @@ SDL_Rect dst_rect_bg = { 0, 0 };                      // 描画位置
 SDL_Rect imageRect;
 SDL_Rect drawRect;
 
+SDL_TimerID timer_id;
+
 Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 wiimote_t wiimote = WIIMOTE_INIT;  // Wiiリモコンの状態格納用
 
@@ -36,9 +38,28 @@ bool flag_loop = true; // メインループのループフラグ
 SDL_Rect pointer      = { 0, 0, 15, 15 }; // ポインター
 SDL_Rect pointer_prev = { 0, 0, 15, 15 }; // 前回のポインター
 
+int interval = 40; // 描画の時間間隔
+
+int min_flips = -1; // 1秒あたりの最小描画回数
+// 時間間隔(flip_interval)あたりの最小描画回数を計算
+Uint32 min_flips_callback(Uint32 flip_interval, void* param)
+{
+    int flips = *(int*)param;
+    if (min_flips == -1 || flips < min_flips) {
+        min_flips = flips;
+    }
+    // 描画回数を表示する
+    fprintf(stderr, "Flips per sec: %d\n", flips);
+    *(int*)param = 0;
+    return flip_interval;
+}
+
 int main(int argc, char* argv[])
 {
     init_sys(argc, argv); // システム初期化
+
+    int flips = 0;                                              // 1秒あたりの描画回数
+    timer_id  = SDL_AddTimer(1000, min_flips_callback, &flips); // 1秒あたりの最小描画回数を計算
 
     // Wiiリモコンが接続状態の時はループ
     while (flag_loop) {
@@ -240,7 +261,9 @@ int main(int argc, char* argv[])
         SDL_RenderFillRect(gGame.renderer, &pointer);
 
         SDL_RenderPresent(gGame.renderer);
-        SDL_Delay(10);
+
+        flips += 1; // 表示回数
+        SDL_Delay(interval);
     }
 
     opening_process(); // システム開放

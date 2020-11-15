@@ -71,7 +71,7 @@ extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 
 extern SDL_mutex* mtx;       // 相互排除（Mutex）
 extern SDL_Event event;      // SDLによるイベントを検知するための構造体
-extern SDL_TimerID timer_id; // タイマーIDextern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
+extern SDL_TimerID timer_id; // タイマーID
 
 extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 extern SDL_Surface* image_bg_1;           // 背景画像用のサーフェイス
