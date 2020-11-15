@@ -1,14 +1,5 @@
 #include "header/define.h"
 
-char menu_str[5][10]       = { "SOLO", "MULTI", "SETTING", "EXIT" };
-char menu_multi_str[5][10] = { "HOST", "CLIENT", "2 player", " 3 player", " 4 player" };
-
-int menu_sel = 0; // メニューのセレクター
-
-GameInfo gGame;     // ゲームの描画関係
-Player gPlayer[4];  // プレイヤーの情報
-int player_num = 1; // プレイヤーの数
-
 SDL_Thread* wii_thread;      // wii_threadを用いる
 SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 SDL_mutex* mtx;              // 相互排除（Mutex）
@@ -16,31 +7,37 @@ SDL_Surface* image_bg_1;     // 背景画像用のサーフェイス
 SDL_Surface* image_menu_bg;  // メニュー画像用のサーフェイス
 SDL_Texture* menu_texture;   // メニュー用のテクスチャ
 SDL_Event event;             // SDLによるイベントを検知するための構造体
+SDL_TimerID timer_id;        // min_flips_callback用のタイマー
 
-int iw, ih;         // 文字を描画する際に使用
-TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
-TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
-SDL_Rect txtRect;   // 文字を描画する際に使用
-SDL_Rect pasteRect; // 文字を描画する際に使用
+TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
+TTF_Font* font50; // TrueTypeフォントデータを格納する構造体
 
-SDL_Rect src_rect_bg = { 0, 0, WD_Width, WD_Height }; // 画像の切り取り範囲
-SDL_Rect dst_rect_bg = { 0, 0 };                      // 描画位置
+SDL_Rect pointer      = { 0, 0, 15, 15 };              // ポインター
+SDL_Rect pointer_prev = { 0, 0, 15, 15 };              // 前回のポインター
+SDL_Rect src_rect_bg  = { 0, 0, WD_Width, WD_Height }; // 画像の切り取り範囲
+SDL_Rect dst_rect_bg  = { 0, 0 };                      // 描画位置
+SDL_Rect txtRect;                                      // 文字を描画する際に使用
+SDL_Rect pasteRect;                                    // 文字を描画する際に使用
 SDL_Rect imageRect;
 SDL_Rect drawRect;
 
-SDL_TimerID timer_id;
+wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
 
+GameInfo gGame;                    // ゲームの描画関係
+Player gPlayer[4];                 // プレイヤーの情報
 Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
-wiimote_t wiimote = WIIMOTE_INIT;  // Wiiリモコンの状態格納用
+
+int menu_sel   = 0; // メニューのセレクター
+int player_num = 1; // プレイヤーの数
+int iw, ih;         // 文字を描画する際に使用
+int interval  = 40; // 描画の時間間隔
+int min_flips = -1; // 1秒あたりの最小描画回数
+
+char menu_str[5][10]       = { "SOLO", "MULTI", "SETTING", "EXIT" };
+char menu_multi_str[5][10] = { "HOST", "CLIENT", "2 player", " 3 player", " 4 player" };
 
 bool flag_loop = true; // メインループのループフラグ
 
-SDL_Rect pointer      = { 0, 0, 15, 15 }; // ポインター
-SDL_Rect pointer_prev = { 0, 0, 15, 15 }; // 前回のポインター
-
-int interval = 40; // 描画の時間間隔
-
-int min_flips = -1; // 1秒あたりの最小描画回数
 // 時間間隔(flip_interval)あたりの最小描画回数を計算
 Uint32 min_flips_callback(Uint32 flip_interval, void* param)
 {
@@ -153,6 +150,7 @@ int main(int argc, char* argv[])
             break;
         // ソロプレイ中
         case MD_SOLO_PLAYING:
+
             break;
         // マルチプレイ待機
         case MD_MULTI_WAIT:

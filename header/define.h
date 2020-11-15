@@ -64,46 +64,52 @@ typedef struct {
 
 extern GameInfo gGame;    // ゲームの状態
 extern Player gPlayer[4]; // プレイヤーの状態
-extern int player_num;    // プレイヤーの数
 
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
 
 extern SDL_mutex* mtx;       // 相互排除（Mutex）
 extern SDL_Event event;      // SDLによるイベントを検知するための構造体
-extern SDL_TimerID timer_id; // タイマーID
+extern SDL_TimerID timer_id; // min_flips_callback用のタイマー
 
-extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
-extern SDL_Surface* image_bg_1;           // 背景画像用のサーフェイス
-extern SDL_Surface* image_menu_bg;        // メニュー画像陽のサーフェイス
-extern SDL_Rect src_rect_bg;              // 画像の切り取り範囲
-extern SDL_Rect dst_rect_bg;              // 画像の描画位置
+extern SDL_Surface* image_bg_1;    // 背景画像用のサーフェイス
+extern SDL_Surface* image_menu_bg; // メニュー画像陽のサーフェイス
+
+extern TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
+extern TTF_Font* font50; // TrueTypeフォントデータを格納する構造体
+
+extern SDL_Rect src_rect_bg; // 画像の切り取り範囲
+extern SDL_Rect dst_rect_bg; // 画像の描画位置
+extern SDL_Rect txtRect;     // 文字を描画する際に使用
+extern SDL_Rect pasteRect;   // 文字を描画する際に使用
 extern SDL_Rect pointer;
 extern SDL_Rect pointer_prev;
 
-extern TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
-extern TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
-extern int iw, ih;         // 文字を描画する際に使用
-extern SDL_Rect txtRect;   // 文字を描画する際に使用
-extern SDL_Rect pasteRect; // 文字を描画する際に使用
-
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
+extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
+
+extern int player_num; // プレイヤーの数
+extern int iw, ih;     // 文字を描画する際に使用
 extern int menu_sel;   // メニューのボタンのセレクト位置
 extern bool flag_loop; // メインループのループフラグ
 
-extern void init_sys();               // SDLやWiiリモコンを初期化する関数
-extern void opening_process();        // 開放処理を行う関数
+// system.c
+extern void init_sys();        // SDLやWiiリモコンを初期化する関数
+extern void opening_process(); // 開放処理を行う関数
+
+// input.c
 extern int wii_func(void* args);      // Wiiリモコンの入力制御関数
 extern int keyboard_func(void* args); // キーボードの入力制御関数
 
+// define.c
 extern void Error();                                                     // エラーを色付きで出力する関数
 extern void Log();                                                       // ログを色付きで出力する関数
 extern int map(int x, int in_min, int in_max, int out_min, int out_max); // map関数
 
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
 
-// カラーコード
+// color code
 #define COLOR_BG_BLACK "\x1b[40m"
 #define COLOR_BG_RED "\x1b[41m"
 #define COLOR_BG_GREEN "\x1b[42m"
