@@ -30,16 +30,19 @@ GameInfo gGame;                    // ゲームの描画関係
 Player gPlayer[4];                 // プレイヤーの情報
 Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
-int menu_sel = 0;   // メニューのセレクター
-int player_num;     // プレイヤーの数
-int iw, ih;         // 文字を描画する際に使用
-int interval  = 40; // 描画の時間間隔
-int min_flips = -1; // 1秒あたりの最小描画回数
+int iw, ih;              // 文字を描画する際に使用
+int menu_sel       = 0;  // メニューのセレクター
+int player_num     = 1;  // プレイヤーの数
+int interval       = 40; // 描画の時間間隔
+int min_flips      = -1; // 1秒あたりの最小描画回数
+int count_down_val = 3;  // カウントダウン用の変数
 
 char menu_str[5][10]       = { "SOLO", "MULTI", "SETTING", "EXIT" };
 char menu_multi_str[5][10] = { "HOST", "CLIENT", "2 player", " 3 player", " 4 player" };
+char count_down_txt[100];
 
-bool flag_loop = true; // メインループのループフラグ
+bool flag_loop    = true; // メインループのループフラグ
+bool flag_playing = true; // プレイ用のループフラグ
 
 void md_menu();
 void md_solo_wait();
@@ -109,16 +112,76 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+Uint32 count_down(Uint32 interval, void* param)
+{
+    count_down_val--;
+    return interval;
+}
+
 void md_solo_playing()
 {
-    // メニュー画像を描画
-    menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
-    SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
-    imageRect = (SDL_Rect) { 0, 0, iw, ih };
-    drawRect  = (SDL_Rect) { 0, 0, iw, ih };
-    SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
-    SDL_RenderClear(gGame.renderer);
-    SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+    flag_playing = true;
+
+    // カウントダウン用のタイマー起動
+    timer_id_2 = SDL_AddTimer(1000, count_down, &count_down_val);
+
+    while (flag_playing) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // メニュー画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+        SDL_RenderClear(gGame.renderer);
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        // ポインターをウィンドウに描画
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderFillRect(gGame.renderer, &pointer);
+
+        // カウントダウンを数値から文字列に変換
+        sprintf(count_down_txt, "%d", count_down_val);
+
+        // ０は文字列STARTを描画
+        if (count_down_val <= 0) {
+            sprintf(count_down_txt, "%s", "START");
+            // カウントダウン表示
+            gGame.surface = TTF_RenderUTF8_Blended(font50, count_down_txt, (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 350, 200, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+        }
+        // ３〜１ までのカウントダウン描画
+        else {
+            // カウントダウン表示
+            gGame.surface = TTF_RenderUTF8_Blended(font50, count_down_txt, (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 450, 200, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+        }
+
+        // 描画
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+
+        if (count_down_val <= -1) {
+            flag_playing   = false;
+            count_down_val = 3;
+            SDL_RemoveTimer(timer_id_2);
+        }
+    }
+
+    player_num      = 1;       // プレイヤーの数を取り敢えず１に初期化
+    gGame.mode      = MD_MENU; // モードをメニューに設定
+    gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+    menu_sel        = 0;       // セレクターを初期化
 }
 
 void md_menu()

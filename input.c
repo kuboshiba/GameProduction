@@ -11,7 +11,7 @@ int wii_func(void *args)
         if (wiimote_update(&wiimote)) {
             SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
             // Wii Homeボタンが押された時
-            if (wiimote.keys.home)
+            if (wiimote.keys.home && gGame.mode != MD_SOLO_PLAYING)
                 flag_loop = false;
 
             // メニュー画面で選択されているモードで条件分岐
@@ -119,6 +119,19 @@ int wii_func(void *args)
                     while (wiimote.keys.a)
                         wiimote_update(&wiimote);
                 }
+                break;
+            case MD_SOLO_PLAYING:
+                if (wiimote.keys.home) {
+                    flag_playing    = false;
+                    player_num      = 1;       // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode      = MD_MENU; // モードをメニューに設定
+                    gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+                }
+                menu_sel = 0; // セレクターを初期化
+
+                // チャタリング防止のための待機用ループ
+                while (wiimote.keys.home)
+                    wiimote_update(&wiimote);
                 break;
             // [モード] マルチプレイの待機
             case MD_MULTI_WAIT:

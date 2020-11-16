@@ -97,7 +97,9 @@ extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマ�
 extern int player_num; // プレイヤーの数
 extern int iw, ih;     // 文字を描画する際に使用
 extern int menu_sel;   // メニューのボタンのセレクト位置
-extern bool flag_loop; // メインループのループフラグ
+
+extern bool flag_loop;    // メインループのループフラグ
+extern bool flag_playing; // メインループのループフラグ
 
 // system.c
 extern void init_sys();        // SDLやWiiリモコンを初期化する関数
