@@ -106,6 +106,7 @@ void init_sys(int argc, char* argv[])
     for (int i = 0; i < 4; i++) {
         gPlayer[i].mode  = MD_MENU; // 最初はメニュー画面なのでモードを設定
         gPlayer[i].score = 0;       // スコアは0に設定
+        sprintf(gPlayer[i].name, "%s", "guest");
     }
 }
 
