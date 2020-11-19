@@ -100,6 +100,8 @@ extern int iw, ih;        // 文字を描画する際に使用
 extern int menu_sel;      // メニューのボタンのセレクト位置
 extern int alpha_key_pos; // キーボード入力のセレクタ
 
+extern char alpha[27][2];
+
 extern bool flag_loop;    // メインループのループフラグ
 extern bool flag_playing; // メインループのループフラグ
 

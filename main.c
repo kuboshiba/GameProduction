@@ -40,6 +40,9 @@ int alpha_key_pos  = 0;  // キーボード入力のセレクタ
 
 char menu_str[5][10]       = { "SOLO", "MULTI", "SETTING", "EXIT" };
 char menu_multi_str[5][10] = { "HOST", "CLIENT", "2 player", " 3 player", " 4 player" };
+char alpha[27][2]          = { "a", "b", "c", "d", "e", "f", "g", "h", "i",
+    "j", "k", "l", "m", "n", "o", "p", "q", "r",
+    "s", "t", "u", "v", "w", "x", "y", "z" };
 char count_down_txt[100];
 
 bool flag_loop    = true; // メインループのループフラグ
@@ -121,10 +124,6 @@ Uint32 count_down(Uint32 interval, void* param)
 
 void md_solo_playing()
 {
-    char alpha[100][100] = { "a", "b", "c", "d", "e", "f", "g", "h", "i",
-        "j", "k", "l", "m", "n", "o", "p", "q", "r",
-        "s", "t", "u", "v", "w", "x", "y", "z" };
-
     flag_playing  = true;
     alpha_key_pos = 0;
 

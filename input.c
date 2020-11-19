@@ -165,9 +165,25 @@ int wii_func(void *args)
                 else if (wiimote.keys.up && alpha_key_pos == 27)
                     alpha_key_pos = 21;
 
+                if (wiimote.keys.up && 0 <= alpha_key_pos && alpha_key_pos <= 8)
+                    alpha_key_pos = 27;
+
+                char temp[100];
+
+                if (wiimote.keys.a && 0 <= alpha_key_pos && alpha_key_pos <= 25) {
+                    sprintf(temp, "%s", gPlayer[0].name);
+                    sprintf(gPlayer[0].name, "%s%s", temp, alpha[alpha_key_pos]);
+                } else if (wiimote.keys.a && alpha_key_pos == 26) {
+                    int len = strlen(gPlayer[0].name);
+                    for (int i = 0; i < len - 2; i++)
+                        temp[i] = gPlayer[0].name[i];
+                    temp[len - 1] = '\0';
+                    sprintf(gPlayer[0].name, "%s", temp);
+                }
+
             S1:
 
-                while (wiimote.keys.right || wiimote.keys.left || wiimote.keys.up || wiimote.keys.down)
+                while (wiimote.keys.right || wiimote.keys.left || wiimote.keys.up || wiimote.keys.down || wiimote.keys.a)
                     wiimote_update(&wiimote);
 
                 if (wiimote.keys.home) {
