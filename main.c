@@ -127,9 +127,8 @@ void md_solo_playing()
     flag_playing  = true;
     alpha_key_pos = 0;
 
-    player_num      = 1;                    // プレイヤーの数を取り敢えず１に初期化
-    gGame.mode      = MD_PLAYER_NAME_INPUT; // モードをメニューに設定
-    gPlayer[0].mode = MD_PLAYER_NAME_INPUT; // モードをメニューに設定
+    player_num = 1;                    // プレイヤーの数を取り敢えず１に初期化
+    gGame.mode = MD_PLAYER_NAME_INPUT; // モードをメニューに設定
 
     // プレイヤー名入力用のループ
     while (flag_playing) {
@@ -161,7 +160,7 @@ void md_solo_playing()
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 0);
         SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 225, 150, 550, 50 });
 
-        gGame.surface = TTF_RenderUTF8_Blended(font25, gPlayer[0].name, (SDL_Color) { 0, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font25, gGame.name, (SDL_Color) { 0, 0, 0, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -235,10 +234,9 @@ void md_solo_playing()
         SDL_Delay(interval);
     }
 
-    flag_playing = true;
-
     // カウントダウン用のタイマー起動
-    timer_id_2 = SDL_AddTimer(1000, count_down, &count_down_val);
+    timer_id_2   = SDL_AddTimer(1000, count_down, &count_down_val);
+    flag_playing = true;
 
     // カウントダウン用のループ
     while (flag_playing) {
@@ -295,12 +293,11 @@ void md_solo_playing()
         }
     }
 
-    // flag_playing = true;
+    flag_loop = true;
 
-    player_num      = 1;       // プレイヤーの数を取り敢えず１に初期化
-    gGame.mode      = MD_MENU; // モードをメニューに設定
-    gPlayer[0].mode = MD_MENU; // モードをメニューに設定
-    menu_sel        = 0;       // セレクターを初期化
+    player_num = 1;       // プレイヤーの数を取り敢えず１に初期化
+    gGame.mode = MD_MENU; // モードをメニューに設定
+    menu_sel   = 0;       // セレクターを初期化
 }
 
 void md_menu()

@@ -104,9 +104,9 @@ void init_sys(int argc, char* argv[])
     // 状態初期化
     gGame.mode = MD_MENU;
     for (int i = 0; i < 4; i++) {
-        gPlayer[i].mode  = MD_MENU; // 最初はメニュー画面なのでモードを設定
-        gPlayer[i].score = 0;       // スコアは0に設定
-        sprintf(gPlayer[i].name, "%s", "guest");
+        gGame.mode  = MD_MENU; // 最初はメニュー画面なのでモードを設定
+        gGame.score = 0;       // スコアは0に設定
+        sprintf(gGame.name, "%s", "guest");
     }
 }
 

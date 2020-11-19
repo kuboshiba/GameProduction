@@ -56,6 +56,8 @@ typedef struct {
     SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
     SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
     MODE mode;
+    char name[100];
+    int score;
 } GameInfo;
 
 // プレイヤーの状態

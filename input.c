@@ -11,7 +11,7 @@ int wii_func(void *args)
         if (wiimote_update(&wiimote)) {
             SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
             // Wii Homeボタンが押された時
-            if (wiimote.keys.home && gGame.mode != MD_SOLO_PLAYING)
+            if (wiimote.keys.home && gGame.mode == MD_MENU)
                 flag_loop = false;
 
             // メニュー画面で選択されているモードで条件分岐
@@ -46,19 +46,19 @@ int wii_func(void *args)
                     // 0: ソロプレイ，1: マルチプレイ, 2: 設定
                     switch (menu_sel) {
                     case 0: // ソロプレイのボタンが押されたとき
-                        player_num      = 1;
-                        gGame.mode      = MD_SOLO_WAIT;
-                        gPlayer[0].mode = MD_SOLO_WAIT;
+                        player_num = 1;
+                        gGame.mode = MD_SOLO_WAIT;
+                        gGame.mode = MD_SOLO_WAIT;
                         break;
                     case 1: // マルチプレイのボタンが押されたとき
-                        gGame.mode      = MD_MULTI_WAIT;
-                        gPlayer[0].mode = MD_MULTI_WAIT;
+                        gGame.mode = MD_MULTI_WAIT;
+                        gGame.mode = MD_MULTI_WAIT;
                         break;
                     case 2: // 設定のボタンが押されたとき
                         break;
                     case 3: // 終了ボタンが押されたとき
-                        gGame.mode      = MD_EXIT_WAIT;
-                        gPlayer[0].mode = MD_EXIT_WAIT;
+                        gGame.mode = MD_EXIT_WAIT;
+                        gGame.mode = MD_EXIT_WAIT;
                         break;
                     default:
                         break;
@@ -100,15 +100,13 @@ int wii_func(void *args)
                     switch (menu_sel) {
                     // OKボタンが押されたとき
                     case SEL_OK:
-                        player_num      = 1;               // プレイヤーの数を１に設定
-                        gGame.mode      = MD_SOLO_PLAYING; // モードをソロプレイに設定
-                        gPlayer[0].mode = MD_SOLO_PLAYING; // モードをソロプレイに設定
+                        player_num = 1;               // プレイヤーの数を１に設定
+                        gGame.mode = MD_SOLO_PLAYING; // モードをソロプレイに設定
                         break;
                     // CANCELボタンが押されたとき
                     case SEL_CANCEL:
-                        player_num      = 1;       // プレイヤーの数を取り敢えず１に初期化
-                        gGame.mode      = MD_MENU; // モードをメニューに設定
-                        gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+                        player_num = 1;       // プレイヤーの数を取り敢えず１に初期化
+                        gGame.mode = MD_MENU; // モードをメニューに設定
                         break;
                     default:
                         break;
@@ -122,10 +120,9 @@ int wii_func(void *args)
                 break;
             case MD_SOLO_PLAYING:
                 if (wiimote.keys.home) {
-                    flag_playing    = false;
-                    player_num      = 1;       // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode      = MD_MENU; // モードをメニューに設定
-                    gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+                    flag_playing = false;
+                    player_num   = 1;       // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode   = MD_MENU; // モードをメニューに設定
                 }
                 menu_sel = 0; // セレクターを初期化
 
@@ -171,14 +168,19 @@ int wii_func(void *args)
                 char temp[100];
 
                 if (wiimote.keys.a && 0 <= alpha_key_pos && alpha_key_pos <= 25) {
-                    sprintf(temp, "%s", gPlayer[0].name);
-                    sprintf(gPlayer[0].name, "%s%s", temp, alpha[alpha_key_pos]);
+                    sprintf(temp, "%s", gGame.name);
+                    sprintf(gGame.name, "%s%s", temp, alpha[alpha_key_pos]);
                 } else if (wiimote.keys.a && alpha_key_pos == 26) {
-                    int len = strlen(gPlayer[0].name);
+                    int len = strlen(gGame.name);
                     for (int i = 0; i < len - 2; i++)
-                        temp[i] = gPlayer[0].name[i];
+                        temp[i] = gGame.name[i];
                     temp[len - 1] = '\0';
-                    sprintf(gPlayer[0].name, "%s", temp);
+                    sprintf(gGame.name, "%s", temp);
+                } else if (wiimote.keys.a && alpha_key_pos == 27) {
+                    while (wiimote.keys.a) { }
+                    flag_playing = false;
+                    player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode   = MD_SOLO_PLAYING; // モードをメニューに設定
                 }
 
             S1:
@@ -187,10 +189,9 @@ int wii_func(void *args)
                     wiimote_update(&wiimote);
 
                 if (wiimote.keys.home) {
-                    flag_playing    = false;
-                    player_num      = 1;       // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode      = MD_MENU; // モードをメニューに設定
-                    gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+                    flag_playing = false;
+                    player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode   = MD_SOLO_PLAYING; // モードをメニューに設定
                 }
                 menu_sel = 0; // セレクターを初期化
 
@@ -236,9 +237,8 @@ int wii_func(void *args)
                         break;
                     // キャンセルボタンが選択されたとき
                     case 2:
-                        player_num      = 1;       // プレイヤーの数取り敢えず１に初期化
-                        gGame.mode      = MD_MENU; // モードをメニューに設定
-                        gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+                        player_num = 1;       // プレイヤーの数取り敢えず１に初期化
+                        gGame.mode = MD_MENU; // モードをメニューに設定
                         break;
                     default:
                         break;
@@ -280,17 +280,17 @@ int wii_func(void *args)
                     switch (menu_sel) {
                     // ホストが選択されたとき
                     case 0:
-                        gGame.mode      = MD_EXIT;
-                        gPlayer[0].mode = MD_EXIT;
+                        gGame.mode = MD_EXIT;
+                        gGame.mode = MD_EXIT;
                         break;
                     case 1:
                         // チャタリング防止のための待機用ループ
                         while (wiimote.keys.a)
                             wiimote_update(&wiimote);
 
-                        player_num      = 1;       // プレイヤーの数取り敢えず１に初期化
-                        gGame.mode      = MD_MENU; // モードをメニューに設定
-                        gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+                        player_num = 1;       // プレイヤーの数取り敢えず１に初期化
+                        gGame.mode = MD_MENU; // モードをメニューに設定
+                        gGame.mode = MD_MENU; // モードをメニューに設定
                         break;
                     default:
                         break;
