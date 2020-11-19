@@ -38,14 +38,15 @@ enum {
 
 // 画面のモード
 typedef enum {
-    MD_MENU          = 0,  // メニュー
-    MD_SOLO_WAIT     = 1,  // ソロプレイ待機
-    MD_SOLO_PLAYING  = 2,  // ソロプレイ中
-    MD_MULTI_WAIT    = 3,  // マルチプレイ待機
-    MD_MULTI_PLAYING = 4,  // マルチプレイ中
-    MD_EXIT_WAIT     = 97, // 終了待機
-    MD_EXIT          = 98, // 終了
-    MD_WAIT          = 99  // 待機
+    MD_MENU              = 0,  // メニュー
+    MD_SOLO_WAIT         = 1,  // ソロプレイ待機
+    MD_SOLO_PLAYING      = 2,  // ソロプレイ中
+    MD_MULTI_WAIT        = 3,  // マルチプレイ待機
+    MD_MULTI_PLAYING     = 4,  // マルチプレイ中
+    MD_PLAYER_NAME_INPUT = 96, // プレイヤーネームの入力
+    MD_EXIT_WAIT         = 97, // 終了待機
+    MD_EXIT              = 98, // 終了
+    MD_WAIT              = 99  // 待機
 } MODE;
 
 // ゲームの状態
@@ -94,9 +95,10 @@ extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
 extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
-extern int player_num; // プレイヤーの数
-extern int iw, ih;     // 文字を描画する際に使用
-extern int menu_sel;   // メニューのボタンのセレクト位置
+extern int player_num;    // プレイヤーの数
+extern int iw, ih;        // 文字を描画する際に使用
+extern int menu_sel;      // メニューのボタンのセレクト位置
+extern int alpha_key_pos; // キーボード入力のセレクタ
 
 extern bool flag_loop;    // メインループのループフラグ
 extern bool flag_playing; // メインループのループフラグ

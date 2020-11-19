@@ -133,6 +133,55 @@ int wii_func(void *args)
                 while (wiimote.keys.home)
                     wiimote_update(&wiimote);
                 break;
+            // プレイヤー名を入力するモード
+            case MD_PLAYER_NAME_INPUT:
+                if (wiimote.keys.right && alpha_key_pos + 1 <= 27) {
+                    alpha_key_pos++;
+                    goto S1;
+                } else if (wiimote.keys.left && alpha_key_pos - 1 >= 0) {
+                    alpha_key_pos--;
+                    goto S1;
+                } else if (wiimote.keys.up && alpha_key_pos - 9 >= 0 && alpha_key_pos < 26) {
+                    alpha_key_pos -= 9;
+                    goto S1;
+                } else if (wiimote.keys.down && alpha_key_pos + 9 < 26 && alpha_key_pos < 18) {
+                    alpha_key_pos += 9;
+                    goto S1;
+                }
+
+                if (wiimote.keys.left && alpha_key_pos == 0)
+                    alpha_key_pos = 27;
+                else if ((wiimote.keys.right || wiimote.keys.down) && alpha_key_pos == 27)
+                    alpha_key_pos = 0;
+                else if (wiimote.keys.down && alpha_key_pos == 26)
+                    alpha_key_pos = 0;
+
+                if (wiimote.keys.down && 20 <= alpha_key_pos && alpha_key_pos <= 25)
+                    alpha_key_pos = 27;
+                else if (wiimote.keys.down && 18 <= alpha_key_pos && alpha_key_pos <= 19)
+                    alpha_key_pos = 26;
+                else if (wiimote.keys.up && alpha_key_pos == 26)
+                    alpha_key_pos = 18;
+                else if (wiimote.keys.up && alpha_key_pos == 27)
+                    alpha_key_pos = 21;
+
+            S1:
+
+                while (wiimote.keys.right || wiimote.keys.left || wiimote.keys.up || wiimote.keys.down)
+                    wiimote_update(&wiimote);
+
+                if (wiimote.keys.home) {
+                    flag_playing    = false;
+                    player_num      = 1;       // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode      = MD_MENU; // モードをメニューに設定
+                    gPlayer[0].mode = MD_MENU; // モードをメニューに設定
+                }
+                menu_sel = 0; // セレクターを初期化
+
+                // チャタリング防止のための待機用ループ
+                while (wiimote.keys.home)
+                    wiimote_update(&wiimote);
+                break;
             // [モード] マルチプレイの待機
             case MD_MULTI_WAIT:
                 // 十字キー上が押されたとき

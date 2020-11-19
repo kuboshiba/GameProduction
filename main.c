@@ -125,7 +125,12 @@ void md_solo_playing()
         "j", "k", "l", "m", "n", "o", "p", "q", "r",
         "s", "t", "u", "v", "w", "x", "y", "z" };
 
-    flag_playing = true;
+    flag_playing  = true;
+    alpha_key_pos = 0;
+
+    player_num      = 1;                    // プレイヤーの数を取り敢えず１に初期化
+    gGame.mode      = MD_PLAYER_NAME_INPUT; // モードをメニューに設定
+    gPlayer[0].mode = MD_PLAYER_NAME_INPUT; // モードをメニューに設定
 
     // プレイヤー名入力用のループ
     while (flag_playing) {
@@ -167,7 +172,10 @@ void md_solo_playing()
         // アルファベットの四角を描画
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
-                // 背景に白のバックを追加
+                if (0 <= alpha_key_pos && alpha_key_pos <= 25 && alpha_key_pos == (j + 9 * i)) {
+                    SDL_SetRenderDrawColor(gGame.renderer, 180, 180, 180, 255);
+                    SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
+                }
                 SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 0);
                 SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
             }
@@ -185,7 +193,11 @@ void md_solo_playing()
             }
         }
 
-        // BS
+        // BS 26
+        if (alpha_key_pos == 26) {
+            SDL_SetRenderDrawColor(gGame.renderer, 180, 180, 180, 255);
+            SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 150, 400, 70, 50 });
+        }
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 0);
         SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 150, 400, 70, 50 });
 
@@ -196,10 +208,11 @@ void md_solo_playing()
         pasteRect = (SDL_Rect) { 160, 410, iw, ih };
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
-        // Enter
-        SDL_SetRenderDrawColor(gGame.renderer, 180, 180, 180, 255);
-        SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
-
+        // Enter 27
+        if (alpha_key_pos == 27) {
+            SDL_SetRenderDrawColor(gGame.renderer, 180, 180, 180, 255);
+            SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
+        }
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 0);
         SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
 
