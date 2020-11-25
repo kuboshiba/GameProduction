@@ -122,9 +122,9 @@ extern void init_sys();        // SDLやWiiリモコンを初期化する関数
 extern void opening_process(); // 開放処理を行う関数
 
 // input.c
-extern int wii_func(void* args);      // Wiiリモコンの入力制御関数
-extern int keyboard_func(void* args); // キーボードの入力制御関数
-extern int wii_ir_func(void* args);   // Wiiリモコンの赤外線センサの入力制御関数
+extern int wii_func();      // Wiiリモコンの入力制御関数
+extern int keyboard_func(); // キーボードの入力制御関数
+extern int wii_ir_func();   // Wiiリモコンの赤外線センサの入力制御関数
 
 // define.c
 extern void Error();                                                     // エラーを色付きで出力する関数

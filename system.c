@@ -88,9 +88,9 @@ void init_sys(int argc, char* argv[])
     mtx = SDL_CreateMutex(); // 相互排除（Mutex）を用いる
 
     // スレッドを作成・実行
-    wii_thread      = SDL_CreateThread(wii_func, "wii_thread", mtx);
-    keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", mtx);
-    wii_ir_thread   = SDL_CreateThread(wii_ir_func, "wii_ir_thread", mtx);
+    wii_thread      = SDL_CreateThread(wii_func, "wii_thread", NULL);
+    keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", NULL);
+    wii_ir_thread   = SDL_CreateThread(wii_ir_func, "wii_ir_thread", NULL);
 
 // マスクを設定
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -134,6 +134,7 @@ void opening_process()
     Log("各スレッドの終了待ち");
     SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ
+    SDL_WaitThread(wii_ir_thread, NULL);   // wii_ir_threadの処理終了を待つ
 
     SDL_RemoveTimer(timer_id_1);
     SDL_RemoveTimer(timer_id_2);

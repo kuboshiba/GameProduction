@@ -1,15 +1,15 @@
 #include "header/define.h"
 
 // Wiiリモコンの入力制御関数
-int wii_func(void *args)
+int wii_func()
 {
-    SDL_mutex *mtx = (SDL_mutex *)args; // 引数型はmtxに変更
+    // SDL_mutex *mtx = (SDL_mutex *)args; // 引数型はmtxに変更
 
     // Wiiリモコンがオープン（接続状態）であればループ
     while (flag_loop) {
         // Wiiリモコンの状態を取得・更新する
         if (wiimote_update(&wiimote)) {
-            SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
+            // SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
             // Wii Homeボタンが押された時
             if (wiimote.keys.home && gGame.mode == MD_MENU)
                 flag_loop = false;
@@ -206,11 +206,11 @@ int wii_func(void *args)
                 if (wiimote.keys.b) {
                     for (int i = 0; i < TARGET_NUM_MAX; i++) {
                         if (target[i].type != 5) {
-                            int a = target[i].x - pointer.x;
-                            int b = target[i].y - pointer.y;
+                            int a = (target[i].x + 25) - pointer.x;
+                            int b = (target[i].y + 25) - pointer.y;
                             int c = sqrt(a * a + b * b);
 
-                            if (c <= 20) {
+                            if (c <= 35) {
                                 puts("hit");
                                 switch (target[i].type) {
                                 case 0:
@@ -355,39 +355,7 @@ int wii_func(void *args)
                 break;
             }
 
-            // 赤外線センサの値を連続にする（x座標）
-            if (512 <= wiimote.ir2.x && wiimote.ir2.x <= 767)
-                wiimote.ir2.x -= 256;
-            else if (1024 <= wiimote.ir2.x && wiimote.ir2.x <= 1279)
-                wiimote.ir2.x -= 512;
-            else if (1536 <= wiimote.ir2.x && wiimote.ir2.x <= 1791)
-                wiimote.ir2.x -= 768;
-
-            wiimote.ir2.x = abs(1023 - wiimote.ir2.x); // x値反転
-
-            // 赤外線センサの値を連続にする（y座標）
-            if (512 <= wiimote.ir2.y && wiimote.ir2.y <= 767)
-                wiimote.ir2.y -= 256;
-            else if (1024 <= wiimote.ir2.y && wiimote.ir2.y <= 1279)
-                wiimote.ir2.y -= 512;
-            else if (1536 <= wiimote.ir2.y && wiimote.ir2.y <= 1791)
-                wiimote.ir2.y -= 768;
-
-            // map関数でウィンドウサイズに調整
-            pointer.x = map(wiimote.ir2.x, 100, 900, -50, 1050);
-            pointer.y = map(wiimote.ir2.y, 200, 700, -50, 550);
-
-            // ノイズ除去
-            if ((abs(pointer.x - pointer_prev.x) <= 5))
-                pointer.x = pointer_prev.x;
-            if (abs(pointer.y - pointer_prev.y) <= 5)
-                pointer.y = pointer_prev.y;
-
-            // 前回の座標として記憶
-            pointer_prev.x = pointer.x;
-            pointer_prev.y = pointer.y;
-
-            SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
+            // SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
         } else {
             flag_loop = false;
         }
@@ -396,15 +364,15 @@ int wii_func(void *args)
 }
 
 // キーボードの入力制御関数
-int keyboard_func(void *args)
+int keyboard_func()
 {
-    SDL_mutex *mtx = (SDL_mutex *)args; // 注意：引数はmtx
+    // SDL_mutex *mtx = (SDL_mutex *)args; // 注意：引数はmtx
 
     // Wiiリモコンがオープン（接続状態）であればループ
     while (flag_loop) {
         // キーボードの状態を取得・更新する
         if (SDL_PollEvent(&event)) {
-            SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
+            // SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
 
             switch (event.type) {
             case SDL_KEYDOWN: // キーボードが押された時
@@ -419,14 +387,49 @@ int keyboard_func(void *args)
             default:
                 break;
             }
-            SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
+            // SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
         }
     }
     return 0;
 }
 
-int wii_ir_func(void *args)
+int wii_ir_func()
 {
+    // Wiiリモコンがオープン（接続状態）であればループ
+    while (flag_loop) {
+        wiimote_update(&wiimote);
 
+        // 赤外線センサの値を連続にする（x座標）
+        if (512 <= wiimote.ir2.x && wiimote.ir2.x <= 767)
+            wiimote.ir2.x -= 256;
+        else if (1024 <= wiimote.ir2.x && wiimote.ir2.x <= 1279)
+            wiimote.ir2.x -= 512;
+        else if (1536 <= wiimote.ir2.x && wiimote.ir2.x <= 1791)
+            wiimote.ir2.x -= 768;
+
+        wiimote.ir2.x = abs(1023 - wiimote.ir2.x); // x値反転
+
+        // 赤外線センサの値を連続にする（y座標）
+        if (512 <= wiimote.ir2.y && wiimote.ir2.y <= 767)
+            wiimote.ir2.y -= 256;
+        else if (1024 <= wiimote.ir2.y && wiimote.ir2.y <= 1279)
+            wiimote.ir2.y -= 512;
+        else if (1536 <= wiimote.ir2.y && wiimote.ir2.y <= 1791)
+            wiimote.ir2.y -= 768;
+
+        // map関数でウィンドウサイズに調整
+        pointer.x = map(wiimote.ir2.x, 100, 900, -50, 1050);
+        pointer.y = map(wiimote.ir2.y, 200, 700, -50, 550);
+
+        // ノイズ除去
+        if ((abs(pointer.x - pointer_prev.x) <= 5))
+            pointer.x = pointer_prev.x;
+        if (abs(pointer.y - pointer_prev.y) <= 5)
+            pointer.y = pointer_prev.y;
+
+        // 前回の座標として記憶
+        pointer_prev.x = pointer.x;
+        pointer_prev.y = pointer.y;
+    }
     return 0;
 }
