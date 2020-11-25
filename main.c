@@ -2,6 +2,7 @@
 
 SDL_Thread* wii_thread;        // wii_threadを用いる
 SDL_Thread* keyboard_thread;   // keyboard_threadを用いる
+SDL_Thread* wii_ir_thread;     // wii_ir_threadを用いる
 SDL_mutex* mtx;                // 相互排除（Mutex）
 SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
 SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
@@ -30,6 +31,7 @@ wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
 
 GameInfo gGame;                    // ゲームの描画関係
 Player gPlayer[4];                 // プレイヤーの情報
+Target target[10];                 // 的の情報
 Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
 int iw, ih;              // 文字を描画する際に使用
@@ -105,8 +107,7 @@ int main(int argc, char* argv[])
         }
 
         // ポインターをウィンドウに描画
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
-        SDL_RenderFillRect(gGame.renderer, &pointer);
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
 
         SDL_RenderPresent(gGame.renderer);
 
@@ -225,6 +226,9 @@ void md_solo_playing()
         pasteRect = (SDL_Rect) { 650, 250, iw, ih };
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
+        // ポインターをウィンドウに描画
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
         // 描画
         SDL_RenderPresent(gGame.renderer);
         SDL_Delay(interval);
@@ -249,8 +253,7 @@ void md_solo_playing()
         SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
 
         // ポインターをウィンドウに描画
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
-        SDL_RenderFillRect(gGame.renderer, &pointer);
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
 
         // カウントダウンを数値から文字列に変換
         sprintf(count_down_txt, "%d", count_down_val);
@@ -291,31 +294,50 @@ void md_solo_playing()
 
     flag_playing = true;
     gGame.mode   = MD_SOLO_PLAYING_1; // モードをメニューに設定
-    // 実際のゲーム
+
+    int target_num = rand() % 10;
+    for (int i = 0; i < target_num; i++) {
+        target[i].type = rand() % 5;
+        target[i].x    = rand() % 950;
+        target[i].y    = rand() % 450;
+    }
+
+    // 実際のゲーム　ステージ１
     while (flag_playing) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
         // ステージ１の画像を描画
-        // 合成画像作成用サーフェイスを塗りつぶす
-        SDL_FillRect(gGame.surface, NULL, 0x00000000);
-
-        // メニュー画像を描画
         menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
         SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
         drawRect  = (SDL_Rect) { 0, 0, iw, ih };
         SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
 
-        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[1]);
+        // 的を描画
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            if (target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[target[i].type]);
+                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+                imageRect = (SDL_Rect) { 0, 0, iw, ih };
+                drawRect  = (SDL_Rect) { target[i].x, target[i].y, iw, ih };
+                SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
+            }
+        }
+
+        // スコアの表示
+        char score_txt[100];
+        sprintf(score_txt, "YOUR SCORE: %d", gGame.score);
+        gGame.surface = TTF_RenderUTF8_Blended(font25, score_txt, (SDL_Color) { 255, 0, 0, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
-        imageRect = (SDL_Rect) { 0, 0, iw, ih };
-        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
-        SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 550, 100, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
         // ポインターをウィンドウに描画
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
-        SDL_RenderFillRect(gGame.renderer, &pointer);
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
         SDL_RenderPresent(gGame.renderer);
         SDL_Delay(interval);
     }

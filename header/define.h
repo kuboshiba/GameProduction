@@ -68,11 +68,19 @@ typedef struct {
     char name[100];
 } Player;
 
+typedef struct {
+    int type;
+    int x;
+    int y;
+} Target;
+
 extern GameInfo gGame;    // ゲームの状態
 extern Player gPlayer[4]; // プレイヤーの状態
+extern Target target[10];
 
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
+extern SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
 
 extern SDL_mutex* mtx;         // 相互排除（Mutex）
 extern SDL_Event event;        // SDLによるイベントを検知するための構造体
@@ -116,6 +124,7 @@ extern void opening_process(); // 開放処理を行う関数
 // input.c
 extern int wii_func(void* args);      // Wiiリモコンの入力制御関数
 extern int keyboard_func(void* args); // キーボードの入力制御関数
+extern int wii_ir_func(void* args);   // Wiiリモコンの赤外線センサの入力制御関数
 
 // define.c
 extern void Error();                                                     // エラーを色付きで出力する関数
@@ -123,6 +132,9 @@ extern void Log();                                                       // ロ�
 extern int map(int x, int in_min, int in_max, int out_min, int out_max); // map関数
 
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
+
+// define
+#define TARGET_NUM_MAX 10
 
 // color code
 #define COLOR_BG_BLACK "\x1b[40m"

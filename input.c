@@ -203,6 +203,41 @@ int wii_func(void *args)
 
                 break;
             case MD_SOLO_PLAYING_1:
+                if (wiimote.keys.b) {
+                    for (int i = 0; i < TARGET_NUM_MAX; i++) {
+                        if (target[i].type != 5) {
+                            int a = target[i].x - pointer.x;
+                            int b = target[i].y - pointer.y;
+                            int c = sqrt(a * a + b * b);
+
+                            if (c <= 20) {
+                                puts("hit");
+                                switch (target[i].type) {
+                                case 0:
+                                    gGame.score += 100;
+                                    break;
+                                case 1:
+                                    gGame.score += 200;
+                                    break;
+                                case 2:
+                                    gGame.score += 500;
+                                    break;
+                                case 3:
+                                    gGame.score += 1000;
+                                    break;
+                                case 4:
+                                    gGame.score += 2000;
+                                    break;
+                                }
+                            } else {
+                                puts("no hit");
+                            }
+                        }
+                    }
+                    while (wiimote.keys.b)
+                        wiimote_update(&wiimote);
+                }
+
                 if (wiimote.keys.home) {
                     flag_playing = false;
                     player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
@@ -387,5 +422,11 @@ int keyboard_func(void *args)
             SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
         }
     }
+    return 0;
+}
+
+int wii_ir_func(void *args)
+{
+
     return 0;
 }

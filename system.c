@@ -90,6 +90,7 @@ void init_sys(int argc, char* argv[])
     // スレッドを作成・実行
     wii_thread      = SDL_CreateThread(wii_func, "wii_thread", mtx);
     keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", mtx);
+    wii_ir_thread   = SDL_CreateThread(wii_ir_func, "wii_ir_thread", mtx);
 
 // マスクを設定
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -113,6 +114,13 @@ void init_sys(int argc, char* argv[])
         gGame.mode  = MD_MENU; // 最初はメニュー画面なのでモードを設定
         gGame.score = 0;       // スコアは0に設定
         sprintf(gGame.name, "%s", "guest");
+    }
+
+    // 的の初期化
+    for (int i = 0; i < 10; i++) {
+        target[i].type = 5;
+        target[i].x    = 0;
+        target[i].y    = 0;
     }
 }
 
