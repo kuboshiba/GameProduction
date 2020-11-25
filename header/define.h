@@ -41,8 +41,9 @@ typedef enum {
     MD_MENU              = 0,  // メニュー
     MD_SOLO_WAIT         = 1,  // ソロプレイ待機
     MD_SOLO_PLAYING      = 2,  // ソロプレイ中
-    MD_MULTI_WAIT        = 3,  // マルチプレイ待機
-    MD_MULTI_PLAYING     = 4,  // マルチプレイ中
+    MD_SOLO_PLAYING_1    = 3,  // ソロプレイのゲーム中
+    MD_MULTI_WAIT        = 4,  // マルチプレイ待機
+    MD_MULTI_PLAYING     = 5,  // マルチプレイ中
     MD_PLAYER_NAME_INPUT = 96, // プレイヤーネームの入力
     MD_EXIT_WAIT         = 97, // 終了待機
     MD_EXIT              = 98, // 終了
@@ -78,10 +79,11 @@ extern SDL_Event event;        // SDLによるイベントを検知するため�
 extern SDL_TimerID timer_id_1; // min_flips_callback用のタイマー
 extern SDL_TimerID timer_id_2; // カウントダウン用
 
-extern SDL_Surface* image_bg_1;    // 背景画像用のサーフェイス
-extern SDL_Surface* image_bg_2;    // 背景画像用のサーフェイス
-extern SDL_Surface* image_bg_3;    // 背景画像用のサーフェイス
-extern SDL_Surface* image_menu_bg; // メニュー画像陽のサーフェイス
+extern SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_3;       // 背景画像用のサーフェイス
+extern SDL_Surface* image_menu_bg;    // メニュー画像陽のサーフェイス
+extern SDL_Surface* image_target[10]; // 的の画像用のサーフェイス
 
 extern TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
 extern TTF_Font* font50; // TrueTypeフォントデータを格納する構造体

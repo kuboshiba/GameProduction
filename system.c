@@ -18,6 +18,12 @@ void init_sys(int argc, char* argv[])
     image_bg_3    = IMG_Load("./image/bg3.jpg");     // 背景画像読み込み
     image_menu_bg = IMG_Load("./image/menu_bg.png"); // メニュー背景画像読み込み
 
+    image_target[0] = IMG_Load("./image/target/100-1.png");
+    image_target[1] = IMG_Load("./image/target/200-1.png");
+    image_target[2] = IMG_Load("./image/target/500-1.png");
+    image_target[3] = IMG_Load("./image/target/1000-1.png");
+    image_target[4] = IMG_Load("./image/target/2000-1.png");
+
     // SDL初期化
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
         Error("SDLの初期化に失敗しました");

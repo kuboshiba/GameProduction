@@ -177,14 +177,17 @@ int wii_func(void *args)
                     temp[len - 1] = '\0';
                     sprintf(gGame.name, "%s", temp);
                 } else if (wiimote.keys.a && alpha_key_pos == 27) {
-                    while (wiimote.keys.a) { }
+                    // チャタリング防止のための待機用ループ
+                    while (wiimote.keys.a)
+                        wiimote_update(&wiimote);
+
                     flag_playing = false;
                     player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
                     gGame.mode   = MD_SOLO_PLAYING; // モードをメニューに設定
                 }
 
             S1:
-
+                // チャタリング防止のための待機用ループ
                 while (wiimote.keys.right || wiimote.keys.left || wiimote.keys.up || wiimote.keys.down || wiimote.keys.a)
                     wiimote_update(&wiimote);
 
@@ -192,12 +195,23 @@ int wii_func(void *args)
                     flag_playing = false;
                     player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
                     gGame.mode   = MD_SOLO_PLAYING; // モードをメニューに設定
+                    menu_sel     = 0;               // セレクターを初期化
+                    // チャタリング防止のための待機用ループ
+                    while (wiimote.keys.home)
+                        wiimote_update(&wiimote);
                 }
-                menu_sel = 0; // セレクターを初期化
 
-                // チャタリング防止のための待機用ループ
-                while (wiimote.keys.home)
-                    wiimote_update(&wiimote);
+                break;
+            case MD_SOLO_PLAYING_1:
+                if (wiimote.keys.home) {
+                    flag_playing = false;
+                    player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode   = MD_SOLO_PLAYING; // モードをメニューに設定
+                    menu_sel     = 0;               // セレクターを初期化
+                    // チャタリング防止のための待機用ループ
+                    while (wiimote.keys.home)
+                        wiimote_update(&wiimote);
+                }
                 break;
             // [モード] マルチプレイの待機
             case MD_MULTI_WAIT:

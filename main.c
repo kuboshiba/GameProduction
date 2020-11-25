@@ -1,16 +1,18 @@
 #include "header/define.h"
 
-SDL_Thread* wii_thread;      // wii_threadを用いる
-SDL_Thread* keyboard_thread; // keyboard_threadを用いる
-SDL_mutex* mtx;              // 相互排除（Mutex）
-SDL_Surface* image_bg_1;     // 背景画像用のサーフェイス
-SDL_Surface* image_bg_2;     // 背景画像用のサーフェイス
-SDL_Surface* image_bg_3;     // 背景画像用のサーフェイス
-SDL_Surface* image_menu_bg;  // メニュー画像用のサーフェイス
-SDL_Texture* menu_texture;   // メニュー用のテクスチャ
-SDL_Event event;             // SDLによるイベントを検知するための構造体
-SDL_TimerID timer_id_1;      // min_flips_callback用のタイマー
-SDL_TimerID timer_id_2;      // min_flips_callback用のタイマー
+SDL_Thread* wii_thread;        // wii_threadを用いる
+SDL_Thread* keyboard_thread;   // keyboard_threadを用いる
+SDL_mutex* mtx;                // 相互排除（Mutex）
+SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
+SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
+SDL_Surface* image_bg_3;       // 背景画像用のサーフェイス
+SDL_Surface* image_menu_bg;    // メニュー画像用のサーフェイス
+SDL_Surface* image_target[10]; // 的の画像用のサーフェイス
+SDL_Texture* menu_texture;     // メニュー用のテクスチャ
+SDL_Texture* solo_texture;     // ソロプレイ用のテクスチャ
+SDL_Event event;               // SDLによるイベントを検知するための構造体
+SDL_TimerID timer_id_1;        // min_flips_callback用のタイマー
+SDL_TimerID timer_id_2;        // min_flips_callback用のタイマー
 
 TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
 TTF_Font* font50; // TrueTypeフォントデータを格納する構造体
@@ -48,12 +50,13 @@ char count_down_txt[100];
 bool flag_loop    = true; // メインループのループフラグ
 bool flag_playing = true; // プレイ用のループフラグ
 
+Uint32 count_down(Uint32 interval, void* param);
+Uint32 min_flips_callback(Uint32 flip_interval, void* param); // 時間間隔(flip_interval)あたりの最小描画回数を計算
 void md_menu();
 void md_solo_wait();
 void md_solo_playing();
 void md_multi_wait();
 void md_exit_wait();
-Uint32 min_flips_callback(Uint32 flip_interval, void* param); // 時間間隔(flip_interval)あたりの最小描画回数を計算
 
 int main(int argc, char* argv[])
 {
@@ -116,26 +119,19 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-Uint32 count_down(Uint32 interval, void* param)
-{
-    count_down_val--;
-    return interval;
-}
-
 void md_solo_playing()
 {
-    flag_playing  = true;
     alpha_key_pos = 0;
-
-    player_num = 1;                    // プレイヤーの数を取り敢えず１に初期化
-    gGame.mode = MD_PLAYER_NAME_INPUT; // モードをメニューに設定
+    player_num    = 1;                    // プレイヤーの数を取り敢えず１に初期化
+    gGame.mode    = MD_PLAYER_NAME_INPUT; // モードをメニューに設定
+    flag_playing  = true;
 
     // プレイヤー名入力用のループ
     while (flag_playing) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
-        // メニュー画像を描画
+        // 画像を描画
         menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
         SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
@@ -235,9 +231,9 @@ void md_solo_playing()
     }
 
     // カウントダウン用のタイマー起動
-    timer_id_2   = SDL_AddTimer(1000, count_down, &count_down_val);
-    flag_playing = true;
+    timer_id_2 = SDL_AddTimer(1000, count_down, &count_down_val);
 
+    flag_playing = true;
     // カウントダウン用のループ
     while (flag_playing) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
@@ -293,7 +289,36 @@ void md_solo_playing()
         }
     }
 
-    flag_loop = true;
+    flag_playing = true;
+    gGame.mode   = MD_SOLO_PLAYING_1; // モードをメニューに設定
+    // 実際のゲーム
+    while (flag_playing) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // ステージ１の画像を描画
+        // 合成画像作成用サーフェイスを塗りつぶす
+        SDL_FillRect(gGame.surface, NULL, 0x00000000);
+
+        // メニュー画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[1]);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
+
+        // ポインターをウィンドウに描画
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderFillRect(gGame.renderer, &pointer);
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
 
     player_num = 1;       // プレイヤーの数を取り敢えず１に初期化
     gGame.mode = MD_MENU; // モードをメニューに設定
@@ -475,6 +500,12 @@ void md_exit_wait()
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
     pasteRect = (SDL_Rect) { 350, 350 + menu_sel * 50, iw, ih };
     SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+}
+
+Uint32 count_down(Uint32 interval, void* param)
+{
+    count_down_val--;
+    return interval;
 }
 
 // 時間間隔(flip_interval)あたりの最小描画回数を計算
