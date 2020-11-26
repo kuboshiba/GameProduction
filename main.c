@@ -622,9 +622,7 @@ Uint32 target_cnt(Uint32 interval, void* param)
                 target[i].cnt++;
             }
         }
-        printf("%d ", target[i].cnt);
     }
-    printf("\n");
     return interval;
 }
 
