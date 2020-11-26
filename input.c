@@ -202,38 +202,43 @@ int wii_func()
                 }
 
                 break;
+            // ソロプレイ（実際のプレイ）
             case MD_SOLO_PLAYING_1:
+                // Bボタンで撃つ
                 if (wiimote.keys.b) {
+                    // 的は同時表示TARGET_NUM_MAX個までなのでTARGET_NUM_MAX回ループ
                     for (int i = 0; i < TARGET_NUM_MAX; i++) {
+                        // 的を表示している場合　ポインターと的の当たり判定をする
                         if (target[i].type != 5) {
                             int a = (target[i].x + 25) - pointer.x;
                             int b = (target[i].y + 25) - pointer.y;
                             int c = sqrt(a * a + b * b);
 
-                            if (c <= 35) {
-                                puts("hit");
+                            // 当たっている場合
+                            if (c <= 34) {
                                 switch (target[i].type) {
-                                case 0:
+                                case 0: // 100点
                                     gGame.score += 100;
                                     break;
-                                case 1:
+                                case 1: // 200点
                                     gGame.score += 200;
                                     break;
-                                case 2:
+                                case 2: // 500点
                                     gGame.score += 500;
                                     break;
-                                case 3:
+                                case 3: // 1000点
                                     gGame.score += 1000;
                                     break;
-                                case 4:
+                                case 4: // 2000点
                                     gGame.score += 2000;
                                     break;
                                 }
-                            } else {
-                                puts("no hit");
+                                target[i].type = 5; // 的を消す
+                                target[i].cnt  = 0; // カウンターを初期化
                             }
                         }
                     }
+                    // チャタリング回避
                     while (wiimote.keys.b)
                         wiimote_update(&wiimote);
                 }

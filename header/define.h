@@ -72,6 +72,7 @@ typedef struct {
     int type;
     int x;
     int y;
+    int cnt;
 } Target;
 
 extern GameInfo gGame;    // ゲームの状態
@@ -90,6 +91,7 @@ extern SDL_TimerID timer_id_2; // カウントダウン用
 extern SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
 extern SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
 extern SDL_Surface* image_bg_3;       // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_4;       // メニュー画像用のサーフェイス
 extern SDL_Surface* image_menu_bg;    // メニュー画像陽のサーフェイス
 extern SDL_Surface* image_target[10]; // 的の画像用のサーフェイス
 

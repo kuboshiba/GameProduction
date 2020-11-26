@@ -7,6 +7,7 @@ SDL_mutex* mtx;                // 相互排除（Mutex）
 SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
 SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
 SDL_Surface* image_bg_3;       // 背景画像用のサーフェイス
+SDL_Surface* image_bg_4;       // 背景画像用のサーフェイス
 SDL_Surface* image_menu_bg;    // メニュー画像用のサーフェイス
 SDL_Surface* image_target[10]; // 的の画像用のサーフェイス
 SDL_Texture* menu_texture;     // メニュー用のテクスチャ
@@ -53,6 +54,7 @@ bool flag_loop    = true; // メインループのループフラグ
 bool flag_playing = true; // プレイ用のループフラグ
 
 Uint32 count_down(Uint32 interval, void* param);
+Uint32 target_cnt(Uint32 interval, void* param);
 Uint32 min_flips_callback(Uint32 flip_interval, void* param); // 時間間隔(flip_interval)あたりの最小描画回数を計算
 void md_menu();
 void md_solo_wait();
@@ -122,7 +124,7 @@ int main(int argc, char* argv[])
 
 void md_solo_playing()
 {
-    alpha_key_pos = 0;
+    alpha_key_pos = 27;
     player_num    = 1;                    // プレイヤーの数を取り敢えず１に初期化
     gGame.mode    = MD_PLAYER_NAME_INPUT; // モードをメニューに設定
     flag_playing  = true;
@@ -133,20 +135,20 @@ void md_solo_playing()
         SDL_RenderClear(gGame.renderer);
 
         // 画像を描画
-        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
-        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
-        imageRect = (SDL_Rect) { 0, 0, iw, ih };
-        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
-        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
-        SDL_RenderClear(gGame.renderer);
-        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+        // menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        // SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        // imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        // drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        // SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+        // SDL_RenderClear(gGame.renderer);
+        // SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
 
         // 背景に白のバックを追加
-        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
-        SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 5, 5, 990, 490 });
+        // SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        // SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 50, 50, 940, 440 });
 
         // プレイヤー名を入力してください　描画
-        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name", (SDL_Color) { 0, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name", (SDL_Color) { 255, 255, 255, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -154,10 +156,10 @@ void md_solo_playing()
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
         // 入力したプレイヤー名のバックグラウンド
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 0);
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
         SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 225, 150, 550, 50 });
 
-        gGame.surface = TTF_RenderUTF8_Blended(font25, gGame.name, (SDL_Color) { 0, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font25, gGame.name, (SDL_Color) { 255, 255, 255, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -168,10 +170,10 @@ void md_solo_playing()
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
                 if (0 <= alpha_key_pos && alpha_key_pos <= 25 && alpha_key_pos == (j + 9 * i)) {
-                    SDL_SetRenderDrawColor(gGame.renderer, 180, 180, 180, 255);
+                    SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
                     SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
                 }
-                SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 0);
+                SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
                 SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
             }
         }
@@ -179,7 +181,7 @@ void md_solo_playing()
         // アルファベットを描画
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
-                gGame.surface = TTF_RenderUTF8_Blended(font25, alpha[j + i * 9], (SDL_Color) { 0, 0, 0, 255 });
+                gGame.surface = TTF_RenderUTF8_Blended(font25, alpha[j + i * 9], (SDL_Color) { 255, 255, 255, 255 });
                 gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
                 SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
                 txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -190,13 +192,13 @@ void md_solo_playing()
 
         // BS 26
         if (alpha_key_pos == 26) {
-            SDL_SetRenderDrawColor(gGame.renderer, 180, 180, 180, 255);
+            SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
             SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 150, 400, 70, 50 });
         }
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 0);
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
         SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 150, 400, 70, 50 });
 
-        gGame.surface = TTF_RenderUTF8_Blended(font25, "BS", (SDL_Color) { 0, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "BS", (SDL_Color) { 255, 255, 255, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -205,13 +207,13 @@ void md_solo_playing()
 
         // Enter 27
         if (alpha_key_pos == 27) {
-            SDL_SetRenderDrawColor(gGame.renderer, 180, 180, 180, 255);
+            SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
             SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
         }
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 0);
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
         SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
 
-        gGame.surface = TTF_RenderUTF8_Blended(font25, "Enter", (SDL_Color) { 0, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Enter", (SDL_Color) { 255, 255, 255, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -219,7 +221,7 @@ void md_solo_playing()
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
         // 登録されているプレイヤー名を表示
-        gGame.surface = TTF_RenderUTF8_Blended(font25, "Player list", (SDL_Color) { 0, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Player list", (SDL_Color) { 255, 255, 255, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
@@ -244,7 +246,7 @@ void md_solo_playing()
         SDL_RenderClear(gGame.renderer);
 
         // 背景画像を描画
-        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_1);
         SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
         drawRect  = (SDL_Rect) { 0, 0, iw, ih };
@@ -294,13 +296,53 @@ void md_solo_playing()
 
     flag_playing = true;
     gGame.mode   = MD_SOLO_PLAYING_1; // モードをメニューに設定
-
+    srand(1);
     int target_num = rand() % 10;
     for (int i = 0; i < target_num; i++) {
-        target[i].type = rand() % 5;
-        target[i].x    = rand() % 950;
-        target[i].y    = rand() % 450;
+        int type = rand() % 100;
+        if (0 <= type && type < 30)
+            type = 0;
+        else if (30 <= type && type < 60)
+            type = 1;
+        else if (60 <= type && type < 85)
+            type = 2;
+        else if (85 <= type && type < 95)
+            type = 3;
+        else if (95 <= type && type < 100)
+            type = 4;
+
+        int x = 100 + rand() % 750;
+        int y = 100 + rand() % 250;
+
+        bool flag = true;
+
+        for (int j = 0; j < TARGET_NUM_MAX; j++) {
+            if (target[j].type != 5) {
+                int a = target[j].x - x;
+                int b = target[j].y - y;
+                int c = sqrt(a * a + b * b);
+                if (c <= 34)
+                    flag = false;
+            }
+        }
+
+        if (flag) {
+            target[i].type = type;
+            target[i].x    = x;
+            target[i].y    = y;
+            target[i].cnt  = 0;
+        } else {
+            target[i].type = 5;
+            target[i].x    = 0;
+            target[i].y    = 0;
+            target[i].cnt  = 0;
+        }
     }
+
+    SDL_RemoveTimer(timer_id_2); // タイマー解除
+
+    // 的の表示時間用のタイマーをセット
+    timer_id_2 = SDL_AddTimer(1000, target_cnt, &target);
 
     // 実際のゲーム　ステージ１
     while (flag_playing) {
@@ -308,7 +350,7 @@ void md_solo_playing()
         SDL_RenderClear(gGame.renderer);
 
         // ステージ１の画像を描画
-        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_1);
         SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
         drawRect  = (SDL_Rect) { 0, 0, iw, ih };
@@ -341,6 +383,8 @@ void md_solo_playing()
         SDL_RenderPresent(gGame.renderer);
         SDL_Delay(interval);
     }
+
+    SDL_RemoveTimer(timer_id_2); // タイマー解除
 
     player_num = 1;       // プレイヤーの数を取り敢えず１に初期化
     gGame.mode = MD_MENU; // モードをメニューに設定
@@ -524,9 +568,63 @@ void md_exit_wait()
     SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 }
 
+// カウントダウン用のタイマー
 Uint32 count_down(Uint32 interval, void* param)
 {
     count_down_val--;
+    return interval;
+}
+
+// 的の表示時間用のタイマー
+Uint32 target_cnt(Uint32 interval, void* param)
+{
+    for (int i = 0; i < TARGET_NUM_MAX; i++) {
+        if (target[i].type != 5) {
+            if (target[i].cnt == 3) {
+                target[i].type = 5;
+                target[i].cnt  = 0;
+            } else
+                target[i].cnt++;
+        } else {
+            if (target[i].cnt == 3) {
+                int type = rand() % 100;
+                if (0 <= type && type < 30)
+                    type = 0;
+                else if (30 <= type && type < 60)
+                    type = 1;
+                else if (60 <= type && type < 85)
+                    type = 2;
+                else if (85 <= type && type < 95)
+                    type = 3;
+                else if (95 <= type && type < 100)
+                    type = 4;
+
+                int x     = 100 + rand() % 750;
+                int y     = 100 + rand() % 250;
+                bool flag = true;
+                for (int j = 0; j < TARGET_NUM_MAX; j++) {
+                    if (target[j].type != 5) {
+                        int a = target[j].x - x;
+                        int b = target[j].y - y;
+                        int c = sqrt(a * a + b * b);
+                        if (c <= 50)
+                            flag = false;
+                    }
+                }
+
+                if (flag) {
+                    target[i].type = type;
+                    target[i].x    = x;
+                    target[i].y    = y;
+                    target[i].cnt  = 0;
+                }
+            } else {
+                target[i].cnt++;
+            }
+        }
+        printf("%d ", target[i].cnt);
+    }
+    printf("\n");
     return interval;
 }
 

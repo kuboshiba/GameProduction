@@ -15,7 +15,8 @@ void init_sys(int argc, char* argv[])
 
     image_bg_1    = IMG_Load("./image/bg1.jpg");     // 背景画像読み込み
     image_bg_2    = IMG_Load("./image/bg2.jpg");     // 背景画像読み込み
-    image_bg_3    = IMG_Load("./image/bg3.jpg");     // 背景画像読み込み
+    image_bg_3    = IMG_Load("./image/bg3.png");     // 背景画像読み込み
+    image_bg_4    = IMG_Load("./image/bg4.png");     // 背景画像読み込み
     image_menu_bg = IMG_Load("./image/menu_bg.png"); // メニュー背景画像読み込み
 
     image_target[0] = IMG_Load("./image/target/100-1.png");
@@ -121,6 +122,7 @@ void init_sys(int argc, char* argv[])
         target[i].type = 5;
         target[i].x    = 0;
         target[i].y    = 0;
+        target[i].cnt  = 0;
     }
 }
 
