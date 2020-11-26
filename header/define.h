@@ -95,6 +95,8 @@ extern SDL_Surface* image_bg_4;       // メニュー画像用のサーフェイ
 extern SDL_Surface* image_menu_bg;    // メニュー画像陽のサーフェイス
 extern SDL_Surface* image_target[10]; // 的の画像用のサーフェイス
 
+extern TTF_Font* font10;
+extern TTF_Font* font18;
 extern TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
 extern TTF_Font* font50; // TrueTypeフォントデータを格納する構造体
 

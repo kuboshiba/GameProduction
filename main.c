@@ -16,6 +16,8 @@ SDL_Event event;               // SDLによるイベントを検知するため�
 SDL_TimerID timer_id_1;        // min_flips_callback用のタイマー
 SDL_TimerID timer_id_2;        // min_flips_callback用のタイマー
 
+TTF_Font* font10; // TrueTypeフォントデータを格納する構造体
+TTF_Font* font18; // TrueTypeフォントデータを格納する構造体
 TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
 TTF_Font* font50; // TrueTypeフォントデータを格納する構造体
 
@@ -373,23 +375,26 @@ void md_solo_playing()
             }
         }
 
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 600, 0, 400, 100 });
+
         // スコアの表示
         char score_txt[100];
         sprintf(score_txt, "YOUR SCORE: %d", gGame.score);
-        gGame.surface = TTF_RenderUTF8_Blended(font25, score_txt, (SDL_Color) { 255, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font18, score_txt, (SDL_Color) { 255, 0, 0, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 550, 150, iw, ih };
+        pasteRect = (SDL_Rect) { 600, 60, iw, ih };
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
         char time_txt[100];
         sprintf(time_txt, "TIME: %d / 15", totalTime);
-        gGame.surface = TTF_RenderUTF8_Blended(font25, time_txt, (SDL_Color) { 255, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font18, time_txt, (SDL_Color) { 255, 0, 0, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 550, 110, iw, ih };
+        pasteRect = (SDL_Rect) { 600, 10, iw, ih };
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
         // ポインターをウィンドウに描画
@@ -543,23 +548,26 @@ void md_solo_playing()
             }
         }
 
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 600, 0, 400, 100 });
+
         // スコアの表示
         char score_txt[100];
         sprintf(score_txt, "YOUR SCORE: %d", gGame.score);
-        gGame.surface = TTF_RenderUTF8_Blended(font25, score_txt, (SDL_Color) { 255, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font18, score_txt, (SDL_Color) { 255, 0, 0, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 550, 160, iw, ih };
+        pasteRect = (SDL_Rect) { 600, 60, iw, ih };
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
         char time_txt[100];
         sprintf(time_txt, "TIME: %d / 15", totalTime);
-        gGame.surface = TTF_RenderUTF8_Blended(font25, time_txt, (SDL_Color) { 255, 0, 0, 255 });
+        gGame.surface = TTF_RenderUTF8_Blended(font18, time_txt, (SDL_Color) { 255, 0, 0, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 550, 120, iw, ih };
+        pasteRect = (SDL_Rect) { 600, 10, iw, ih };
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
         // ポインターをウィンドウに描画
@@ -569,6 +577,31 @@ void md_solo_playing()
         SDL_Delay(interval);
     }
     SDL_RemoveTimer(timer_id_2); // タイマー解除
+
+    // リザルト画面
+    while (flag_playing) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        gGame.surface = TTF_RenderUTF8_Blended(font50, "Result", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 300, 100, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        char score_txt[100];
+        sprintf(score_txt, "YOUR SCORE: %d", gGame.score);
+        gGame.surface = TTF_RenderUTF8_Blended(font25, score_txt, (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 300, 250, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
 
     player_num = 1;       // プレイヤーの数を取り敢えず１に初期化
     gGame.mode = MD_MENU; // モードをメニューに設定

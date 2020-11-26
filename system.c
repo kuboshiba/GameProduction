@@ -10,6 +10,8 @@ void init_sys(int argc, char* argv[])
     // SDL_TTF初期化
     TTF_Init();
 
+    font10 = TTF_OpenFont(FONT_PATH, 10); // フォントサイズ25読み込み
+    font18 = TTF_OpenFont(FONT_PATH, 18); // フォントサイズ25読み込み
     font25 = TTF_OpenFont(FONT_PATH, 25); // フォントサイズ25読み込み
     font50 = TTF_OpenFont(FONT_PATH, 50); // フォントサイズ50読み込み
 
