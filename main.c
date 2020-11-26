@@ -237,8 +237,7 @@ void md_solo_playing()
     }
 
     // カウントダウン用のタイマー起動
-    timer_id_2 = SDL_AddTimer(1000, count_down, &count_down_val);
-
+    timer_id_2   = SDL_AddTimer(1000, count_down, &count_down_val);
     flag_playing = true;
     // カウントダウン用のループ
     while (flag_playing) {
@@ -293,9 +292,10 @@ void md_solo_playing()
             SDL_RemoveTimer(timer_id_2); // タイマー解除
         }
     }
-
+    SDL_RemoveTimer(timer_id_2); // タイマー解除
     flag_playing = true;
     gGame.mode   = MD_SOLO_PLAYING_1; // モードをメニューに設定
+
     srand(1);
     int target_num = rand() % 10;
     for (int i = 0; i < target_num; i++) {
@@ -339,13 +339,19 @@ void md_solo_playing()
         }
     }
 
-    SDL_RemoveTimer(timer_id_2); // タイマー解除
-
-    // 的の表示時間用のタイマーをセット
-    timer_id_2 = SDL_AddTimer(1000, target_cnt, &target);
-
     // 実際のゲーム　ステージ１
+    timer_id_2 = SDL_AddTimer(1000, target_cnt, &target); // 的の表示時間用のタイマーをセット
+    double startTime, endTime;
+    int totalTime = 0;
+    startTime     = clock() / CLOCKS_PER_SEC;
     while (flag_playing) {
+        endTime   = clock() / CLOCKS_PER_SEC;
+        totalTime = (int)(endTime - startTime);
+
+        if (totalTime == 16) {
+            break;
+        }
+
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
@@ -374,7 +380,16 @@ void md_solo_playing()
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 550, 100, iw, ih };
+        pasteRect = (SDL_Rect) { 550, 150, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        char time_txt[100];
+        sprintf(time_txt, "TIME: %d / 15", totalTime);
+        gGame.surface = TTF_RenderUTF8_Blended(font25, time_txt, (SDL_Color) { 255, 0, 0, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 550, 110, iw, ih };
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
         // ポインターをウィンドウに描画
@@ -383,7 +398,176 @@ void md_solo_playing()
         SDL_RenderPresent(gGame.renderer);
         SDL_Delay(interval);
     }
+    SDL_RemoveTimer(timer_id_2); // タイマー解除
 
+    // カウントダウン用のタイマー起動
+    timer_id_2   = SDL_AddTimer(1000, count_down, &count_down_val);
+    flag_playing = true;
+    // カウントダウン用のループ
+    while (flag_playing) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // 背景画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+        SDL_RenderClear(gGame.renderer);
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        // ポインターをウィンドウに描画
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        // カウントダウンを数値から文字列に変換
+        sprintf(count_down_txt, "%d", count_down_val);
+
+        // ０は文字列STARTを描画
+        if (count_down_val <= 0) {
+            sprintf(count_down_txt, "%s", "START");
+            // カウントダウン表示
+            gGame.surface = TTF_RenderUTF8_Blended(font50, count_down_txt, (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 350, 200, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+        }
+        // ３〜１ までのカウントダウン描画
+        else {
+            // カウントダウン表示
+            gGame.surface = TTF_RenderUTF8_Blended(font50, count_down_txt, (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 450, 200, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+        }
+
+        // 描画
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+
+        // カウントダウンが -1 より小さければ break
+        if (count_down_val <= -1) {
+            flag_playing   = false;      // break
+            count_down_val = 3;          // カウントダウンの変数を初期化
+            SDL_RemoveTimer(timer_id_2); // タイマー解除
+        }
+    }
+    SDL_RemoveTimer(timer_id_2); // タイマー解除
+    flag_playing = true;
+    gGame.mode   = MD_SOLO_PLAYING_1; // モードをメニューに設定
+
+    // 座標関係初期化
+    for (int i = 0; i < TARGET_NUM_MAX; i++) {
+        target[i].type = 5;
+        target[i].x    = 0;
+        target[i].y    = 0;
+        target[i].cnt  = 0;
+    }
+
+    target_num = rand() % 10;
+    for (int i = 0; i < target_num; i++) {
+        int type = rand() % 100;
+        if (0 <= type && type < 30)
+            type = 0;
+        else if (30 <= type && type < 60)
+            type = 1;
+        else if (60 <= type && type < 85)
+            type = 2;
+        else if (85 <= type && type < 95)
+            type = 3;
+        else if (95 <= type && type < 100)
+            type = 4;
+
+        int x = 100 + rand() % 750;
+        int y = 100 + rand() % 250;
+
+        bool flag = true;
+
+        for (int j = 0; j < TARGET_NUM_MAX; j++) {
+            if (target[j].type != 5) {
+                int a = target[j].x - x;
+                int b = target[j].y - y;
+                int c = sqrt(a * a + b * b);
+                if (c <= 34)
+                    flag = false;
+            }
+        }
+
+        if (flag) {
+            target[i].type = type;
+            target[i].x    = x;
+            target[i].y    = y;
+            target[i].cnt  = 0;
+        } else {
+            target[i].type = 5;
+            target[i].x    = 0;
+            target[i].y    = 0;
+            target[i].cnt  = 0;
+        }
+    }
+
+    // 実際のゲーム　ステージ2
+    timer_id_2 = SDL_AddTimer(1000, target_cnt, &target); // 的の表示時間用のタイマーをセット
+    totalTime  = 0;
+    startTime  = clock() / CLOCKS_PER_SEC;
+    while (flag_playing) {
+        endTime   = clock() / CLOCKS_PER_SEC;
+        totalTime = (int)(endTime - startTime);
+
+        if (totalTime == 16) {
+            break;
+        }
+
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // ステージ１の画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        // 的を描画
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            if (target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[target[i].type]);
+                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+                imageRect = (SDL_Rect) { 0, 0, iw, ih };
+                drawRect  = (SDL_Rect) { target[i].x, target[i].y, iw, ih };
+                SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
+            }
+        }
+
+        // スコアの表示
+        char score_txt[100];
+        sprintf(score_txt, "YOUR SCORE: %d", gGame.score);
+        gGame.surface = TTF_RenderUTF8_Blended(font25, score_txt, (SDL_Color) { 255, 0, 0, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 550, 160, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        char time_txt[100];
+        sprintf(time_txt, "TIME: %d / 15", totalTime);
+        gGame.surface = TTF_RenderUTF8_Blended(font25, time_txt, (SDL_Color) { 255, 0, 0, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 550, 120, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // ポインターをウィンドウに描画
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
     SDL_RemoveTimer(timer_id_2); // タイマー解除
 
     player_num = 1;       // プレイヤーの数を取り敢えず１に初期化
@@ -586,7 +770,7 @@ Uint32 target_cnt(Uint32 interval, void* param)
             } else
                 target[i].cnt++;
         } else {
-            if (target[i].cnt == 3) {
+            if (target[i].cnt == 2) {
                 int type = rand() % 100;
                 if (0 <= type && type < 30)
                     type = 0;
