@@ -100,8 +100,8 @@ int wii_func()
                     switch (menu_sel) {
                     // OKボタンが押されたとき
                     case SEL_OK:
-                        player_num = 1;               // プレイヤーの数を１に設定
-                        gGame.mode = MD_SOLO_PLAYING; // モードをソロプレイに設定
+                        player_num = 1;                 // プレイヤーの数を１に設定
+                        gGame.mode = MD_SOLO_PLAYING_1; // モードをソロプレイに設定
                         break;
                     // CANCELボタンが押されたとき
                     case SEL_CANCEL:
@@ -118,9 +118,9 @@ int wii_func()
                         wiimote_update(&wiimote);
                 }
                 break;
-            case MD_SOLO_PLAYING:
+            case MD_SOLO_PLAYING_1:
                 if (wiimote.keys.home) {
-                    flag_playing = false;
+                    flag_subloop = false;
                     player_num   = 1;       // プレイヤーの数を取り敢えず１に初期化
                     gGame.mode   = MD_MENU; // モードをメニューに設定
                 }
@@ -181,9 +181,9 @@ int wii_func()
                     while (wiimote.keys.a)
                         wiimote_update(&wiimote);
 
-                    flag_playing = false;
-                    player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode   = MD_SOLO_PLAYING; // モードをメニューに設定
+                    flag_subloop = false;
+                    player_num   = 1; // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode   = MD_SOLO_PLAYING_2;
                 }
 
             S1:
@@ -192,10 +192,10 @@ int wii_func()
                     wiimote_update(&wiimote);
 
                 if (wiimote.keys.home) {
-                    flag_playing = false;
-                    player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode   = MD_SOLO_PLAYING; // モードをメニューに設定
-                    menu_sel     = 0;               // セレクターを初期化
+                    flag_subloop = false;
+                    player_num   = 1;                 // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode   = MD_SOLO_PLAYING_2; // モードをメニューに設定
+                    menu_sel     = 0;                 // セレクターを初期化
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.home)
                         wiimote_update(&wiimote);
@@ -203,7 +203,7 @@ int wii_func()
 
                 break;
             // ソロプレイ（実際のプレイ）
-            case MD_SOLO_PLAYING_1:
+            case MD_SOLO_PLAYING_2:
                 // Bボタンで撃つ
                 if (wiimote.keys.b) {
                     // 的は同時表示TARGET_NUM_MAX個までなのでTARGET_NUM_MAX回ループ
@@ -244,10 +244,10 @@ int wii_func()
                 }
 
                 if (wiimote.keys.home) {
-                    flag_playing = false;
-                    player_num   = 1;               // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode   = MD_SOLO_PLAYING; // モードをメニューに設定
-                    menu_sel     = 0;               // セレクターを初期化
+                    flag_subloop = false;
+                    player_num   = 1;                 // プレイヤーの数を取り敢えず１に初期化
+                    gGame.mode   = MD_SOLO_PLAYING_2; // モードをメニューに設定
+                    menu_sel     = 0;                 // セレクターを初期化
                     // チャタリング防止のための待機用ループ
                     while (wiimote.keys.home)
                         wiimote_update(&wiimote);
@@ -283,16 +283,19 @@ int wii_func()
                     switch (menu_sel) {
                     // ホストが選択されたとき
                     case SEL_HOST:
-                        puts("host");
+                        gGame.mode   = MD_MULTI_HOST_1;
+                        flag_subloop = false;
                         break;
                     // クライアントが選択されたとき
                     case SEL_CLIENT:
-                        puts("client");
+                        gGame.mode   = MD_MULTI_CLIENT;
+                        flag_subloop = false;
                         break;
                     // キャンセルボタンが選択されたとき
                     case 2:
-                        player_num = 1;       // プレイヤーの数取り敢えず１に初期化
-                        gGame.mode = MD_MENU; // モードをメニューに設定
+                        player_num   = 1;       // プレイヤーの数取り敢えず１に初期化
+                        gGame.mode   = MD_MENU; // モードをメニューに設定
+                        flag_subloop = false;
                         break;
                     default:
                         break;
@@ -303,6 +306,60 @@ int wii_func()
                     while (wiimote.keys.a)
                         wiimote_update(&wiimote);
                 }
+                break;
+            case MD_MULTI_HOST_1:
+                if (wiimote.keys.home) {
+                    flag_subloop = false;
+                } else if (wiimote.keys.up) {
+                    if (menu_sel != 0)
+                        menu_sel--;
+                } else if (wiimote.keys.down) {
+                    if (menu_sel != 3)
+                        menu_sel++;
+                } else if (wiimote.keys.right) {
+                    if (menu_sel != 3)
+                        menu_sel = 3;
+                } else if (wiimote.keys.left) {
+                    if (menu_sel == 3)
+                        menu_sel = 1;
+                }
+
+                if (wiimote.keys.a) {
+                    switch (menu_sel) {
+                    // 2 players
+                    case 0:
+                        player_num   = 2;
+                        gGame.mode   = MD_MULTI_HOST_2;
+                        flag_subloop = false;
+                        break;
+                    // 3 players
+                    case 1:
+                        player_num   = 3;
+                        gGame.mode   = MD_MULTI_HOST_2;
+                        flag_subloop = false;
+                        break;
+                    // 4 players
+                    case 2:
+                        player_num   = 4;
+                        gGame.mode   = MD_MULTI_HOST_2;
+                        flag_subloop = false;
+                        break;
+                    // CANCEL
+                    case 3:
+                        player_num   = 1;       // プレイヤーの数取り敢えず１に初期化
+                        gGame.mode   = MD_MENU; // モードをメニューに設定
+                        flag_subloop = false;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+
+                while (wiimote.keys.home || wiimote.keys.a || wiimote.keys.up || wiimote.keys.down || wiimote.keys.left || wiimote.keys.right)
+                    wiimote_update(&wiimote);
+                break;
+            case MD_MULTI_HOST_2:
+
                 break;
             // [モード] 終了待機
             case MD_EXIT_WAIT:

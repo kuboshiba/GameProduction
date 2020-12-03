@@ -12,6 +12,7 @@ void init_sys(int argc, char* argv[])
 
     font10 = TTF_OpenFont(FONT_PATH, 10); // フォントサイズ25読み込み
     font18 = TTF_OpenFont(FONT_PATH, 18); // フォントサイズ25読み込み
+    font20 = TTF_OpenFont(FONT_PATH, 20); // フォントサイズ25読み込み
     font25 = TTF_OpenFont(FONT_PATH, 25); // フォントサイズ25読み込み
     font50 = TTF_OpenFont(FONT_PATH, 50); // フォントサイズ50読み込み
 
@@ -71,7 +72,7 @@ void init_sys(int argc, char* argv[])
 
     // Wiiリモコンの接続（１つのみ）
     // コマンド引数に指定したWiiリモコン識別情報を渡して接続
-    Log("Wiiリモコンの接続試行中...");
+    SystemLog("Wiiリモコンの接続試行中...");
     while (wiimote_connect(&wiimote, argv[1]) < 0) { }
 
     if (!wiimote_is_open(&wiimote)) {
@@ -79,7 +80,7 @@ void init_sys(int argc, char* argv[])
         exit(1);
     }
 
-    Log("Wiiリモコンの接続に成功しました");
+    SystemLog("Wiiリモコンの接続に成功しました");
 
     wiimote.led.one  = 1; // WiiリモコンのLEDの一番左を点灯させる（接続を知らせるために）
     wiimote.mode.acc = 1; // センサからのデータを受け付けるモードに変更
@@ -131,11 +132,11 @@ void init_sys(int argc, char* argv[])
 // 開放処理を行う関数
 void opening_process()
 {
-    Log("Wiiリモコンの接続を解除します");
+    SystemLog("Wiiリモコンの接続を解除します");
     wiimote_disconnect(&wiimote); // Wiiリモコン接続解除
 
     // 各スレッドが終了するまでmain関数の処理を中断
-    Log("各スレッドの終了待ち");
+    SystemLog("各スレッドの終了待ち");
     SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ
     SDL_WaitThread(wii_ir_thread, NULL);   // wii_ir_threadの処理終了を待つ
@@ -143,11 +144,11 @@ void opening_process()
     SDL_RemoveTimer(timer_id_1);
     SDL_RemoveTimer(timer_id_2);
 
-    Log("Mutexを破棄します");
+    SystemLog("Mutexを破棄します");
     SDL_DestroyMutex(mtx); // Mutexを破棄
 
     // 終了処理
-    Log("レンダラーとウィンドウを破棄します");
+    SystemLog("レンダラーとウィンドウを破棄します");
     SDL_DestroyRenderer(gGame.renderer); // RCの破棄（解放）
     SDL_DestroyWindow(gGame.window);     // 生成したウィンドウの破棄（消去）
     SDL_Quit();
