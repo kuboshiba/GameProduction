@@ -3,10 +3,10 @@
 // サーバー処理のメイン関数
 int server_main()
 {
-    // int num_cl   = player_num;   // クライアントの数をここで決める
-    // u_short port = DEFAULT_PORT; // ポート番号はデフォルト　constants.h 参照
+    int num_cl   = player_num;   // クライアントの数をここで決める
+    u_short port = DEFAULT_PORT; // ポート番号はデフォルト　constants.h 参照
 
-    // setup_server(num_cl, port); // サーバーのセットアップを行う
+    setup_server(num_cl, port); // サーバーのセットアップを行う
 
     // メインループ
     // int cond = 1;
@@ -14,7 +14,7 @@ int server_main()
     //     cond = control_requests();
     // }
 
-    // terminate_server(); // サーバーの終了処理を行う
+    terminate_server(); // サーバーの終了処理を行う
 
     return 0;
 }
