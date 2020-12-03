@@ -108,6 +108,7 @@ typedef struct {
     int cid;
     char command;
     char message[MAX_LEN_BUFFER];
+    int score;
 } CONTAINER;
 
 extern GameInfo gGame;    // ゲームの状態

@@ -41,9 +41,21 @@ void setup_client(char *server_name, u_short port)
 
     sv_addr.sin_family = AF_INET;     // アドレスの種類 = インターネット
     sv_addr.sin_port   = htons(port); // ポート番号 = port
-    // sv_addr.sin_addr.s_addr = *(u_int *)server->h_addr_list[0]; // 任意アドレスから受信可
-    inet_aton("192.168.64.88", &sv_addr.sin_addr);
 
+    // ホストのときはローカルホスト指定
+    if (gGame.mode == MD_MULTI_HOST_2) {
+        sv_addr.sin_addr.s_addr = *(u_int *)server->h_addr_list[0];
+    }
+    // クライアントのときはIPアドレス指定
+    else {
+        char ipv4[MAX_LEN_BUFFER];
+        printf("サーバーのIPアドレスを入力してください => ");
+        if (fgets(ipv4, MAX_LEN_BUFFER, stdin) == NULL) {
+            client_handle_error("fgets()");
+        }
+        puts(ipv4);
+        inet_aton("192.168.64.88", &sv_addr.sin_addr);
+    }
     // サーバーへの通信リクエスト
     if (connect(c_sock, (struct sockaddr *)&sv_addr, sizeof(sv_addr)) != 0) {
         // 異常終了
