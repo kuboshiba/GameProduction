@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,10 +30,14 @@
 
 #define DEFAULT_PORT 51000 // デフォルトのポート番号
 #define MAX_LEN_NAME 10    // 名前の最大文字数
-#define MAX_NUM_CLIENTS 4  // クライアントの最大数
+#define MAX_NUM_CLIENTS 5  // クライアントの最大数
 #define MAX_LEN_BUFFER 256 // バッファーの最大値
 #define MAX_LEN_ADDR 32    // アドレスの最大値
 #define BROADCAST -1       // デフォルトのブロードキャスト値
+
+#define MESSAGE_COMMAND 'M' // メッセージコマンド
+#define QUIT_COMMAND 'Q'    // 終了コマンド
+#define DATA_COMMAND 'D'    // データ送信コマンド
 
 // ウインドウサイズ
 enum {
@@ -100,19 +105,20 @@ typedef struct {
 
 // コンテナの構造体
 typedef struct {
-    int cid;                      // クライアントのID
-    char command;                 // コマンド
-    char message[MAX_LEN_BUFFER]; // メッセージ
-} DATA;
+    int cid;
+    char command;
+    char message[MAX_LEN_BUFFER];
+} CONTAINER;
 
 extern GameInfo gGame;    // ゲームの状態
 extern Player gPlayer[4]; // プレイヤーの状態
 extern Target target[10];
 
-extern SDL_Thread* wii_thread;      // wii_threadを用いる
-extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
-extern SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
-extern SDL_Thread* network_thread;  // network_threadを用いる
+extern SDL_Thread* wii_thread;            // wii_threadを用いる
+extern SDL_Thread* keyboard_thread;       // keyboard_threadを用いる
+extern SDL_Thread* wii_ir_thread;         // wii_ir_threadを用いる
+extern SDL_Thread* network_host_thread;   // network_host_threadを用いる
+extern SDL_Thread* network_client_thread; // network_client_threadを用いる
 
 extern SDL_mutex* mtx;  // 相互排除（Mutex）
 extern SDL_Event event; // SDLによるイベントを検知するための構造体
@@ -156,11 +162,19 @@ extern bool flag_loop;    // メインループのループフラグ
 extern bool flag_subloop; // メインループのループフラグ
 
 // server.c
-extern CLIENT clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 clients で宣言
-extern int num_clients;                 // クライアントの数を格納
-extern int num_socks;                   // ソケットの数を格納
-extern fd_set mask;
-extern DATA data; // 構造体 CONTAINER を構造体変数 data で宣言
+extern CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
+extern CONTAINER s_data;                  // 構造体 DATA を構造体変数 s_data で宣言
+extern int s_num_clients;                 // クライアントの数を格納
+extern int s_num_socks;                   // ソケットの数を格納
+extern fd_set s_mask;
+
+// client.c
+extern int c_sock;
+extern int c_num_clients;
+extern int c_myid;
+extern int c_num_sock;
+extern fd_set c_mask;
+extern CLIENT c_clients[MAX_NUM_CLIENTS];
 
 // system.c
 extern void init_sys();        // SDLやWiiリモコンを初期化する関数
@@ -179,12 +193,28 @@ extern void Log();                                                       // ロ�
 extern void SystemLog();                                                 // ログを色付きで出力する関数
 extern int map(int x, int in_min, int in_max, int out_min, int out_max); // map関数
 
+// server.c
 extern int server_main();
 extern void setup_server(int, u_short);
-extern int control_requests();
-extern void send_data(int cid, void* data, int size);
+extern int server_control_requests();
+extern void server_send_data(int cid, void* data, int size);
+extern int server_receive_data(int cid, void* data, int size);
 extern void terminate_server(void);
-extern void handle_error(char* message);
+extern void server_handle_error(char* message);
+
+// client.c
+extern int client_main();
+extern void setup_client(char* server_name, u_short port);
+extern int client_control_requests();
+extern int in_command(void);
+extern int exe_command(void);
+extern void client_send_data(void*, int);
+extern int client_receive_data(void*, int);
+extern void client_handle_error(char*);
+extern void terminate_client();
+
+// client.c
+extern int client_main();
 
 // color code
 #define COLOR_BG_BLACK "\x1b[40m"

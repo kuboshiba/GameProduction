@@ -1,9 +1,10 @@
 #include "header/define.h"
 
-SDL_Thread* wii_thread;      // wii_threadを用いる
-SDL_Thread* keyboard_thread; // keyboard_threadを用いる
-SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
-SDL_Thread* network_thread;  // network_threadを用いる
+SDL_Thread* wii_thread;            // wii_threadを用いる
+SDL_Thread* keyboard_thread;       // keyboard_threadを用いる
+SDL_Thread* wii_ir_thread;         // wii_ir_threadを用いる
+SDL_Thread* network_host_thread;   // network_host_threadを用いる
+SDL_Thread* network_client_thread; // network_client_threadを用いる
 
 SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
 SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
@@ -77,18 +78,37 @@ void md_multi_host(int);
 void md_exit_wait();
 
 // server.c
-CLIENT clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 clients
-DATA data;                       // 構造体 DATA を構造体変数 data で宣言
-int num_clients;                 // クライアントの数を格納
-int num_socks;                   // ソケットの数を格納
-fd_set mask;
+CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
+CONTAINER s_data;                  // 構造体 DATA を構造体変数 s_data で宣言
+int s_num_clients;                 // クライアントの数を格納
+int s_num_socks;                   // ソケットの数を格納
+fd_set s_mask;
 
 int server_main();
 void setup_server(int num_cl, u_short port);
-int control_requests();
-void send_data(int cid, void* data, int size);
+int server_control_requests();
+void server_send_data(int cid, void* data, int size);
+int server_receive_data(int cid, void* data, int size);
 void terminate_server(void);
-void handle_error(char* message);
+void server_handle_error(char* message);
+
+// client.c
+CLIENT c_clients[MAX_NUM_CLIENTS];
+int c_sock;
+int c_num_clients;
+int c_myid;
+int c_num_sock;
+fd_set c_mask;
+
+int client_main();
+void setup_client(char* server_name, u_short port);
+int client_control_requests();
+int in_command(void);
+int exe_command(void);
+void client_send_data(void*, int);
+int client_receive_data(void*, int);
+void client_handle_error(char*);
+void terminate_client();
 
 int main(int argc, char* argv[])
 {
@@ -907,9 +927,11 @@ void md_multi_host(int player_num)
 {
     gGame.mode = MD_MULTI_HOST_2;
 
-    network_thread = SDL_CreateThread(server_main, "network_thread", NULL);
+    network_host_thread   = SDL_CreateThread(server_main, "network_host_thread", NULL);
+    network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
 
-    SDL_WaitThread(network_thread, NULL); // keyboard_threadの処理終了を待つ
+    SDL_WaitThread(network_host_thread, NULL);   // keyboard_threadの処理終了を待つ
+    SDL_WaitThread(network_client_thread, NULL); // keyboard_threadの処理終了を待つ
 }
 
 void md_exit_wait()
