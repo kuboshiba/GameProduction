@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <SDL2/SDL.h>                // SDLを用いるために必要なヘッダファイル
@@ -21,6 +22,17 @@
 
 #include <libcwiimote/wiimote.h>     // Wiiリモコンを用いるために必要なヘッダファイル
 #include <libcwiimote/wiimote_api.h> // Wiiリモコンを用いるために必要なヘッダファイル
+
+// define
+#define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
+#define TARGET_NUM_MAX 10
+
+#define DEFAULT_PORT 51000 // デフォルトのポート番号
+#define MAX_LEN_NAME 10    // 名前の最大文字数
+#define MAX_NUM_CLIENTS 4  // クライアントの最大数
+#define MAX_LEN_BUFFER 256 // バッファーの最大値
+#define MAX_LEN_ADDR 32    // アドレスの最大値
+#define BROADCAST -1       // デフォルトのブロードキャスト値
 
 // ウインドウサイズ
 enum {
@@ -37,14 +49,20 @@ enum {
 
 // 画面のモード
 typedef enum {
-    MD_MENU          = 0,  // メニュー
-    MD_SOLO_WAIT     = 1,  // ソロプレイ待機
-    MD_SOLO_PLAYING  = 2,  // ソロプレイ中
-    MD_MULTI_WAIT    = 3,  // マルチプレイ待機
-    MD_MULTI_PLAYING = 4,  // マルチプレイ中
-    MD_EXIT_WAIT     = 97, // 終了待機
-    MD_EXIT          = 98, // 終了
-    MD_WAIT          = 99  // 待機
+    MD_MENU              = 0, // メニュー
+    MD_SOLO_WAIT         = 1, // ソロプレイ待機
+    MD_SOLO_PLAYING_1    = 2, // ソロプレイ中
+    MD_SOLO_PLAYING_2    = 3, // ソロプレイのゲーム中
+    MD_MULTI_WAIT        = 4, // マルチプレイ待機
+    MD_MULTI_HOST_1      = 5,
+    MD_MULTI_HOST_2      = 6,
+    MD_MULTI_HOST_3      = 7,
+    MD_MULTI_CLIENT      = 8,
+    MD_MULTI_PLAYING     = 9,  // マルチプレイ中
+    MD_PLAYER_NAME_INPUT = 96, // プレイヤーネームの入力
+    MD_EXIT_WAIT         = 97, // 終了待機
+    MD_EXIT              = 98, // 終了
+    MD_WAIT              = 99  // 待機
 } MODE;
 
 // ゲームの状態
@@ -54,55 +72,121 @@ typedef struct {
     SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
     SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
     MODE mode;
+    char name[100];
+    int score;
 } GameInfo;
 
 // プレイヤーの状態
 typedef struct {
     MODE mode;
     int score;
+    char name[100];
 } Player;
+
+typedef struct {
+    int type;
+    int x;
+    int y;
+    int cnt;
+} Target;
+
+// クライアントの構造体
+typedef struct {
+    int cid;
+    int sock;
+    struct sockaddr_in addr;
+    char name[MAX_LEN_NAME];
+} CLIENT;
+
+// コンテナの構造体
+typedef struct {
+    int cid;                      // クライアントのID
+    char command;                 // コマンド
+    char message[MAX_LEN_BUFFER]; // メッセージ
+} DATA;
 
 extern GameInfo gGame;    // ゲームの状態
 extern Player gPlayer[4]; // プレイヤーの状態
-extern int player_num;    // プレイヤーの数
+extern Target target[10];
 
 extern SDL_Thread* wii_thread;      // wii_threadを用いる
-extern SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
 extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
+extern SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
+extern SDL_Thread* network_thread;  // network_threadを用いる
 
-extern SDL_mutex* mtx;       // 相互排除（Mutex）
-extern SDL_Event event;      // SDLによるイベントを検知するための構造体
-extern SDL_TimerID timer_id; // タイマーIDextern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
+extern SDL_mutex* mtx;  // 相互排除（Mutex）
+extern SDL_Event event; // SDLによるイベントを検知するための構造体
 
-extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
-extern SDL_Surface* image_bg_1;           // 背景画像用のサーフェイス
-extern SDL_Surface* image_menu_bg;        // メニュー画像陽のサーフェイス
-extern SDL_Rect src_rect_bg;              // 画像の切り取り範囲
-extern SDL_Rect dst_rect_bg;              // 画像の描画位置
+extern SDL_TimerID timer_id_1; // min_flips_callback用のタイマー
+extern SDL_TimerID timer_id_2; // カウントダウン用
 
-extern TTF_Font* font25;   // TrueTypeフォントデータを格納する構造体
-extern TTF_Font* font50;   // TrueTypeフォントデータを格納する構造体
-extern int iw, ih;         // 文字を描画する際に使用
-extern SDL_Rect txtRect;   // 文字を描画する際に使用
-extern SDL_Rect pasteRect; // 文字を描画する際に使用
+extern SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_3;       // 背景画像用のサーフェイス
+extern SDL_Surface* image_bg_4;       // メニュー画像用のサーフェイス
+extern SDL_Surface* image_menu_bg;    // メニュー画像陽のサーフェイス
+extern SDL_Surface* image_target[10]; // 的の画像用のサーフェイス
+
+extern SDL_Rect src_rect_bg; // 画像の切り取り範囲
+extern SDL_Rect dst_rect_bg; // 画像の描画位置
+extern SDL_Rect txtRect;     // 文字を描画する際に使用
+extern SDL_Rect pasteRect;   // 文字を描画する際に使用
+extern SDL_Rect pointer;
+extern SDL_Rect pointer_prev;
+
+extern TTF_Font* font10;
+extern TTF_Font* font18;
+extern TTF_Font* font20;
+extern TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
+extern TTF_Font* font50; // TrueTypeフォントデータを格納する構造体
 
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
-extern int menu_sel; // メニューのボタンのセレクト位置
-extern bool flag_loop;
+extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
-extern void init_sys();               // SDLやWiiリモコンを初期化する関数
-extern void opening_process();        // 開放処理を行う関数
-extern int wii_func(void* args);      // Wiiリモコンの入力制御関数
-extern int wii_ir_func(void* args);   // Wiiリモコンの入力制御関数
-extern int keyboard_func(void* args); // キーボードの入力制御関数
+extern int iw, ih;        // 文字を描画する際に使用
+extern int player_num;    // プレイヤーの数
+extern int menu_sel;      // メニューのボタンのセレクト位置
+extern int menu_sel_num;  // メニューのボタンのセレクトの数
+extern int alpha_key_pos; // キーボード入力のセレクタ
 
-extern void Error(); // エラーを色付きで出力する関数
-extern void Log();   // ログを色付きで出力する関数
+extern char alpha[27][2];
 
-#define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
+extern bool flag_loop;    // メインループのループフラグ
+extern bool flag_subloop; // メインループのループフラグ
 
-// カラーコード
+// server.c
+extern CLIENT clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 clients で宣言
+extern int num_clients;                 // クライアントの数を格納
+extern int num_socks;                   // ソケットの数を格納
+extern fd_set mask;
+extern DATA data; // 構造体 CONTAINER を構造体変数 data で宣言
+
+// system.c
+extern void init_sys();        // SDLやWiiリモコンを初期化する関数
+extern void opening_process(); // 開放処理を行う関数
+
+// input.c
+extern int wii_func();      // Wiiリモコンの入力制御関数
+extern int keyboard_func(); // キーボードの入力制御関数
+extern int wii_ir_func();   // Wiiリモコンの赤外線センサの入力制御関数
+
+extern void md_multi_host(int player_num);
+
+// define.c
+extern void Error();                                                     // エラーを色付きで出力する関数
+extern void Log();                                                       // ログを色付きで出力する関数
+extern void SystemLog();                                                 // ログを色付きで出力する関数
+extern int map(int x, int in_min, int in_max, int out_min, int out_max); // map関数
+
+extern int server_main();
+extern void setup_server(int, u_short);
+extern int control_requests();
+extern void send_data(int cid, void* data, int size);
+extern void terminate_server(void);
+extern void handle_error(char* message);
+
+// color code
 #define COLOR_BG_BLACK "\x1b[40m"
 #define COLOR_BG_RED "\x1b[41m"
 #define COLOR_BG_GREEN "\x1b[42m"
