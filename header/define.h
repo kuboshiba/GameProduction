@@ -62,8 +62,10 @@ typedef enum {
     MD_MULTI_HOST_1      = 5,
     MD_MULTI_HOST_2      = 6,
     MD_MULTI_HOST_3      = 7,
-    MD_MULTI_CLIENT      = 8,
-    MD_MULTI_PLAYING     = 9,  // マルチプレイ中
+    MD_MULTI_CLIENT_1    = 8,
+    MD_MULTI_CLIENT_2    = 9,
+    MD_MULTI_CLIENT_3    = 10,
+    MD_MULTI_PLAYING     = 11, // マルチプレイ中
     MD_PLAYER_NAME_INPUT = 96, // プレイヤーネームの入力
     MD_EXIT_WAIT         = 97, // 終了待機
     MD_EXIT              = 98, // 終了
@@ -186,7 +188,8 @@ extern int wii_func();      // Wiiリモコンの入力制御関数
 extern int keyboard_func(); // キーボードの入力制御関数
 extern int wii_ir_func();   // Wiiリモコンの赤外線センサの入力制御関数
 
-extern void md_multi_host(int player_num);
+extern void md_multi_host();
+extern void md_multi_client();
 
 // define.c
 extern void Error();                                                     // エラーを色付きで出力する関数

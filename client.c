@@ -5,6 +5,8 @@ int client_main()
     u_short port = DEFAULT_PORT;
     char server_name[MAX_LEN_NAME];
 
+    c_num_clients = player_num;
+
     sprintf(server_name, "localhost");
     setup_client(server_name, port); // クライアントのセットアップを行う
 
@@ -54,7 +56,7 @@ void setup_client(char *server_name, u_short port)
             client_handle_error("fgets()");
         }
         puts(ipv4);
-        inet_aton("192.168.64.88", &sv_addr.sin_addr);
+        inet_aton(ipv4, &sv_addr.sin_addr);
     }
     // サーバーへの通信リクエスト
     if (connect(c_sock, (struct sockaddr *)&sv_addr, sizeof(sv_addr)) != 0) {
@@ -89,6 +91,7 @@ void setup_client(char *server_name, u_short port)
     FD_ZERO(&c_mask);        // c_maskをゼロクリア
     FD_SET(0, &c_mask);      // 0番目のFDに対応する値を1にセット
     FD_SET(c_sock, &c_mask); // c_sockのFDに対応する値を1にセット
+
     fprintf(stderr, "Input command (M=message, Q=quit): \n");
 }
 
@@ -176,7 +179,7 @@ int exe_command()
         break;
     default:
         fprintf(stderr, "exe_command(): %c is not a valid command.\n", data.command);
-        exit(1);
+        // exit(1);
     }
 
     return result;

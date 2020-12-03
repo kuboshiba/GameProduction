@@ -74,7 +74,8 @@ void md_menu();
 void md_solo_wait();
 void md_solo_playing();
 void md_multi_wait();
-void md_multi_host(int);
+void md_multi_host();
+void md_multi_client();
 void md_exit_wait();
 
 // server.c
@@ -902,20 +903,11 @@ void md_multi_wait()
             SDL_Delay(interval);
         }
 
-        md_multi_host(player_num);
+        md_multi_host();
     }
     // クライアントを選択された場合
-    else if (gGame.mode == MD_MULTI_CLIENT) {
-        while (flag_subloop) {
-            SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
-            SDL_RenderClear(gGame.renderer);
-
-            // ポインターをウィンドウに描画
-            filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
-
-            SDL_RenderPresent(gGame.renderer);
-            SDL_Delay(interval);
-        }
+    else if (gGame.mode == MD_MULTI_CLIENT_1) {
+        md_multi_client();
     }
 
     menu_sel   = 0;       // セレクターを初期化
@@ -923,15 +915,34 @@ void md_multi_wait()
     gGame.mode = MD_MENU; // モードをメニューに設定
 }
 
-void md_multi_host(int player_num)
+void md_multi_host()
 {
     gGame.mode = MD_MULTI_HOST_2;
 
     network_host_thread   = SDL_CreateThread(server_main, "network_host_thread", NULL);
     network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
 
+    while (gGame.mode == MD_MULTI_HOST_2) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "waiting...", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
     SDL_WaitThread(network_host_thread, NULL);   // keyboard_threadの処理終了を待つ
     SDL_WaitThread(network_client_thread, NULL); // keyboard_threadの処理終了を待つ
+}
+
+void md_multi_client()
+{
 }
 
 void md_exit_wait()

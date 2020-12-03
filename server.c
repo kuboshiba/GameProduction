@@ -27,7 +27,7 @@ void setup_server(int num_cl, u_short port)
 
     fprintf(stderr, "Server setup is started.\n");
 
-    s_num_clients = num_cl; // クライアントの数を同期
+    s_num_clients = player_num; // クライアントの数を同期
 
     rsock = socket(AF_INET, SOCK_STREAM, 0); // ソケットのトークンを取得する
     // ソケットのトークンが取得できなかった場合，例外処理
@@ -100,6 +100,8 @@ void setup_server(int num_cl, u_short port)
         FD_SET(s_clients[i].sock, &s_mask);
     }
     fprintf(stderr, "Server setup is done.\n");
+
+    gGame.mode = MD_MULTI_HOST_3;
 }
 
 // データ受信制御を行う関数
@@ -142,7 +144,7 @@ int server_control_requests()
             default:
                 // 異常なエラーであることを表示する
                 fprintf(stderr, "server_control_requests(): %c is not a valid command.\n", s_data.command);
-                exit(1);
+                // exit(1);
             }
         }
     }

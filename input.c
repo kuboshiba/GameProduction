@@ -288,7 +288,7 @@ int wii_func()
                         break;
                     // クライアントが選択されたとき
                     case SEL_CLIENT:
-                        gGame.mode   = MD_MULTI_CLIENT;
+                        gGame.mode   = MD_MULTI_CLIENT_1;
                         flag_subloop = false;
                         break;
                     // キャンセルボタンが選択されたとき
@@ -359,7 +359,8 @@ int wii_func()
                     wiimote_update(&wiimote);
                 break;
             case MD_MULTI_HOST_2:
-
+                break;
+            case MD_MULTI_CLIENT_1:
                 break;
             // [モード] 終了待機
             case MD_EXIT_WAIT:
