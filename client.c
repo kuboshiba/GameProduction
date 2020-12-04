@@ -65,6 +65,8 @@ void setup_client(char *server_name, u_short port)
 
     if (gGame.mode == MD_MULTI_HOST_2)
         gGame.mode = MD_MULTI_HOST_3;
+    else if (gGame.mode == MD_MULTI_CLIENT_1)
+        gGame.mode = MD_MULTI_CLIENT_2;
 
     // 他のクライアントを待つ
     fprintf(stderr, "Waiting for other clients...\n");
@@ -82,6 +84,9 @@ void setup_client(char *server_name, u_short port)
     FD_SET(0, &c_mask);      // 0番目のFDに対応する値を1にセット
     FD_SET(c_sock, &c_mask); // c_sockのFDに対応する値を1にセット
     fprintf(stderr, "Input command (M=message, Q=quit): \n");
+
+    if (gGame.mode == MD_MULTI_CLIENT_2)
+        gGame.mode = MD_MULTI_CLIENT_3;
 }
 
 // データ受信制御を行う関数

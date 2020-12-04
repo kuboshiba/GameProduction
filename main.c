@@ -78,6 +78,8 @@ void md_multi_host();
 void md_multi_client();
 void md_exit_wait();
 
+void count_down_draw();
+
 // server.c
 CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
 CONTAINER s_data;                  // 構造体 DATA を構造体変数 s_data で宣言
@@ -182,19 +184,6 @@ void md_solo_playing()
     while (flag_subloop) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
-
-        // 画像を描画
-        // menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
-        // SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
-        // imageRect = (SDL_Rect) { 0, 0, iw, ih };
-        // drawRect  = (SDL_Rect) { 0, 0, iw, ih };
-        // SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
-        // SDL_RenderClear(gGame.renderer);
-        // SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
-
-        // 背景に白のバックを追加
-        // SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
-        // SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 50, 50, 940, 440 });
 
         // プレイヤー名を入力してください　描画
         gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name", (SDL_Color) { 255, 255, 255, 255 });
@@ -922,6 +911,7 @@ void md_multi_host()
     network_host_thread   = SDL_CreateThread(server_main, "network_host_thread", NULL);
     network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
 
+    // 名前入力
     while (gGame.mode == MD_MULTI_HOST_2) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
@@ -937,6 +927,7 @@ void md_multi_host()
         SDL_Delay(interval);
     }
 
+    // クライアントが揃うまでの待機画面
     gGame.mode = MD_MULTI_HOST_3;
     while (gGame.mode == MD_MULTI_HOST_3) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
@@ -953,12 +944,100 @@ void md_multi_host()
         SDL_Delay(interval);
     }
 
+    // カウントダウン開始
+    count_down_draw();
+
     SDL_WaitThread(network_host_thread, NULL);
     SDL_WaitThread(network_client_thread, NULL);
 }
 
+void count_down_draw()
+{
+    // カウントダウン用のタイマー起動
+    timer_id_2   = SDL_AddTimer(1000, count_down, &count_down_val);
+    flag_subloop = true;
+    // カウントダウン用のループ
+    while (flag_subloop) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // 背景画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_1);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+        SDL_RenderClear(gGame.renderer);
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        // ポインターをウィンドウに描画
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        // カウントダウンを数値から文字列に変換
+        sprintf(count_down_txt, "%d", count_down_val);
+
+        // ０は文字列STARTを描画
+        if (count_down_val <= 0) {
+            sprintf(count_down_txt, "%s", "START");
+            // カウントダウン表示
+            gGame.surface = TTF_RenderUTF8_Blended(font50, count_down_txt, (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 350, 200, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+        }
+        // ３〜１ までのカウントダウン描画
+        else {
+            // カウントダウン表示
+            gGame.surface = TTF_RenderUTF8_Blended(font50, count_down_txt, (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 450, 200, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+        }
+
+        // 描画
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+
+        // カウントダウンが -1 より小さければ break
+        if (count_down_val <= -1) {
+            flag_subloop   = false;      // break
+            count_down_val = 3;          // カウントダウンの変数を初期化
+            SDL_RemoveTimer(timer_id_2); // タイマー解除
+        }
+    }
+    SDL_RemoveTimer(timer_id_2); // タイマー解除
+    flag_subloop = true;
+}
+
 void md_multi_client()
 {
+    gGame.mode = MD_MULTI_CLIENT_1;
+
+    network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
+
+    // 名前入力
+    while (gGame.mode == MD_MULTI_CLIENT_1) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name. (terminal)", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
+    count_down_draw();
+
+    SDL_WaitThread(network_client_thread, NULL);
 }
 
 void md_exit_wait()
