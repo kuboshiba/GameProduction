@@ -5,9 +5,8 @@ int client_main()
     u_short port = DEFAULT_PORT;
     char server_name[MAX_LEN_NAME];
 
-    c_num_clients = player_num;
-
     sprintf(server_name, "localhost");
+
     setup_client(server_name, port); // クライアントのセットアップを行う
 
     // メインループ
@@ -43,21 +42,9 @@ void setup_client(char *server_name, u_short port)
 
     sv_addr.sin_family = AF_INET;     // アドレスの種類 = インターネット
     sv_addr.sin_port   = htons(port); // ポート番号 = port
+    // sv_addr.sin_addr.s_addr = *(u_int *)server->h_addr_list[0]; // 任意アドレスから受信可
+    inet_aton("192.168.64.88", &sv_addr.sin_addr);
 
-    // ホストのときはローカルホスト指定
-    if (gGame.mode == MD_MULTI_HOST_2) {
-        sv_addr.sin_addr.s_addr = *(u_int *)server->h_addr_list[0];
-    }
-    // クライアントのときはIPアドレス指定
-    else {
-        char ipv4[MAX_LEN_BUFFER];
-        printf("サーバーのIPアドレスを入力してください => ");
-        if (fgets(ipv4, MAX_LEN_BUFFER, stdin) == NULL) {
-            client_handle_error("fgets()");
-        }
-        puts(ipv4);
-        inet_aton(ipv4, &sv_addr.sin_addr);
-    }
     // サーバーへの通信リクエスト
     if (connect(c_sock, (struct sockaddr *)&sv_addr, sizeof(sv_addr)) != 0) {
         // 異常終了
@@ -76,6 +63,9 @@ void setup_client(char *server_name, u_short port)
     user_name[strlen(user_name) - 1] = '\0';
     client_send_data(user_name, MAX_LEN_NAME); // 名前を送信
 
+    if (gGame.mode == MD_MULTI_HOST_2)
+        gGame.mode = MD_MULTI_HOST_3;
+
     // 他のクライアントを待つ
     fprintf(stderr, "Waiting for other clients...\n");
     client_receive_data(&c_num_clients, sizeof(int));
@@ -91,7 +81,6 @@ void setup_client(char *server_name, u_short port)
     FD_ZERO(&c_mask);        // c_maskをゼロクリア
     FD_SET(0, &c_mask);      // 0番目のFDに対応する値を1にセット
     FD_SET(c_sock, &c_mask); // c_sockのFDに対応する値を1にセット
-
     fprintf(stderr, "Input command (M=message, Q=quit): \n");
 }
 
@@ -179,7 +168,7 @@ int exe_command()
         break;
     default:
         fprintf(stderr, "exe_command(): %c is not a valid command.\n", data.command);
-        // exit(1);
+        exit(1);
     }
 
     return result;

@@ -30,7 +30,7 @@
 
 #define DEFAULT_PORT 51000 // デフォルトのポート番号
 #define MAX_LEN_NAME 10    // 名前の最大文字数
-#define MAX_NUM_CLIENTS 5  // クライアントの最大数
+#define MAX_NUM_CLIENTS 4  // クライアントの最大数
 #define MAX_LEN_BUFFER 256 // バッファーの最大値
 #define MAX_LEN_ADDR 32    // アドレスの最大値
 #define BROADCAST -1       // デフォルトのブロードキャスト値
@@ -62,10 +62,11 @@ typedef enum {
     MD_MULTI_HOST_1      = 5,
     MD_MULTI_HOST_2      = 6,
     MD_MULTI_HOST_3      = 7,
-    MD_MULTI_CLIENT_1    = 8,
-    MD_MULTI_CLIENT_2    = 9,
-    MD_MULTI_CLIENT_3    = 10,
-    MD_MULTI_PLAYING     = 11, // マルチプレイ中
+    MD_MULTI_HOST_4      = 8,
+    MD_MULTI_CLIENT_1    = 20,
+    MD_MULTI_CLIENT_2    = 21,
+    MD_MULTI_CLIENT_3    = 22,
+    MD_MULTI_PLAYING     = 95, // マルチプレイ中
     MD_PLAYER_NAME_INPUT = 96, // プレイヤーネームの入力
     MD_EXIT_WAIT         = 97, // 終了待機
     MD_EXIT              = 98, // 終了

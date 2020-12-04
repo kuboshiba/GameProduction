@@ -13,7 +13,6 @@ int server_main()
     while (cond) {
         cond = server_control_requests();
     }
-
     terminate_server(); // サーバーの終了処理を行う
 
     return 0;
@@ -27,7 +26,7 @@ void setup_server(int num_cl, u_short port)
 
     fprintf(stderr, "Server setup is started.\n");
 
-    s_num_clients = player_num; // クライアントの数を同期
+    s_num_clients = num_cl; // クライアントの数を同期
 
     rsock = socket(AF_INET, SOCK_STREAM, 0); // ソケットのトークンを取得する
     // ソケットのトークンが取得できなかった場合，例外処理
@@ -59,7 +58,7 @@ void setup_server(int num_cl, u_short port)
     socklen_t len;
     char src[MAX_LEN_ADDR];
 
-    // クライアントからサーバーの接続要求を処理する
+    // クライアントからサーバーじぇの接続要求を処理する
     for (i = 0; i < s_num_clients; i++) {
         len  = sizeof(cl_addr);
         sock = accept(rsock, (struct sockaddr *)&cl_addr, &len);
@@ -101,7 +100,7 @@ void setup_server(int num_cl, u_short port)
     }
     fprintf(stderr, "Server setup is done.\n");
 
-    gGame.mode = MD_MULTI_HOST_3;
+    gGame.mode = MD_MULTI_HOST_4;
 }
 
 // データ受信制御を行う関数
@@ -110,7 +109,7 @@ int server_control_requests()
     fd_set read_flag = s_mask;
     memset(&s_data, 0, sizeof(CONTAINER));
 
-    fprintf(stderr, "select() is started.\n");
+    // fprintf(stderr, "select() is started.\n");
     if (select(s_num_socks, (fd_set *)&read_flag, NULL, NULL, NULL) == -1) {
         server_handle_error("select()");
     }
@@ -144,7 +143,7 @@ int server_control_requests()
             default:
                 // 異常なエラーであることを表示する
                 fprintf(stderr, "server_control_requests(): %c is not a valid command.\n", s_data.command);
-                // exit(1);
+                exit(1);
             }
         }
     }
@@ -153,14 +152,14 @@ int server_control_requests()
 }
 
 // データの送信を行う関数
-void server_send_data(int cid, void *data, int size)
+void server_send_data(int cid, void *s_data, int size)
 {
     if ((cid != BROADCAST) && (0 > cid || cid >= s_num_clients)) {
         // 異常終了
         fprintf(stderr, "server_send_data(): client id is illeagal.\n");
         exit(1);
     }
-    if ((data == NULL) || (size <= 0)) {
+    if ((s_data == NULL) || (size <= 0)) {
         // 異常終了
         fprintf(stderr, "server_send_data(): data is illeagal.\n");
         exit(1);
@@ -169,32 +168,32 @@ void server_send_data(int cid, void *data, int size)
     if (cid == BROADCAST) {
         int i;
         for (i = 0; i < s_num_clients; i++) {
-            if (write(s_clients[i].sock, data, size) < 0) {
+            if (write(s_clients[i].sock, s_data, size) < 0) {
                 server_handle_error("write()");
             }
         }
     } else {
-        if (write(s_clients[cid].sock, data, size) < 0) {
+        if (write(s_clients[cid].sock, s_data, size) < 0) {
             server_handle_error("write()");
         }
     }
 }
 
 // データの受信を行う関数
-int server_receive_data(int cid, void *data, int size)
+int server_receive_data(int cid, void *s_data, int size)
 {
     if ((cid != BROADCAST) && (0 > cid || cid >= s_num_clients)) {
         // 異常終了
         fprintf(stderr, "server_receive_data(): client id is illeagal.\n");
         exit(1);
     }
-    if ((data == NULL) || (size <= 0)) {
+    if ((s_data == NULL) || (size <= 0)) {
         // 異常終了
         fprintf(stderr, "server_receive_data(): data is illeagal.\n");
         exit(1);
     }
 
-    return read(s_clients[cid].sock, data, size);
+    return read(s_clients[cid].sock, s_data, size);
 }
 
 // エラー内容を出力
@@ -213,5 +212,4 @@ void terminate_server(void)
         close(s_clients[i].sock);
     }
     fprintf(stderr, "All connections are closed.\n");
-    // exit(0);
 }

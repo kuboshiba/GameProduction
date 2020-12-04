@@ -926,6 +926,22 @@ void md_multi_host()
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name. (terminal)", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
+    gGame.mode = MD_MULTI_HOST_3;
+    while (gGame.mode == MD_MULTI_HOST_3) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
         gGame.surface = TTF_RenderUTF8_Blended(font25, "waiting...", (SDL_Color) { 255, 255, 255, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
@@ -937,8 +953,8 @@ void md_multi_host()
         SDL_Delay(interval);
     }
 
-    SDL_WaitThread(network_host_thread, NULL);   // keyboard_threadの処理終了を待つ
-    SDL_WaitThread(network_client_thread, NULL); // keyboard_threadの処理終了を待つ
+    SDL_WaitThread(network_host_thread, NULL);
+    SDL_WaitThread(network_client_thread, NULL);
 }
 
 void md_multi_client()
