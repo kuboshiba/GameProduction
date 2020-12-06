@@ -97,6 +97,7 @@ void server_handle_error(char* message);
 
 // client.c
 CLIENT c_clients[MAX_NUM_CLIENTS];
+CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
 int c_sock;
 int c_num_clients;
 int c_myid;

@@ -100,6 +100,9 @@ void setup_server(int num_cl, u_short port)
     }
     fprintf(stderr, "Server setup is done.\n");
 
+    s_data.command = START_COMMAND; // 発言権を初期化　初めは クライアント０ が発言権所有
+    server_send_data(BROADCAST, &s_data, sizeof(int));
+
     gGame.mode = MD_MULTI_HOST_4;
 }
 

@@ -38,6 +38,7 @@
 #define MESSAGE_COMMAND 'M' // メッセージコマンド
 #define QUIT_COMMAND 'Q'    // 終了コマンド
 #define DATA_COMMAND 'D'    // データ送信コマンド
+#define START_COMMAND 'S'   // スタートコマンド
 
 // ウインドウサイズ
 enum {
@@ -179,6 +180,7 @@ extern int c_myid;
 extern int c_num_sock;
 extern fd_set c_mask;
 extern CLIENT c_clients[MAX_NUM_CLIENTS];
+extern CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
 
 // system.c
 extern void init_sys();        // SDLやWiiリモコンを初期化する関数

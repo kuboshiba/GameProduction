@@ -85,8 +85,11 @@ void setup_client(char *server_name, u_short port)
     FD_SET(c_sock, &c_mask); // c_sockのFDに対応する値を1にセット
     fprintf(stderr, "Input command (M=message, Q=quit): \n");
 
-    if (gGame.mode == MD_MULTI_CLIENT_2)
-        gGame.mode = MD_MULTI_CLIENT_3;
+    client_receive_data(&c_data, sizeof(int));
+    if (c_data.command == START_COMMAND) {
+        if (gGame.mode == MD_MULTI_CLIENT_2)
+            gGame.mode = MD_MULTI_CLIENT_3;
+    }
 }
 
 // データ受信制御を行う関数
