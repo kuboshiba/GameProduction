@@ -907,12 +907,11 @@ void md_multi_wait()
 
 void md_multi_host()
 {
-    gGame.mode = MD_MULTI_HOST_2;
-
     network_host_thread   = SDL_CreateThread(server_main, "network_host_thread", NULL);
     network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
 
     // 名前入力
+    gGame.mode = MD_MULTI_HOST_2;
     while (gGame.mode == MD_MULTI_HOST_2) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
@@ -948,7 +947,72 @@ void md_multi_host()
     // カウントダウン開始
     count_down_draw();
 
+    // ゲーム開始
+    gGame.mode = MD_MULTI_HOST_4;
+    while (MD_MULTI_HOST_4) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // メニュー画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+        SDL_RenderClear(gGame.renderer);
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
     SDL_WaitThread(network_host_thread, NULL);
+    SDL_WaitThread(network_client_thread, NULL);
+}
+
+void md_multi_client()
+{
+    gGame.mode = MD_MULTI_CLIENT_1;
+
+    network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
+
+    // 名前入力
+    while (gGame.mode == MD_MULTI_CLIENT_1) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name. (terminal)", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
+    count_down_draw();
+
+    // ゲーム開始
+    gGame.mode = MD_MULTI_HOST_4;
+    while (MD_MULTI_HOST_4) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // メニュー画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+        SDL_RenderClear(gGame.renderer);
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
     SDL_WaitThread(network_client_thread, NULL);
 }
 
@@ -1012,33 +1076,6 @@ void count_down_draw()
     }
     SDL_RemoveTimer(timer_id_2); // タイマー解除
     flag_subloop = true;
-}
-
-void md_multi_client()
-{
-    gGame.mode = MD_MULTI_CLIENT_1;
-
-    network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
-
-    // 名前入力
-    while (gGame.mode == MD_MULTI_CLIENT_1) {
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
-        SDL_RenderClear(gGame.renderer);
-
-        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name. (terminal)", (SDL_Color) { 255, 255, 255, 255 });
-        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
-        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
-        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
-        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
-
-        SDL_RenderPresent(gGame.renderer);
-        SDL_Delay(interval);
-    }
-
-    count_down_draw();
-
-    SDL_WaitThread(network_client_thread, NULL);
 }
 
 void md_exit_wait()

@@ -58,7 +58,7 @@ void setup_server(int num_cl, u_short port)
     socklen_t len;
     char src[MAX_LEN_ADDR];
 
-    // クライアントからサーバーじぇの接続要求を処理する
+    // クライアントからサーバーの接続要求を処理する
     for (i = 0; i < s_num_clients; i++) {
         len  = sizeof(cl_addr);
         sock = accept(rsock, (struct sockaddr *)&cl_addr, &len);
