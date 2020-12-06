@@ -146,28 +146,30 @@ int in_command()
 // コマンドを実行する関数
 int exe_command()
 {
-    CONTAINER data;
     int result = 1;
-    memset(&data, 0, sizeof(CONTAINER));
-    client_receive_data(&data, sizeof(data));
+    memset(&c_data, 0, sizeof(CONTAINER));
+    client_receive_data(&c_data, sizeof(c_data));
 
     // data.command によって条件分岐
-    switch (data.command) {
+    switch (c_data.command) {
     // メッセージコマンドの場合
     case MESSAGE_COMMAND:
-        fprintf(stderr, "client[%d] %s: %s\n", data.cid, c_clients[data.cid].name, data.message);
+        fprintf(stderr, "client[%d] %s: %s\n", c_data.cid, c_clients[c_data.cid].name, c_data.message);
         result = 1;
         break;
     // 終了コマンドの場合
     case QUIT_COMMAND:
-        fprintf(stderr, "client[%d] %s sent quit command.\n", data.cid, c_clients[data.cid].name);
+        fprintf(stderr, "client[%d] %s sent quit command.\n", c_data.cid, c_clients[c_data.cid].name);
         result = 0;
         break;
     case START_COMMAND:
-        puts("test");
         gGame.mode = MD_MULTI_CLIENT_3;
         break;
     case DATA_COMMAND:
+        for (int i = 0; i < 10; i++) {
+            printf("%d ", c_data.target[i].type);
+        }
+        printf("\n");
         break;
     }
 

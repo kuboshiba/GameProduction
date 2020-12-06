@@ -54,6 +54,11 @@ enum {
     SEL_CLIENT = 1,
 };
 
+typedef enum {
+    TYPE_HOST   = 0,
+    TYPE_CLIENT = 1
+} TYPE;
+
 // 画面のモード
 typedef enum {
     MD_MENU              = 0, // メニュー
@@ -82,6 +87,7 @@ typedef struct {
     SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
     SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
     MODE mode;
+    TYPE type;
     char name[MAX_LEN_NAME];
     int score;
 } GameInfo;
@@ -114,6 +120,7 @@ typedef struct {
     char command;
     char message[MAX_LEN_BUFFER];
     int score;
+    Target target[10];
 } CONTAINER;
 
 extern GameInfo gGame;    // ゲームの状態

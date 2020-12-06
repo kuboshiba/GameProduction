@@ -122,14 +122,18 @@ void init_sys(int argc, char* argv[])
 
     // 的の初期化
     for (int i = 0; i < 10; i++) {
-        target[i].type   = 5;
-        target[i].x      = 0;
-        target[i].y      = 0;
-        target[i].cnt    = 0;
-        c_target[i].type = 5;
-        c_target[i].x    = 0;
-        c_target[i].y    = 0;
-        c_target[i].cnt  = 0;
+        target[i].type        = 5;
+        target[i].x           = 0;
+        target[i].y           = 0;
+        target[i].cnt         = 0;
+        s_data.target[i].type = 5;
+        s_data.target[i].x    = 0;
+        s_data.target[i].y    = 0;
+        s_data.target[i].cnt  = 0;
+        c_data.target[i].type = 5;
+        c_data.target[i].x    = 0;
+        c_data.target[i].y    = 0;
+        c_data.target[i].cnt  = 0;
     }
 }
 

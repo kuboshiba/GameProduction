@@ -44,7 +44,6 @@ wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
 GameInfo gGame;    // ゲームの描画関係
 Player gPlayer[4]; // プレイヤーの情報
 Target target[10]; // 的の情報
-Target c_target[10];
 
 Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
@@ -358,9 +357,9 @@ void md_solo_playing()
         bool flag = true;
 
         for (int j = 0; j < TARGET_NUM_MAX; j++) {
-            if (target[j].type != 5) {
-                int a = target[j].x - x;
-                int b = target[j].y - y;
+            if (s_data.target[j].type != 5) {
+                int a = s_data.target[j].x - x;
+                int b = s_data.target[j].y - y;
                 int c = sqrt(a * a + b * b);
                 if (c <= 34)
                     flag = false;
@@ -368,15 +367,15 @@ void md_solo_playing()
         }
 
         if (flag) {
-            target[i].type = type;
-            target[i].x    = x;
-            target[i].y    = y;
-            target[i].cnt  = 0;
+            s_data.target[i].type = type;
+            s_data.target[i].x    = x;
+            s_data.target[i].y    = y;
+            s_data.target[i].cnt  = 0;
         } else {
-            target[i].type = 5;
-            target[i].x    = 0;
-            target[i].y    = 0;
-            target[i].cnt  = 0;
+            s_data.target[i].type = 5;
+            s_data.target[i].x    = 0;
+            s_data.target[i].y    = 0;
+            s_data.target[i].cnt  = 0;
         }
     }
 
@@ -405,11 +404,11 @@ void md_solo_playing()
 
         // 的を描画
         for (int i = 0; i < TARGET_NUM_MAX; i++) {
-            if (target[i].type != 5) {
-                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[target[i].type]);
+            if (s_data.target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[s_data.target[i].type]);
                 SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
                 imageRect = (SDL_Rect) { 0, 0, iw, ih };
-                drawRect  = (SDL_Rect) { target[i].x, target[i].y, iw, ih };
+                drawRect  = (SDL_Rect) { s_data.target[i].x, s_data.target[i].y, iw, ih };
                 SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
             }
         }
@@ -506,10 +505,10 @@ void md_solo_playing()
 
     // 座標関係初期化
     for (int i = 0; i < TARGET_NUM_MAX; i++) {
-        target[i].type = 5;
-        target[i].x    = 0;
-        target[i].y    = 0;
-        target[i].cnt  = 0;
+        s_data.target[i].type = 5;
+        s_data.target[i].x    = 0;
+        s_data.target[i].y    = 0;
+        s_data.target[i].cnt  = 0;
     }
 
     target_num = rand() % 10;
@@ -533,8 +532,8 @@ void md_solo_playing()
 
         for (int j = 0; j < TARGET_NUM_MAX; j++) {
             if (target[j].type != 5) {
-                int a = target[j].x - x;
-                int b = target[j].y - y;
+                int a = s_data.target[j].x - x;
+                int b = s_data.target[j].y - y;
                 int c = sqrt(a * a + b * b);
                 if (c <= 34)
                     flag = false;
@@ -542,15 +541,15 @@ void md_solo_playing()
         }
 
         if (flag) {
-            target[i].type = type;
-            target[i].x    = x;
-            target[i].y    = y;
-            target[i].cnt  = 0;
+            s_data.target[i].type = type;
+            s_data.target[i].x    = x;
+            s_data.target[i].y    = y;
+            s_data.target[i].cnt  = 0;
         } else {
-            target[i].type = 5;
-            target[i].x    = 0;
-            target[i].y    = 0;
-            target[i].cnt  = 0;
+            s_data.target[i].type = 5;
+            s_data.target[i].x    = 0;
+            s_data.target[i].y    = 0;
+            s_data.target[i].cnt  = 0;
         }
     }
 
@@ -578,11 +577,11 @@ void md_solo_playing()
 
         // 的を描画
         for (int i = 0; i < TARGET_NUM_MAX; i++) {
-            if (target[i].type != 5) {
-                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[target[i].type]);
+            if (s_data.target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[s_data.target[i].type]);
                 SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
                 imageRect = (SDL_Rect) { 0, 0, iw, ih };
-                drawRect  = (SDL_Rect) { target[i].x, target[i].y, iw, ih };
+                drawRect  = (SDL_Rect) { s_data.target[i].x, s_data.target[i].y, iw, ih };
                 SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
             }
         }
@@ -754,9 +753,8 @@ void md_solo_wait()
 
 void md_multi_wait()
 {
-    flag_subloop = true;
     // ホストかクライアントかを選択
-    while (flag_subloop) {
+    while (gGame.mode == MD_MULTI_WAIT) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
@@ -895,7 +893,8 @@ void md_multi_wait()
             SDL_Delay(interval);
         }
 
-        md_multi_host();
+        if (gGame.mode != MD_MENU)
+            md_multi_host();
     }
     // クライアントを選択された場合
     else if (gGame.mode == MD_MULTI_CLIENT_1) {
@@ -909,8 +908,9 @@ void md_multi_wait()
 
 void md_multi_host()
 {
+    gGame.type = TYPE_HOST;
+
     network_host_thread = SDL_CreateThread(server_main, "network_host_thread", NULL);
-    timer_id_2          = SDL_AddTimer(1000, target_cnt, &target); // 的の表示時間用のタイマーをセット
     md_multi_client();
     SDL_RemoveTimer(timer_id_2); // タイマー解除
     SDL_WaitThread(network_host_thread, NULL);
@@ -1034,6 +1034,8 @@ void md_multi_client()
         SDL_Delay(interval);
     }
 
+    timer_id_2 = SDL_AddTimer(1000, target_cnt, &s_data); // 的の表示時間用のタイマーをセット
+
     // カウントダウン描画
     count_down_draw();
 
@@ -1053,11 +1055,11 @@ void md_multi_client()
 
         // 的を描画
         for (int i = 0; i < TARGET_NUM_MAX; i++) {
-            if (c_target[i].type != 5) {
-                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[c_target[i].type]);
+            if (c_data.target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[c_data.target[i].type]);
                 SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
                 imageRect = (SDL_Rect) { 0, 0, iw, ih };
-                drawRect  = (SDL_Rect) { c_target[i].x, c_target[i].y, iw, ih };
+                drawRect  = (SDL_Rect) { c_data.target[i].x, c_data.target[i].y, iw, ih };
                 SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
             }
         }
@@ -1183,14 +1185,14 @@ Uint32 count_down(Uint32 interval, void* param)
 Uint32 target_cnt(Uint32 interval, void* param)
 {
     for (int i = 0; i < TARGET_NUM_MAX; i++) {
-        if (target[i].type != 5) {
-            if (target[i].cnt == 3) {
-                target[i].type = 5;
-                target[i].cnt  = 0;
+        if (s_data.target[i].type != 5) {
+            if (s_data.target[i].cnt == 3) {
+                s_data.target[i].type = 5;
+                s_data.target[i].cnt  = 0;
             } else
-                target[i].cnt++;
+                s_data.target[i].cnt++;
         } else {
-            if (target[i].cnt == 2) {
+            if (s_data.target[i].cnt == 2) {
                 int type = rand() % 100;
                 if (0 <= type && type < 30)
                     type = 0;
@@ -1207,9 +1209,9 @@ Uint32 target_cnt(Uint32 interval, void* param)
                 int y     = 100 + rand() % 250;
                 bool flag = true;
                 for (int j = 0; j < TARGET_NUM_MAX; j++) {
-                    if (target[j].type != 5) {
-                        int a = target[j].x - x;
-                        int b = target[j].y - y;
+                    if (s_data.target[j].type != 5) {
+                        int a = s_data.target[j].x - x;
+                        int b = s_data.target[j].y - y;
                         int c = sqrt(a * a + b * b);
                         if (c <= 50)
                             flag = false;
@@ -1217,16 +1219,19 @@ Uint32 target_cnt(Uint32 interval, void* param)
                 }
 
                 if (flag) {
-                    target[i].type = type;
-                    target[i].x    = x;
-                    target[i].y    = y;
-                    target[i].cnt  = 0;
+                    s_data.target[i].type = type;
+                    s_data.target[i].x    = x;
+                    s_data.target[i].y    = y;
+                    s_data.target[i].cnt  = 0;
                 }
             } else {
-                target[i].cnt++;
+                s_data.target[i].cnt++;
             }
         }
     }
+
+    s_data.command = DATA_COMMAND;
+    server_send_data(BROADCAST, &s_data, sizeof(CONTAINER));
 
     return interval;
 }
