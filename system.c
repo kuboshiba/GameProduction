@@ -73,7 +73,7 @@ void init_sys(int argc, char* argv[])
     // Wiiリモコンの接続（１つのみ）
     // コマンド引数に指定したWiiリモコン識別情報を渡して接続
     SystemLog("Wiiリモコンの接続試行中...");
-    while (wiimote_connect(&wiimote, argv[1]) < 0) { }
+    wiimote_connect(&wiimote, argv[1]);
 
     if (!wiimote_is_open(&wiimote)) {
         Error("Wiiリモコンの接続に失敗しました");
