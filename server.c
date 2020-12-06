@@ -100,10 +100,9 @@ void setup_server(int num_cl, u_short port)
     }
     fprintf(stderr, "Server setup is done.\n");
 
-    s_data.command = START_COMMAND; // 発言権を初期化　初めは クライアント０ が発言権所有
-    server_send_data(BROADCAST, &s_data, sizeof(s_data));
-
-    gGame.mode = MD_MULTI_HOST_4;
+    CONTAINER data;
+    data.command = START_COMMAND;
+    server_send_data(BROADCAST, &data, sizeof(CONTAINER));
 }
 
 // データ受信制御を行う関数
@@ -112,7 +111,6 @@ int server_control_requests()
     fd_set read_flag = s_mask;
     memset(&s_data, 0, sizeof(CONTAINER));
 
-    // fprintf(stderr, "select() is started.\n");
     if (select(s_num_socks, (fd_set *)&read_flag, NULL, NULL, NULL) == -1) {
         server_handle_error("select()");
     }

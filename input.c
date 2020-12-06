@@ -165,7 +165,7 @@ int wii_func()
                 if (wiimote.keys.up && 0 <= alpha_key_pos && alpha_key_pos <= 8)
                     alpha_key_pos = 27;
 
-                char temp[100];
+                char temp[MAX_LEN_NAME];
 
                 if (wiimote.keys.a && 0 <= alpha_key_pos && alpha_key_pos <= 25) {
                     sprintf(temp, "%s", gGame.name);

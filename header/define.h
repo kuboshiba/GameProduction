@@ -38,7 +38,8 @@
 #define MESSAGE_COMMAND 'M' // メッセージコマンド
 #define QUIT_COMMAND 'Q'    // 終了コマンド
 #define DATA_COMMAND 'D'    // データ送信コマンド
-#define START_COMMAND 'S'   // スタートコマンド
+#define DATA_TARGET_COMMAND 'T'
+#define START_COMMAND 'S' // スタートコマンド
 
 // ウインドウサイズ
 enum {
@@ -81,7 +82,7 @@ typedef struct {
     SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
     SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
     MODE mode;
-    char name[100];
+    char name[MAX_LEN_NAME];
     int score;
 } GameInfo;
 
@@ -118,6 +119,7 @@ typedef struct {
 extern GameInfo gGame;    // ゲームの状態
 extern Player gPlayer[4]; // プレイヤーの状態
 extern Target target[10];
+extern Target c_target[10];
 
 extern SDL_Thread* wii_thread;            // wii_threadを用いる
 extern SDL_Thread* keyboard_thread;       // keyboard_threadを用いる
@@ -130,6 +132,7 @@ extern SDL_Event event; // SDLによるイベントを検知するための構�
 
 extern SDL_TimerID timer_id_1; // min_flips_callback用のタイマー
 extern SDL_TimerID timer_id_2; // カウントダウン用
+extern SDL_TimerID timer_id_3; // カウントダウン用
 
 extern SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
 extern SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス

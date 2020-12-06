@@ -27,6 +27,7 @@ SDL_Texture* solo_texture; // ソロプレイ用のテクスチャ
 
 SDL_TimerID timer_id_1; // min_flips_callback用のタイマー
 SDL_TimerID timer_id_2; // min_flips_callback用のタイマー
+SDL_TimerID timer_id_3; // min_flips_callback用のタイマー
 
 SDL_Event event; // SDLによるイベントを検知するための構造体
 SDL_mutex* mtx;  // 相互排除（Mutex）
@@ -43,6 +44,7 @@ wiimote_t wiimote = WIIMOTE_INIT; // Wiiリモコンの状態格納用
 GameInfo gGame;    // ゲームの描画関係
 Player gPlayer[4]; // プレイヤーの情報
 Target target[10]; // 的の情報
+Target c_target[10];
 
 Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
 
@@ -907,29 +909,117 @@ void md_multi_wait()
 
 void md_multi_host()
 {
-    network_host_thread   = SDL_CreateThread(server_main, "network_host_thread", NULL);
+    network_host_thread = SDL_CreateThread(server_main, "network_host_thread", NULL);
+    timer_id_2          = SDL_AddTimer(1000, target_cnt, &target); // 的の表示時間用のタイマーをセット
+    md_multi_client();
+    SDL_RemoveTimer(timer_id_2); // タイマー解除
+    SDL_WaitThread(network_host_thread, NULL);
+}
+
+void md_multi_client()
+{
+    gGame.mode            = MD_MULTI_CLIENT_1;
     network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
 
     // 名前入力
-    gGame.mode = MD_MULTI_HOST_2;
-    while (gGame.mode == MD_MULTI_HOST_2) {
+    alpha_key_pos = 27;
+    gGame.mode    = MD_MULTI_CLIENT_1;
+    while (gGame.mode == MD_MULTI_CLIENT_1) {
+        // プレイヤー名入力用のループ
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
-        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name. (terminal)", (SDL_Color) { 255, 255, 255, 255 });
+        // プレイヤー名を入力してください　描画
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name", (SDL_Color) { 255, 255, 255, 255 });
         gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
         SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        pasteRect = (SDL_Rect) { 225, 50, iw, ih };
         SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
 
+        // 入力したプレイヤー名のバックグラウンド
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 225, 150, 550, 50 });
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, gGame.name, (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 238, 160, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // アルファベットの四角を描画
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (0 <= alpha_key_pos && alpha_key_pos <= 25 && alpha_key_pos == (j + 9 * i)) {
+                    SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
+                    SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
+                }
+                SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+                SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
+            }
+        }
+
+        // アルファベットを描画
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 9; j++) {
+                gGame.surface = TTF_RenderUTF8_Blended(font25, alpha[j + i * 9], (SDL_Color) { 255, 255, 255, 255 });
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+                txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+                pasteRect = (SDL_Rect) { 158 + j * 50, 258 + i * 50, iw, ih };
+                SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+            }
+        }
+
+        // BS 26
+        if (alpha_key_pos == 26) {
+            SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
+            SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 150, 400, 70, 50 });
+        }
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 150, 400, 70, 50 });
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "BS", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 160, 410, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // Enter 27
+        if (alpha_key_pos == 27) {
+            SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
+            SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
+        }
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Enter", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 255, 410, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // 登録されているプレイヤー名を表示
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Player list", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 650, 250, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // ポインターをウィンドウに描画
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        // 描画
         SDL_RenderPresent(gGame.renderer);
         SDL_Delay(interval);
     }
 
-    // クライアントが揃うまでの待機画面
-    gGame.mode = MD_MULTI_HOST_3;
-    while (gGame.mode == MD_MULTI_HOST_3) {
+    // 待機画面
+    while (gGame.mode == MD_MULTI_CLIENT_2) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
@@ -944,12 +1034,11 @@ void md_multi_host()
         SDL_Delay(interval);
     }
 
-    // カウントダウン開始
+    // カウントダウン描画
     count_down_draw();
 
     // ゲーム開始
-    gGame.mode = MD_MULTI_HOST_4;
-    while (MD_MULTI_HOST_4) {
+    while (MD_MULTI_CLIENT_3) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
@@ -962,52 +1051,16 @@ void md_multi_host()
         SDL_RenderClear(gGame.renderer);
         SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
 
-        SDL_RenderPresent(gGame.renderer);
-        SDL_Delay(interval);
-    }
-
-    SDL_WaitThread(network_host_thread, NULL);
-    SDL_WaitThread(network_client_thread, NULL);
-}
-
-void md_multi_client()
-{
-    gGame.mode = MD_MULTI_CLIENT_1;
-
-    network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
-
-    // 名前入力
-    while (gGame.mode == MD_MULTI_CLIENT_1) {
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
-        SDL_RenderClear(gGame.renderer);
-
-        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name. (terminal)", (SDL_Color) { 255, 255, 255, 255 });
-        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
-        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
-        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
-        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
-
-        SDL_RenderPresent(gGame.renderer);
-        SDL_Delay(interval);
-    }
-
-    count_down_draw();
-
-    // ゲーム開始
-    gGame.mode = MD_MULTI_HOST_4;
-    while (MD_MULTI_HOST_4) {
-        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
-        SDL_RenderClear(gGame.renderer);
-
-        // メニュー画像を描画
-        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
-        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
-        imageRect = (SDL_Rect) { 0, 0, iw, ih };
-        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
-        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
-        SDL_RenderClear(gGame.renderer);
-        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+        // 的を描画
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            if (c_target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[c_target[i].type]);
+                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+                imageRect = (SDL_Rect) { 0, 0, iw, ih };
+                drawRect  = (SDL_Rect) { c_target[i].x, c_target[i].y, iw, ih };
+                SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
+            }
+        }
 
         SDL_RenderPresent(gGame.renderer);
         SDL_Delay(interval);
@@ -1019,7 +1072,7 @@ void md_multi_client()
 void count_down_draw()
 {
     // カウントダウン用のタイマー起動
-    timer_id_2   = SDL_AddTimer(1000, count_down, &count_down_val);
+    timer_id_3   = SDL_AddTimer(1000, count_down, &count_down_val);
     flag_subloop = true;
     // カウントダウン用のループ
     while (flag_subloop) {
@@ -1071,10 +1124,10 @@ void count_down_draw()
         if (count_down_val <= -1) {
             flag_subloop   = false;      // break
             count_down_val = 3;          // カウントダウンの変数を初期化
-            SDL_RemoveTimer(timer_id_2); // タイマー解除
+            SDL_RemoveTimer(timer_id_3); // タイマー解除
         }
     }
-    SDL_RemoveTimer(timer_id_2); // タイマー解除
+    SDL_RemoveTimer(timer_id_3); // タイマー解除
     flag_subloop = true;
 }
 
@@ -1174,6 +1227,7 @@ Uint32 target_cnt(Uint32 interval, void* param)
             }
         }
     }
+
     return interval;
 }
 

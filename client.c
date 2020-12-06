@@ -60,13 +60,11 @@ void setup_client(char *server_name, u_short port)
         // 異常終了
         client_handle_error("fgets()");
     }
+
+    gGame.mode = MD_MULTI_CLIENT_2;
+
     user_name[strlen(user_name) - 1] = '\0';
     client_send_data(user_name, MAX_LEN_NAME); // 名前を送信
-
-    if (gGame.mode == MD_MULTI_HOST_2)
-        gGame.mode = MD_MULTI_HOST_3;
-    else if (gGame.mode == MD_MULTI_CLIENT_1)
-        gGame.mode = MD_MULTI_CLIENT_2;
 
     // 他のクライアントを待つ
     fprintf(stderr, "Waiting for other clients...\n");
@@ -84,12 +82,6 @@ void setup_client(char *server_name, u_short port)
     FD_SET(0, &c_mask);      // 0番目のFDに対応する値を1にセット
     FD_SET(c_sock, &c_mask); // c_sockのFDに対応する値を1にセット
     fprintf(stderr, "Input command (M=message, Q=quit): \n");
-
-    client_receive_data(&c_data, sizeof(c_data));
-    if (c_data.command == START_COMMAND) {
-        if (gGame.mode == MD_MULTI_CLIENT_2)
-            gGame.mode = MD_MULTI_CLIENT_3;
-    }
 }
 
 // データ受信制御を行う関数
@@ -146,9 +138,6 @@ int in_command()
         data.cid     = c_myid;
         client_send_data(&data, sizeof(CONTAINER));
         break;
-    // それ以外のコマンドが送信された場合
-    default:
-        fprintf(stderr, "%c is not a valid command.\n", com);
     }
 
     return 1;
@@ -174,9 +163,12 @@ int exe_command()
         fprintf(stderr, "client[%d] %s sent quit command.\n", data.cid, c_clients[data.cid].name);
         result = 0;
         break;
-    default:
-        fprintf(stderr, "exe_command(): %c is not a valid command.\n", data.command);
-        exit(1);
+    case START_COMMAND:
+        puts("test");
+        gGame.mode = MD_MULTI_CLIENT_3;
+        break;
+    case DATA_COMMAND:
+        break;
     }
 
     return result;
