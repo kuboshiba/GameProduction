@@ -85,7 +85,7 @@ void setup_client(char *server_name, u_short port)
     FD_SET(c_sock, &c_mask); // c_sockのFDに対応する値を1にセット
     fprintf(stderr, "Input command (M=message, Q=quit): \n");
 
-    client_receive_data(&c_data, sizeof(int));
+    client_receive_data(&c_data, sizeof(c_data));
     if (c_data.command == START_COMMAND) {
         if (gGame.mode == MD_MULTI_CLIENT_2)
             gGame.mode = MD_MULTI_CLIENT_3;
