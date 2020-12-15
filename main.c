@@ -45,21 +45,21 @@ char alphabet[27][2] = { "a", "b", "c", "d", "e", "f", "g", "h", "i",
     "s", "t", "u", "v", "w", "x", "y", "z" };
 bool flag[MODE_NUM]  = { true }; // フラグ
 
+POINT image_1_point = { 0, 0 };    // 現在画像の座標
+POINT image_2_point = { 1000, 0 }; // 遷移する画像の座標
+
 /* main.c 関数 */
-void mode_menu();              // メニュー画面を描画する関数
-void mode_solo_ok_or_cancel(); // ソロプレイをするかしないかを尋ねる関数
-void mode_input_name();        // プレイヤー名を入力する関数
-void mode_solo_playing();
-Uint32 count_down(Uint32, void*);
-void count_down_draw(int);
-
-POINT image_1_point = { 0, 0 };
-POINT image_2_point = { 1000, 0 };
-void transition_stage(SDL_Surface* image_1, SDL_Surface* image_2);
-Uint32 timer_transition_stage(Uint32 interval, void* param);
-
-void create_target();
-Uint32 target_cnt(Uint32 interval, void* param);
+void mode_menu();                                  // メニュー画面を描画する関数
+void mode_solo_ok_or_cancel();                     // ソロプレイをするかしないかを尋ねる関数
+void mode_input_name();                            // プレイヤー名を入力する関数
+void mode_solo_playing();                          // ソロプレイの処理
+void count_down_draw(int);                         // カウントダウンの描画
+void transition_stage(SDL_Surface*, SDL_Surface*); // 画面遷移関数
+void create_target();                              // 的を生成する関数
+void result_draw();                                // リザルトを描画する関数
+Uint32 count_down(Uint32, void*);                  // カウントダウン処理
+Uint32 timer_transition_stage(Uint32, void*);      // 画面遷移のアニメーション関数
+Uint32 target_cnt(Uint32, void*);                  // タイマーで的を生成する関数
 
 /* server 関係 */
 CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
@@ -71,10 +71,10 @@ fd_set s_mask;
 int server_main();
 void setup_server(int, u_short);
 int server_control_requests();
-void server_send_data(int cid, void* data, int size);
-int server_receive_data(int cid, void* data, int size);
+void server_send_data(int, void*, int);
+int server_receive_data(int, void*, int);
 void terminate_server(void);
-void server_handle_error(char* message);
+void server_handle_error(char*);
 
 /* client 関係 */
 CLIENT c_clients[MAX_NUM_CLIENTS];
@@ -86,7 +86,7 @@ int c_num_sock;
 fd_set c_mask;
 
 int client_main();
-void setup_client(char* server_name, u_short port);
+void setup_client(char*, u_short);
 int client_control_requests();
 int in_command(void);
 int exe_command(void);
@@ -113,9 +113,11 @@ int main(int argc, char* argv[])
             mode_solo_ok_or_cancel(); // ソロプレイをするかしないかを尋ねる
             mode_input_name();        // プレイヤー名の入力
             mode_solo_playing();      // ソロプレイ中
-            gGame.mode = MODE_MENU;
-            selecter   = 0;
+            result_draw();            // リザルト描画
             break;
+        case MODE_SOLO_REPLAY:
+            mode_solo_playing(); // ソロプレイ中
+            result_draw();       // リザルト描画
         default:
             break;
         }
@@ -698,7 +700,7 @@ void create_target()
         /* 的を表示する場合 */
         if (type != 5) {
             int x = 50 + rand() % 900;  // x座標生成
-            int y = 100 + rand() % 350; // y座標生成
+            int y = 100 + rand() % 300; // y座標生成
 
             bool generate = true; // 的を生成出来るかどうか
             /* 生成した座標と既存の的の座標から当たり判定を行う */
@@ -777,7 +779,7 @@ Uint32 target_cnt(Uint32 interval, void* param)
                 /* 的を表示する場合 */
                 if (type != 5) {
                     int x = 50 + rand() % 900;  // x座標生成
-                    int y = 100 + rand() % 350; // y座標生成
+                    int y = 100 + rand() % 300; // y座標生成
 
                     bool generate = true; // 的を生成出来るかどうか
                     /* 生成した座標と既存の的の座標から当たり判定を行う */
@@ -810,7 +812,74 @@ Uint32 target_cnt(Uint32 interval, void* param)
                     }
                 }
             }
+            s_data.target[i].cnt++; // 的のカウンターをインクリメント
         }
     }
     return interval;
+}
+
+/*******************************************************************
+ * 関数名 : result_draw
+ * 　　型 : void
+ * 　説明 : リザルトを描画する関数
+ ******************************************************************/
+void result_draw()
+{
+    gGame.mode        = MODE_RESULT;
+    flag[MODE_RESULT] = true;
+    while (flag[MODE_RESULT]) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size50, "RESULT", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 350, 100, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* 名前を描画 */
+        surface = TTF_RenderUTF8_Blended(fonts.size25, gPlayer.name, (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 400, 200, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* スコアを描画 */
+        sprintf(txt, "%s%d", "SCORE ", gPlayer.score);
+        surface = TTF_RenderUTF8_Blended(fonts.size25, txt, (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 380, 280, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* OKボタンを描画 */
+        surface = TTF_RenderUTF8_Blended(fonts.size25, "OK", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 300, 370, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* REPLAYボタンを描画 */
+        surface = TTF_RenderUTF8_Blended(fonts.size25, "REPLAY", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 600, 370, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* セレクターを描画 */
+        surface = TTF_RenderUTF8_Blended(fonts.size25, ">", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 250 + selecter * 300, 370, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(interval);
+    }
 }

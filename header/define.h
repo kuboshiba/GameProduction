@@ -29,8 +29,8 @@
 
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
 
-#define MODE_NUM 100  // モードの個数
-#define STAGE_TIME 15 // ステージごとの時間 sec
+#define MODE_NUM 100 // モードの個数
+#define STAGE_TIME 2 // ステージごとの時間 sec
 
 #define DEFAULT_PORT 51000 // デフォルトのポート番号
 #define MAX_LEN_NAME 100   // 名前の最大文字数
@@ -58,8 +58,10 @@ typedef enum {
     MODE_SOLO_OK_OR_CANCEL = 1,  // ソロプレイ select OK or CANCEL
     MODE_INPUT_NAME        = 2,  // プレイヤー名入力
     MODE_SOLO_PLAYING      = 3,  // ソロプレイ　プレイ中
+    MODE_SOLO_REPLAY       = 4,  // ソロプレイ　リプレイ
     MODE_COUNTDOWN         = 10, // ソロプレイ　カウントダウン中
-    MODE_TRANSITION        = 11  // ステージ遷移
+    MODE_TRANSITION        = 11, // ステージ遷移
+    MODE_RESULT            = 12  // リザルト
 } MODE;
 
 /* ゲームで多用する共通変数は構造体 Game で管理 */

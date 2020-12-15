@@ -20,6 +20,9 @@ int keyboard_func()
                     /* フラグを全て false にする */
                     for (int i = 0; i < MODE_NUM; i++)
                         flag[i] = false;
+
+                    opening_sys();      // 開放処理
+                    exit(EXIT_SUCCESS); // システム終了
                     break;
                 }
             }
@@ -228,6 +231,39 @@ int wiimote_func()
             case MODE_TRANSITION:
                 break;
             case MODE_SOLO_PLAYING: // ソロプレイ　プレイ中
+                break;
+            case MODE_RESULT:
+                if (wiimote.keys.left) {
+                    if (selecter != 0)
+                        selecter--;
+
+                    /* チャタリング防止 */
+                    while (wiimote.keys.left)
+                        wiimote_update(&wiimote);
+                } else if (wiimote.keys.right) {
+                    if (selecter != 1)
+                        selecter++;
+
+                    /* チャタリング防止 */
+                    while (wiimote.keys.right)
+                        wiimote_update(&wiimote);
+                } else if (wiimote.keys.a) {
+                    switch (selecter) {
+                    case 0: // OK
+                        flag[MODE_RESULT] = false;
+                        gGame.mode        = MODE_MENU;
+                        break;
+                    case 1: // REPLAY
+                        flag[MODE_RESULT] = false;
+                        gGame.mode        = MODE_SOLO_REPLAY;
+                        break;
+                    }
+                    selecter = 0; // セレクター初期化
+
+                    /* チャタリング防止 */
+                    while (wiimote.keys.a)
+                        wiimote_update(&wiimote);
+                }
                 break;
             }
         }
