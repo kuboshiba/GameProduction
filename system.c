@@ -73,7 +73,7 @@ void init_sys(int argc, char* argv[])
     // Wiiリモコンの接続（１つのみ）
     // コマンド引数に指定したWiiリモコン識別情報を渡して接続
     SystemLog("Wiiリモコンの接続試行中...");
-    while (wiimote_connect(&wiimote, argv[1]) < 0) { }
+    wiimote_connect(&wiimote, argv[1]);
 
     if (!wiimote_is_open(&wiimote)) {
         Error("Wiiリモコンの接続に失敗しました");
@@ -122,10 +122,18 @@ void init_sys(int argc, char* argv[])
 
     // 的の初期化
     for (int i = 0; i < 10; i++) {
-        target[i].type = 5;
-        target[i].x    = 0;
-        target[i].y    = 0;
-        target[i].cnt  = 0;
+        target[i].type        = 5;
+        target[i].x           = 0;
+        target[i].y           = 0;
+        target[i].cnt         = 0;
+        s_data.target[i].type = 5;
+        s_data.target[i].x    = 0;
+        s_data.target[i].y    = 0;
+        s_data.target[i].cnt  = 0;
+        c_data.target[i].type = 5;
+        c_data.target[i].x    = 0;
+        c_data.target[i].y    = 0;
+        c_data.target[i].cnt  = 0;
     }
 }
 

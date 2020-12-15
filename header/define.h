@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -34,6 +35,12 @@
 #define MAX_LEN_ADDR 32    // アドレスの最大値
 #define BROADCAST -1       // デフォルトのブロードキャスト値
 
+#define MESSAGE_COMMAND 'M' // メッセージコマンド
+#define QUIT_COMMAND 'Q'    // 終了コマンド
+#define DATA_COMMAND 'D'    // データ送信コマンド
+#define DATA_TARGET_COMMAND 'T'
+#define START_COMMAND 'S' // スタートコマンド
+
 // ウインドウサイズ
 enum {
     WD_Width  = 1000,
@@ -47,6 +54,11 @@ enum {
     SEL_CLIENT = 1,
 };
 
+typedef enum {
+    TYPE_HOST   = 0,
+    TYPE_CLIENT = 1
+} TYPE;
+
 // 画面のモード
 typedef enum {
     MD_MENU              = 0, // メニュー
@@ -57,8 +69,11 @@ typedef enum {
     MD_MULTI_HOST_1      = 5,
     MD_MULTI_HOST_2      = 6,
     MD_MULTI_HOST_3      = 7,
-    MD_MULTI_CLIENT      = 8,
-    MD_MULTI_PLAYING     = 9,  // マルチプレイ中
+    MD_MULTI_HOST_4      = 8,
+    MD_MULTI_CLIENT_1    = 20,
+    MD_MULTI_CLIENT_2    = 21,
+    MD_MULTI_CLIENT_3    = 22,
+    MD_MULTI_PLAYING     = 95, // マルチプレイ中
     MD_PLAYER_NAME_INPUT = 96, // プレイヤーネームの入力
     MD_EXIT_WAIT         = 97, // 終了待機
     MD_EXIT              = 98, // 終了
@@ -72,7 +87,8 @@ typedef struct {
     SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
     SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
     MODE mode;
-    char name[100];
+    TYPE type;
+    char name[MAX_LEN_NAME];
     int score;
 } GameInfo;
 
@@ -100,25 +116,30 @@ typedef struct {
 
 // コンテナの構造体
 typedef struct {
-    int cid;                      // クライアントのID
-    char command;                 // コマンド
-    char message[MAX_LEN_BUFFER]; // メッセージ
-} DATA;
+    int cid;
+    char command;
+    char message[MAX_LEN_BUFFER];
+    int score;
+    Target target[10];
+} CONTAINER;
 
 extern GameInfo gGame;    // ゲームの状態
 extern Player gPlayer[4]; // プレイヤーの状態
 extern Target target[10];
+extern Target c_target[10];
 
-extern SDL_Thread* wii_thread;      // wii_threadを用いる
-extern SDL_Thread* keyboard_thread; // keyboard_threadを用いる
-extern SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
-extern SDL_Thread* network_thread;  // network_threadを用いる
+extern SDL_Thread* wii_thread;            // wii_threadを用いる
+extern SDL_Thread* keyboard_thread;       // keyboard_threadを用いる
+extern SDL_Thread* wii_ir_thread;         // wii_ir_threadを用いる
+extern SDL_Thread* network_host_thread;   // network_host_threadを用いる
+extern SDL_Thread* network_client_thread; // network_client_threadを用いる
 
 extern SDL_mutex* mtx;  // 相互排除（Mutex）
 extern SDL_Event event; // SDLによるイベントを検知するための構造体
 
 extern SDL_TimerID timer_id_1; // min_flips_callback用のタイマー
 extern SDL_TimerID timer_id_2; // カウントダウン用
+extern SDL_TimerID timer_id_3; // カウントダウン用
 
 extern SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
 extern SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
@@ -156,11 +177,20 @@ extern bool flag_loop;    // メインループのループフラグ
 extern bool flag_subloop; // メインループのループフラグ
 
 // server.c
-extern CLIENT clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 clients で宣言
-extern int num_clients;                 // クライアントの数を格納
-extern int num_socks;                   // ソケットの数を格納
-extern fd_set mask;
-extern DATA data; // 構造体 CONTAINER を構造体変数 data で宣言
+extern CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
+extern CONTAINER s_data;                  // 構造体 DATA を構造体変数 s_data で宣言
+extern int s_num_clients;                 // クライアントの数を格納
+extern int s_num_socks;                   // ソケットの数を格納
+extern fd_set s_mask;
+
+// client.c
+extern int c_sock;
+extern int c_num_clients;
+extern int c_myid;
+extern int c_num_sock;
+extern fd_set c_mask;
+extern CLIENT c_clients[MAX_NUM_CLIENTS];
+extern CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
 
 // system.c
 extern void init_sys();        // SDLやWiiリモコンを初期化する関数
@@ -171,7 +201,8 @@ extern int wii_func();      // Wiiリモコンの入力制御関数
 extern int keyboard_func(); // キーボードの入力制御関数
 extern int wii_ir_func();   // Wiiリモコンの赤外線センサの入力制御関数
 
-extern void md_multi_host(int player_num);
+extern void md_multi_host();
+extern void md_multi_client();
 
 // define.c
 extern void Error();                                                     // エラーを色付きで出力する関数
@@ -179,12 +210,28 @@ extern void Log();                                                       // ロ�
 extern void SystemLog();                                                 // ログを色付きで出力する関数
 extern int map(int x, int in_min, int in_max, int out_min, int out_max); // map関数
 
+// server.c
 extern int server_main();
 extern void setup_server(int, u_short);
-extern int control_requests();
-extern void send_data(int cid, void* data, int size);
+extern int server_control_requests();
+extern void server_send_data(int cid, void* data, int size);
+extern int server_receive_data(int cid, void* data, int size);
 extern void terminate_server(void);
-extern void handle_error(char* message);
+extern void server_handle_error(char* message);
+
+// client.c
+extern int client_main();
+extern void setup_client(char* server_name, u_short port);
+extern int client_control_requests();
+extern int in_command(void);
+extern int exe_command(void);
+extern void client_send_data(void*, int);
+extern int client_receive_data(void*, int);
+extern void client_handle_error(char*);
+extern void terminate_client();
+
+// client.c
+extern int client_main();
 
 // color code
 #define COLOR_BG_BLACK "\x1b[40m"

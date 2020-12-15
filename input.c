@@ -165,7 +165,7 @@ int wii_func()
                 if (wiimote.keys.up && 0 <= alpha_key_pos && alpha_key_pos <= 8)
                     alpha_key_pos = 27;
 
-                char temp[100];
+                char temp[MAX_LEN_NAME];
 
                 if (wiimote.keys.a && 0 <= alpha_key_pos && alpha_key_pos <= 25) {
                     sprintf(temp, "%s", gGame.name);
@@ -209,9 +209,9 @@ int wii_func()
                     // 的は同時表示TARGET_NUM_MAX個までなのでTARGET_NUM_MAX回ループ
                     for (int i = 0; i < TARGET_NUM_MAX; i++) {
                         // 的を表示している場合　ポインターと的の当たり判定をする
-                        if (target[i].type != 5) {
-                            int a = (target[i].x + 25) - pointer.x;
-                            int b = (target[i].y + 25) - pointer.y;
+                        if (s_data.target[i].type != 5) {
+                            int a = (s_data.target[i].x + 25) - pointer.x;
+                            int b = (s_data.target[i].y + 25) - pointer.y;
                             int c = sqrt(a * a + b * b);
 
                             // 当たっている場合
@@ -233,8 +233,8 @@ int wii_func()
                                     gGame.score += 2000;
                                     break;
                                 }
-                                target[i].type = 5; // 的を消す
-                                target[i].cnt  = 0; // カウンターを初期化
+                                s_data.target[i].type = 5; // 的を消す
+                                s_data.target[i].cnt  = 0; // カウンターを初期化
                             }
                         }
                     }
@@ -282,20 +282,17 @@ int wii_func()
                     // セレクターによって条件分岐
                     switch (menu_sel) {
                     // ホストが選択されたとき
-                    case SEL_HOST:
-                        gGame.mode   = MD_MULTI_HOST_1;
-                        flag_subloop = false;
+                    case 0:
+                        gGame.mode = MD_MULTI_HOST_1;
                         break;
                     // クライアントが選択されたとき
-                    case SEL_CLIENT:
-                        gGame.mode   = MD_MULTI_CLIENT;
-                        flag_subloop = false;
+                    case 1:
+                        gGame.mode = MD_MULTI_CLIENT_1;
                         break;
                     // キャンセルボタンが選択されたとき
                     case 2:
-                        player_num   = 1;       // プレイヤーの数取り敢えず１に初期化
-                        gGame.mode   = MD_MENU; // モードをメニューに設定
-                        flag_subloop = false;
+                        player_num = 1;       // プレイヤーの数取り敢えず１に初期化
+                        gGame.mode = MD_MENU; // モードをメニューに設定
                         break;
                     default:
                         break;
@@ -346,9 +343,9 @@ int wii_func()
                         break;
                     // CANCEL
                     case 3:
-                        player_num   = 1;       // プレイヤーの数取り敢えず１に初期化
-                        gGame.mode   = MD_MENU; // モードをメニューに設定
+                        player_num   = 1; // プレイヤーの数取り敢えず１に初期化
                         flag_subloop = false;
+                        gGame.mode   = MD_MENU; // モードをメニューに設定
                         break;
                     default:
                         break;
@@ -359,7 +356,8 @@ int wii_func()
                     wiimote_update(&wiimote);
                 break;
             case MD_MULTI_HOST_2:
-
+                break;
+            case MD_MULTI_CLIENT_1:
                 break;
             // [モード] 終了待機
             case MD_EXIT_WAIT:

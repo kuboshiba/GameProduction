@@ -1,9 +1,10 @@
 #include "header/define.h"
 
-SDL_Thread* wii_thread;      // wii_threadを用いる
-SDL_Thread* keyboard_thread; // keyboard_threadを用いる
-SDL_Thread* wii_ir_thread;   // wii_ir_threadを用いる
-SDL_Thread* network_thread;  // network_threadを用いる
+SDL_Thread* wii_thread;            // wii_threadを用いる
+SDL_Thread* keyboard_thread;       // keyboard_threadを用いる
+SDL_Thread* wii_ir_thread;         // wii_ir_threadを用いる
+SDL_Thread* network_host_thread;   // network_host_threadを用いる
+SDL_Thread* network_client_thread; // network_client_threadを用いる
 
 SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
 SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
@@ -26,6 +27,7 @@ SDL_Texture* solo_texture; // ソロプレイ用のテクスチャ
 
 SDL_TimerID timer_id_1; // min_flips_callback用のタイマー
 SDL_TimerID timer_id_2; // min_flips_callback用のタイマー
+SDL_TimerID timer_id_3; // min_flips_callback用のタイマー
 
 SDL_Event event; // SDLによるイベントを検知するための構造体
 SDL_mutex* mtx;  // 相互排除（Mutex）
@@ -73,22 +75,45 @@ void md_menu();
 void md_solo_wait();
 void md_solo_playing();
 void md_multi_wait();
-void md_multi_host(int);
+void md_multi_host();
+void md_multi_client();
 void md_exit_wait();
 
+void count_down_draw();
+
 // server.c
-CLIENT clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 clients
-DATA data;                       // 構造体 DATA を構造体変数 data で宣言
-int num_clients;                 // クライアントの数を格納
-int num_socks;                   // ソケットの数を格納
-fd_set mask;
+CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
+CONTAINER s_data;                  // 構造体 DATA を構造体変数 s_data で宣言
+int s_num_clients;                 // クライアントの数を格納
+int s_num_socks;                   // ソケットの数を格納
+fd_set s_mask;
 
 int server_main();
 void setup_server(int num_cl, u_short port);
-int control_requests();
-void send_data(int cid, void* data, int size);
+int server_control_requests();
+void server_send_data(int cid, void* data, int size);
+int server_receive_data(int cid, void* data, int size);
 void terminate_server(void);
-void handle_error(char* message);
+void server_handle_error(char* message);
+
+// client.c
+CLIENT c_clients[MAX_NUM_CLIENTS];
+CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
+int c_sock;
+int c_num_clients;
+int c_myid;
+int c_num_sock;
+fd_set c_mask;
+
+int client_main();
+void setup_client(char* server_name, u_short port);
+int client_control_requests();
+int in_command(void);
+int exe_command(void);
+void client_send_data(void*, int);
+int client_receive_data(void*, int);
+void client_handle_error(char*);
+void terminate_client();
 
 int main(int argc, char* argv[])
 {
@@ -161,19 +186,6 @@ void md_solo_playing()
     while (flag_subloop) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
-
-        // 画像を描画
-        // menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
-        // SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
-        // imageRect = (SDL_Rect) { 0, 0, iw, ih };
-        // drawRect  = (SDL_Rect) { 0, 0, iw, ih };
-        // SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
-        // SDL_RenderClear(gGame.renderer);
-        // SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
-
-        // 背景に白のバックを追加
-        // SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
-        // SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 50, 50, 940, 440 });
 
         // プレイヤー名を入力してください　描画
         gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name", (SDL_Color) { 255, 255, 255, 255 });
@@ -345,9 +357,9 @@ void md_solo_playing()
         bool flag = true;
 
         for (int j = 0; j < TARGET_NUM_MAX; j++) {
-            if (target[j].type != 5) {
-                int a = target[j].x - x;
-                int b = target[j].y - y;
+            if (s_data.target[j].type != 5) {
+                int a = s_data.target[j].x - x;
+                int b = s_data.target[j].y - y;
                 int c = sqrt(a * a + b * b);
                 if (c <= 34)
                     flag = false;
@@ -355,15 +367,15 @@ void md_solo_playing()
         }
 
         if (flag) {
-            target[i].type = type;
-            target[i].x    = x;
-            target[i].y    = y;
-            target[i].cnt  = 0;
+            s_data.target[i].type = type;
+            s_data.target[i].x    = x;
+            s_data.target[i].y    = y;
+            s_data.target[i].cnt  = 0;
         } else {
-            target[i].type = 5;
-            target[i].x    = 0;
-            target[i].y    = 0;
-            target[i].cnt  = 0;
+            s_data.target[i].type = 5;
+            s_data.target[i].x    = 0;
+            s_data.target[i].y    = 0;
+            s_data.target[i].cnt  = 0;
         }
     }
 
@@ -392,11 +404,11 @@ void md_solo_playing()
 
         // 的を描画
         for (int i = 0; i < TARGET_NUM_MAX; i++) {
-            if (target[i].type != 5) {
-                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[target[i].type]);
+            if (s_data.target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[s_data.target[i].type]);
                 SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
                 imageRect = (SDL_Rect) { 0, 0, iw, ih };
-                drawRect  = (SDL_Rect) { target[i].x, target[i].y, iw, ih };
+                drawRect  = (SDL_Rect) { s_data.target[i].x, s_data.target[i].y, iw, ih };
                 SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
             }
         }
@@ -493,10 +505,10 @@ void md_solo_playing()
 
     // 座標関係初期化
     for (int i = 0; i < TARGET_NUM_MAX; i++) {
-        target[i].type = 5;
-        target[i].x    = 0;
-        target[i].y    = 0;
-        target[i].cnt  = 0;
+        s_data.target[i].type = 5;
+        s_data.target[i].x    = 0;
+        s_data.target[i].y    = 0;
+        s_data.target[i].cnt  = 0;
     }
 
     target_num = rand() % 10;
@@ -520,8 +532,8 @@ void md_solo_playing()
 
         for (int j = 0; j < TARGET_NUM_MAX; j++) {
             if (target[j].type != 5) {
-                int a = target[j].x - x;
-                int b = target[j].y - y;
+                int a = s_data.target[j].x - x;
+                int b = s_data.target[j].y - y;
                 int c = sqrt(a * a + b * b);
                 if (c <= 34)
                     flag = false;
@@ -529,15 +541,15 @@ void md_solo_playing()
         }
 
         if (flag) {
-            target[i].type = type;
-            target[i].x    = x;
-            target[i].y    = y;
-            target[i].cnt  = 0;
+            s_data.target[i].type = type;
+            s_data.target[i].x    = x;
+            s_data.target[i].y    = y;
+            s_data.target[i].cnt  = 0;
         } else {
-            target[i].type = 5;
-            target[i].x    = 0;
-            target[i].y    = 0;
-            target[i].cnt  = 0;
+            s_data.target[i].type = 5;
+            s_data.target[i].x    = 0;
+            s_data.target[i].y    = 0;
+            s_data.target[i].cnt  = 0;
         }
     }
 
@@ -565,11 +577,11 @@ void md_solo_playing()
 
         // 的を描画
         for (int i = 0; i < TARGET_NUM_MAX; i++) {
-            if (target[i].type != 5) {
-                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[target[i].type]);
+            if (s_data.target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[s_data.target[i].type]);
                 SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
                 imageRect = (SDL_Rect) { 0, 0, iw, ih };
-                drawRect  = (SDL_Rect) { target[i].x, target[i].y, iw, ih };
+                drawRect  = (SDL_Rect) { s_data.target[i].x, s_data.target[i].y, iw, ih };
                 SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
             }
         }
@@ -741,9 +753,8 @@ void md_solo_wait()
 
 void md_multi_wait()
 {
-    flag_subloop = true;
     // ホストかクライアントかを選択
-    while (flag_subloop) {
+    while (gGame.mode == MD_MULTI_WAIT) {
         SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
         SDL_RenderClear(gGame.renderer);
 
@@ -882,20 +893,12 @@ void md_multi_wait()
             SDL_Delay(interval);
         }
 
-        md_multi_host(player_num);
+        if (gGame.mode != MD_MENU)
+            md_multi_host();
     }
     // クライアントを選択された場合
-    else if (gGame.mode == MD_MULTI_CLIENT) {
-        while (flag_subloop) {
-            SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
-            SDL_RenderClear(gGame.renderer);
-
-            // ポインターをウィンドウに描画
-            filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
-
-            SDL_RenderPresent(gGame.renderer);
-            SDL_Delay(interval);
-        }
+    else if (gGame.mode == MD_MULTI_CLIENT_1) {
+        md_multi_client();
     }
 
     menu_sel   = 0;       // セレクターを初期化
@@ -903,13 +906,231 @@ void md_multi_wait()
     gGame.mode = MD_MENU; // モードをメニューに設定
 }
 
-void md_multi_host(int player_num)
+void md_multi_host()
 {
-    gGame.mode = MD_MULTI_HOST_2;
+    gGame.type = TYPE_HOST;
 
-    network_thread = SDL_CreateThread(server_main, "network_thread", NULL);
+    network_host_thread = SDL_CreateThread(server_main, "network_host_thread", NULL);
+    md_multi_client();
+    SDL_RemoveTimer(timer_id_2); // タイマー解除
+    SDL_WaitThread(network_host_thread, NULL);
+}
 
-    SDL_WaitThread(network_thread, NULL); // keyboard_threadの処理終了を待つ
+void md_multi_client()
+{
+    gGame.mode            = MD_MULTI_CLIENT_1;
+    network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
+
+    // 名前入力
+    alpha_key_pos = 27;
+    gGame.mode    = MD_MULTI_CLIENT_1;
+    while (gGame.mode == MD_MULTI_CLIENT_1) {
+        // プレイヤー名入力用のループ
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // プレイヤー名を入力してください　描画
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Please input your name", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 225, 50, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // 入力したプレイヤー名のバックグラウンド
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 225, 150, 550, 50 });
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, gGame.name, (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 238, 160, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // アルファベットの四角を描画
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (0 <= alpha_key_pos && alpha_key_pos <= 25 && alpha_key_pos == (j + 9 * i)) {
+                    SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
+                    SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
+                }
+                SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+                SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
+            }
+        }
+
+        // アルファベットを描画
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 9; j++) {
+                gGame.surface = TTF_RenderUTF8_Blended(font25, alpha[j + i * 9], (SDL_Color) { 255, 255, 255, 255 });
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+                txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+                pasteRect = (SDL_Rect) { 158 + j * 50, 258 + i * 50, iw, ih };
+                SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+            }
+        }
+
+        // BS 26
+        if (alpha_key_pos == 26) {
+            SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
+            SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 150, 400, 70, 50 });
+        }
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 150, 400, 70, 50 });
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "BS", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 160, 410, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // Enter 27
+        if (alpha_key_pos == 27) {
+            SDL_SetRenderDrawColor(gGame.renderer, 120, 120, 120, 255);
+            SDL_RenderFillRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
+        }
+        SDL_SetRenderDrawColor(gGame.renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(gGame.renderer, &(SDL_Rect) { 245, 400, 145, 50 });
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Enter", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 255, 410, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // 登録されているプレイヤー名を表示
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "Player list", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 650, 250, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        // ポインターをウィンドウに描画
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        // 描画
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
+    // 待機画面
+    while (gGame.mode == MD_MULTI_CLIENT_2) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        gGame.surface = TTF_RenderUTF8_Blended(font25, "waiting...", (SDL_Color) { 255, 255, 255, 255 });
+        gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+        SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
+    timer_id_2 = SDL_AddTimer(1000, target_cnt, &s_data); // 的の表示時間用のタイマーをセット
+
+    // カウントダウン描画
+    count_down_draw();
+
+    // ゲーム開始
+    while (MD_MULTI_CLIENT_3) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // メニュー画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_2);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+        SDL_RenderClear(gGame.renderer);
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        // 的を描画
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            if (c_data.target[i].type != 5) {
+                gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, image_target[c_data.target[i].type]);
+                SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+                imageRect = (SDL_Rect) { 0, 0, iw, ih };
+                drawRect  = (SDL_Rect) { c_data.target[i].x, c_data.target[i].y, iw, ih };
+                SDL_RenderCopy(gGame.renderer, gGame.texture, &imageRect, &drawRect);
+            }
+        }
+
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+    }
+
+    SDL_WaitThread(network_client_thread, NULL);
+}
+
+void count_down_draw()
+{
+    // カウントダウン用のタイマー起動
+    timer_id_3   = SDL_AddTimer(1000, count_down, &count_down_val);
+    flag_subloop = true;
+    // カウントダウン用のループ
+    while (flag_subloop) {
+        SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(gGame.renderer);
+
+        // 背景画像を描画
+        menu_texture = SDL_CreateTextureFromSurface(gGame.renderer, image_bg_1);
+        SDL_QueryTexture(menu_texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_SetRenderDrawColor(gGame.renderer, 200, 200, 200, 255);
+        SDL_RenderClear(gGame.renderer);
+        SDL_RenderCopy(gGame.renderer, menu_texture, &imageRect, &drawRect);
+
+        // ポインターをウィンドウに描画
+        filledCircleColor(gGame.renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        // カウントダウンを数値から文字列に変換
+        sprintf(count_down_txt, "%d", count_down_val);
+
+        // ０は文字列STARTを描画
+        if (count_down_val <= 0) {
+            sprintf(count_down_txt, "%s", "START");
+            // カウントダウン表示
+            gGame.surface = TTF_RenderUTF8_Blended(font50, count_down_txt, (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 350, 200, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+        }
+        // ３〜１ までのカウントダウン描画
+        else {
+            // カウントダウン表示
+            gGame.surface = TTF_RenderUTF8_Blended(font50, count_down_txt, (SDL_Color) { 0, 0, 0, 255 });
+            gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
+            SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 450, 200, iw, ih };
+            SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
+        }
+
+        // 描画
+        SDL_RenderPresent(gGame.renderer);
+        SDL_Delay(interval);
+
+        // カウントダウンが -1 より小さければ break
+        if (count_down_val <= -1) {
+            flag_subloop   = false;      // break
+            count_down_val = 3;          // カウントダウンの変数を初期化
+            SDL_RemoveTimer(timer_id_3); // タイマー解除
+        }
+    }
+    SDL_RemoveTimer(timer_id_3); // タイマー解除
+    flag_subloop = true;
 }
 
 void md_exit_wait()
@@ -964,14 +1185,14 @@ Uint32 count_down(Uint32 interval, void* param)
 Uint32 target_cnt(Uint32 interval, void* param)
 {
     for (int i = 0; i < TARGET_NUM_MAX; i++) {
-        if (target[i].type != 5) {
-            if (target[i].cnt == 3) {
-                target[i].type = 5;
-                target[i].cnt  = 0;
+        if (s_data.target[i].type != 5) {
+            if (s_data.target[i].cnt == 3) {
+                s_data.target[i].type = 5;
+                s_data.target[i].cnt  = 0;
             } else
-                target[i].cnt++;
+                s_data.target[i].cnt++;
         } else {
-            if (target[i].cnt == 2) {
+            if (s_data.target[i].cnt == 2) {
                 int type = rand() % 100;
                 if (0 <= type && type < 30)
                     type = 0;
@@ -988,9 +1209,9 @@ Uint32 target_cnt(Uint32 interval, void* param)
                 int y     = 100 + rand() % 250;
                 bool flag = true;
                 for (int j = 0; j < TARGET_NUM_MAX; j++) {
-                    if (target[j].type != 5) {
-                        int a = target[j].x - x;
-                        int b = target[j].y - y;
+                    if (s_data.target[j].type != 5) {
+                        int a = s_data.target[j].x - x;
+                        int b = s_data.target[j].y - y;
                         int c = sqrt(a * a + b * b);
                         if (c <= 50)
                             flag = false;
@@ -998,16 +1219,20 @@ Uint32 target_cnt(Uint32 interval, void* param)
                 }
 
                 if (flag) {
-                    target[i].type = type;
-                    target[i].x    = x;
-                    target[i].y    = y;
-                    target[i].cnt  = 0;
+                    s_data.target[i].type = type;
+                    s_data.target[i].x    = x;
+                    s_data.target[i].y    = y;
+                    s_data.target[i].cnt  = 0;
                 }
             } else {
-                target[i].cnt++;
+                s_data.target[i].cnt++;
             }
         }
     }
+
+    s_data.command = DATA_COMMAND;
+    server_send_data(BROADCAST, &s_data, sizeof(CONTAINER));
+
     return interval;
 }
 
