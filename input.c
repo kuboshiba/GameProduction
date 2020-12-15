@@ -1,495 +1,236 @@
 #include "header/define.h"
 
-// Wiiリモコンの入力制御関数
-int wii_func()
+/*******************************************************************
+ * 関数名 : keyboard_func
+ * 　　型 : int
+ * 　説明 : キーボード入力用の関数
+ ******************************************************************/
+int keyboard_func()
 {
-    // SDL_mutex *mtx = (SDL_mutex *)args; // 引数型はmtxに変更
+    /* ゲームがアクティブ状態であればループ */
+    while (gGame.status == ACTIVE) {
+        /* イベントを更新する */
+        if (SDL_PollEvent(&event)) {
+            /* キーボードの入力タイプによって条件分岐*/
+            if (event.type == SDL_KEYDOWN) { // キーが押されたとき
+                /* キーの種類によって条件分岐 */
+                switch (event.key.keysym.sym) {
+                case SDLK_ESCAPE:           // Escキーが押された時
+                    gGame.status = PASSIVE; // ゲームの状態を PASSIVE にする
+                    /* フラグを全て false にする */
+                    for (int i = 0; i < MODE_NUM; i++)
+                        flag[i] = false;
+                    break;
+                }
+            }
+        }
+    }
+    return 0;
+}
 
-    // Wiiリモコンがオープン（接続状態）であればループ
-    while (flag_loop) {
-        // Wiiリモコンの状態を取得・更新する
+/*******************************************************************
+ * 関数名 : wiimote_func
+ * 　　型 : int
+ * 　説明 : Wiiリモコン入力用の関数
+ ******************************************************************/
+int wiimote_func()
+{
+    /* ゲームがアクティブ状態であればループ */
+    while (gGame.status == ACTIVE) {
+        /* Wiiリモコンの状態を取得・更新する */
         if (wiimote_update(&wiimote)) {
-            // SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
-            // Wii Homeボタンが押された時
-            if (wiimote.keys.home && gGame.mode == MD_MENU)
-                flag_loop = false;
-
-            // メニュー画面で選択されているモードで条件分岐
+            /* モードによって条件分岐*/
             switch (gGame.mode) {
-            // [モード] メニュー
-            case MD_MENU:
-                // Wiiリモコンの 十字キー上 が押されたとき
+            case MODE_MENU: // メニュー
+                /* Wiiリモコンの 十字キー上 が押されたとき */
                 if (wiimote.keys.up) {
-                    // メニューのモードをデクリメント
-                    if (menu_sel != 0)
-                        menu_sel--;
+                    if (selecter != 0)
+                        selecter--;
                     else
-                        menu_sel = 3;
-                    // チャタリング防止のための待機用ループ
+                        selecter = 3;
+
+                    /* チャタリング防止 */
                     while (wiimote.keys.up)
                         wiimote_update(&wiimote);
                 }
-                // Wiiリモコンの 十字キー下 が押されたとき
+                /* Wiiリモコンの 十字キー下 が押されたとき */
                 else if (wiimote.keys.down) {
-                    // メニューのモードをインクリメント
-                    if (menu_sel != 3)
-                        menu_sel++;
+                    if (selecter != 3)
+                        selecter++;
                     else
-                        menu_sel = 0;
-                    // チャタリング防止のための待機用ループ
+                        selecter = 0;
+
+                    /* チャタリング防止 */
                     while (wiimote.keys.down)
                         wiimote_update(&wiimote);
                 }
-                // Wiiリモコンの Aボタン が押されたとき
+                /* Wiiリモコンの Aボタンが押されたとき */
                 else if (wiimote.keys.a) {
-                    // メニューのモードによって条件分岐
-                    // 0: ソロプレイ，1: マルチプレイ, 2: 設定
-                    switch (menu_sel) {
-                    case 0: // ソロプレイのボタンが押されたとき
-                        player_num = 1;
-                        gGame.mode = MD_SOLO_WAIT;
-                        gGame.mode = MD_SOLO_WAIT;
+                    /*
+                        セレクター値によって条件分岐
+                        0: SOLO ソロプレイ >>> ソロプレイをするかを尋ねる
+                        1: MULTI マルチプレイ >>> ホストかクライアントを尋ねる
+                        2: SETTING 設定
+                        3: EXIT 終了
+                    */
+                    switch (selecter) {
+                    case 0: // SOLO ソロプレイ
+                        gGame.mode = MODE_SOLO_OK_OR_CANCEL;
                         break;
-                    case 1: // マルチプレイのボタンが押されたとき
-                        gGame.mode = MD_MULTI_WAIT;
-                        gGame.mode = MD_MULTI_WAIT;
+                    case 1: // MULTI マルチプレイ
                         break;
-                    case 2: // 設定のボタンが押されたとき
+                    case 2: // SETTING 設定
                         break;
-                    case 3: // 終了ボタンが押されたとき
-                        gGame.mode = MD_EXIT_WAIT;
-                        gGame.mode = MD_EXIT_WAIT;
-                        break;
-                    default:
+                    case 3: // EXIT 終了
                         break;
                     }
-                    menu_sel = 0; // セレクターを初期化
 
-                    // チャタリング防止のため待機用ループ
+                    /* チャタリング防止 */
                     while (wiimote.keys.a)
                         wiimote_update(&wiimote);
                 }
                 break;
-            // [モード] ソロプレイの待機
-            case MD_SOLO_WAIT:
-                // 十字キー上が押されたとき
+            case MODE_SOLO_OK_OR_CANCEL: // ソロプレイをするかどうか OK or CANCEL
+                /* Wiiリモコンの 十字キー上 が押されたとき */
                 if (wiimote.keys.up) {
-                    // セレクターをデクリメント
-                    if (menu_sel != 0)
-                        menu_sel--;
+                    if (selecter != 0)
+                        selecter--;
                     else
-                        menu_sel = 1;
-                    // チャタリング防止のため待機用ループ
+                        selecter = 1;
+
+                    /* チャタリング防止 */
                     while (wiimote.keys.up)
                         wiimote_update(&wiimote);
                 }
-                // 十字キー下が押されたとき
+                /* Wiiリモコンの 十字キー下 が押されたとき */
                 else if (wiimote.keys.down) {
-                    // セレクターをインクリメント
-                    if (menu_sel != 1)
-                        menu_sel++;
+                    if (selecter != 1)
+                        selecter++;
                     else
-                        menu_sel = 0;
-                    // チャタリング防止のため待機用ループ
+                        selecter = 0;
+
+                    /* チャタリング防止 */
                     while (wiimote.keys.down)
                         wiimote_update(&wiimote);
                 }
-                // Aボタンが押されたとき
+                /* Wiiリモコンの Aボタンが押されたとき */
                 else if (wiimote.keys.a) {
-                    // セレクターによって条件分岐
-                    switch (menu_sel) {
-                    // OKボタンが押されたとき
-                    case SEL_OK:
-                        player_num = 1;                 // プレイヤーの数を１に設定
-                        gGame.mode = MD_SOLO_PLAYING_1; // モードをソロプレイに設定
+                    /*
+                        セレクター値によって条件分岐
+                        0: OK ソロプレイする >>> プレイヤー名入力へ
+                        1: CANCEL >>> メニュー画面へ
+                    */
+                    switch (selecter) {
+                    case 0: // OK >>> プレイヤー名入力へ
+                        gGame.mode = MODE_INPUT_NAME;
                         break;
-                    // CANCELボタンが押されたとき
-                    case SEL_CANCEL:
-                        player_num = 1;       // プレイヤーの数を取り敢えず１に初期化
-                        gGame.mode = MD_MENU; // モードをメニューに設定
-                        break;
-                    default:
+                    case 1: // CANCEL >>> メニュー画面へ
+                        gGame.mode = MODE_MENU;
                         break;
                     }
-                    menu_sel = 0; // セレクターを初期化
 
-                    // チャタリング防止のための待機用ループ
+                    flag[MODE_SOLO_OK_OR_CANCEL] = false;
+                    selecter                     = 0;
+
+                    /* チャタリング防止 */
                     while (wiimote.keys.a)
                         wiimote_update(&wiimote);
                 }
                 break;
-            case MD_SOLO_PLAYING_1:
-                if (wiimote.keys.home) {
-                    flag_subloop = false;
-                    player_num   = 1;       // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode   = MD_MENU; // モードをメニューに設定
+            case MODE_INPUT_NAME: // プレイヤー名を入力する
+                /* Wiiリモコンの 十字キー上 が押されたとき */
+                if (wiimote.keys.up) {
+                    if (9 <= key_pos && key_pos <= 25)
+                        key_pos -= 9;
+                    else if (key_pos == 8)
+                        key_pos = 25;
+                    else
+                        key_pos += 18;
+
+                    /* チャタリング防止 */
+                    while (wiimote.keys.up)
+                        wiimote_update(&wiimote);
                 }
-                menu_sel = 0; // セレクターを初期化
+                /* Wiiリモコンの 十字キー下 が押されたとき */
+                else if (wiimote.keys.down) {
+                    if (0 <= key_pos && key_pos <= 16)
+                        key_pos += 9;
+                    else if (key_pos == 17)
+                        key_pos = 25;
+                    else
+                        key_pos -= 18;
 
-                // チャタリング防止のための待機用ループ
-                while (wiimote.keys.home)
-                    wiimote_update(&wiimote);
-                break;
-            // プレイヤー名を入力するモード
-            case MD_PLAYER_NAME_INPUT:
-                if (wiimote.keys.right && alpha_key_pos + 1 <= 27) {
-                    alpha_key_pos++;
-                    goto S1;
-                } else if (wiimote.keys.left && alpha_key_pos - 1 >= 0) {
-                    alpha_key_pos--;
-                    goto S1;
-                } else if (wiimote.keys.up && alpha_key_pos - 9 >= 0 && alpha_key_pos < 26) {
-                    alpha_key_pos -= 9;
-                    goto S1;
-                } else if (wiimote.keys.down && alpha_key_pos + 9 < 26 && alpha_key_pos < 18) {
-                    alpha_key_pos += 9;
-                    goto S1;
+                    /* チャタリング防止 */
+                    while (wiimote.keys.down)
+                        wiimote_update(&wiimote);
                 }
+                /* Wiiリモコンの 十字キー左 が押されたとき */
+                else if (wiimote.keys.left) {
+                    if (key_pos == 0 || key_pos == 9)
+                        key_pos += 8;
+                    else if (key_pos == 18)
+                        key_pos = 25;
+                    else
+                        key_pos--;
 
-                if (wiimote.keys.left && alpha_key_pos == 0)
-                    alpha_key_pos = 27;
-                else if ((wiimote.keys.right || wiimote.keys.down) && alpha_key_pos == 27)
-                    alpha_key_pos = 0;
-                else if (wiimote.keys.down && alpha_key_pos == 26)
-                    alpha_key_pos = 0;
+                    /* チャタリング防止 */
+                    while (wiimote.keys.left)
+                        wiimote_update(&wiimote);
+                }
+                /* Wiiリモコンの 十字キー右 が押されたとき */
+                else if (wiimote.keys.right) {
+                    if (key_pos == 8 || key_pos == 17)
+                        key_pos -= 8;
+                    else if (key_pos == 25)
+                        key_pos = 18;
+                    else
+                        key_pos++;
 
-                if (wiimote.keys.down && 20 <= alpha_key_pos && alpha_key_pos <= 25)
-                    alpha_key_pos = 27;
-                else if (wiimote.keys.down && 18 <= alpha_key_pos && alpha_key_pos <= 19)
-                    alpha_key_pos = 26;
-                else if (wiimote.keys.up && alpha_key_pos == 26)
-                    alpha_key_pos = 18;
-                else if (wiimote.keys.up && alpha_key_pos == 27)
-                    alpha_key_pos = 21;
+                    /* チャタリング防止 */
+                    while (wiimote.keys.right)
+                        wiimote_update(&wiimote);
+                }
+                /* Wiiリモコンの Aボタン が押されたとき */
+                else if (wiimote.keys.a) {
+                    char buf[MAX_LEN_NAME] = "\0";
+                    if (strlen(gPlayer.name) <= 15) {
+                        sprintf(buf, "%s%s", gPlayer.name, alphabet[key_pos]);
+                        sprintf(gPlayer.name, "%s", buf);
+                    }
 
-                if (wiimote.keys.up && 0 <= alpha_key_pos && alpha_key_pos <= 8)
-                    alpha_key_pos = 27;
-
-                char temp[MAX_LEN_NAME];
-
-                if (wiimote.keys.a && 0 <= alpha_key_pos && alpha_key_pos <= 25) {
-                    sprintf(temp, "%s", gGame.name);
-                    sprintf(gGame.name, "%s%s", temp, alpha[alpha_key_pos]);
-                } else if (wiimote.keys.a && alpha_key_pos == 26) {
-                    int len = strlen(gGame.name);
-                    for (int i = 0; i < len - 2; i++)
-                        temp[i] = gGame.name[i];
-                    temp[len - 1] = '\0';
-                    sprintf(gGame.name, "%s", temp);
-                } else if (wiimote.keys.a && alpha_key_pos == 27) {
-                    // チャタリング防止のための待機用ループ
+                    /* チャタリング防止 */
                     while (wiimote.keys.a)
                         wiimote_update(&wiimote);
-
-                    flag_subloop = false;
-                    player_num   = 1; // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode   = MD_SOLO_PLAYING_2;
                 }
+                /* Wiiリモコンの Bボタン が押されたとき */
+                else if (wiimote.keys.b) {
+                    int len = strlen(gPlayer.name);
+                    if (0 < len)
+                        gPlayer.name[len - 1] = '\0';
 
-            S1:
-                // チャタリング防止のための待機用ループ
-                while (wiimote.keys.right || wiimote.keys.left || wiimote.keys.up || wiimote.keys.down || wiimote.keys.a)
-                    wiimote_update(&wiimote);
-
-                if (wiimote.keys.home) {
-                    flag_subloop = false;
-                    player_num   = 1;                 // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode   = MD_SOLO_PLAYING_2; // モードをメニューに設定
-                    menu_sel     = 0;                 // セレクターを初期化
-                    // チャタリング防止のための待機用ループ
-                    while (wiimote.keys.home)
-                        wiimote_update(&wiimote);
-                }
-
-                break;
-            // ソロプレイ（実際のプレイ）
-            case MD_SOLO_PLAYING_2:
-                // Bボタンで撃つ
-                if (wiimote.keys.b) {
-                    // 的は同時表示TARGET_NUM_MAX個までなのでTARGET_NUM_MAX回ループ
-                    for (int i = 0; i < TARGET_NUM_MAX; i++) {
-                        // 的を表示している場合　ポインターと的の当たり判定をする
-                        if (s_data.target[i].type != 5) {
-                            int a = (s_data.target[i].x + 25) - pointer.x;
-                            int b = (s_data.target[i].y + 25) - pointer.y;
-                            int c = sqrt(a * a + b * b);
-
-                            // 当たっている場合
-                            if (c <= 34) {
-                                switch (target[i].type) {
-                                case 0: // 100点
-                                    gGame.score += 100;
-                                    break;
-                                case 1: // 200点
-                                    gGame.score += 200;
-                                    break;
-                                case 2: // 500点
-                                    gGame.score += 500;
-                                    break;
-                                case 3: // 1000点
-                                    gGame.score += 1000;
-                                    break;
-                                case 4: // 2000点
-                                    gGame.score += 2000;
-                                    break;
-                                }
-                                s_data.target[i].type = 5; // 的を消す
-                                s_data.target[i].cnt  = 0; // カウンターを初期化
-                            }
-                        }
-                    }
-                    // チャタリング回避
+                    /* チャタリング防止 */
                     while (wiimote.keys.b)
                         wiimote_update(&wiimote);
                 }
+                /* Wiiリモコンの 1ボタン が押されたとき */
+                else if (wiimote.keys.one) {
+                    gGame.mode            = MODE_SOLO_PLAYING; // モード遷移
+                    flag[MODE_INPUT_NAME] = false;             // フラグ初期化
+                    key_pos               = 0;                 // セレクター初期化
 
-                if (wiimote.keys.home) {
-                    flag_subloop = false;
-                    player_num   = 1;                 // プレイヤーの数を取り敢えず１に初期化
-                    gGame.mode   = MD_SOLO_PLAYING_2; // モードをメニューに設定
-                    menu_sel     = 0;                 // セレクターを初期化
-                    // チャタリング防止のための待機用ループ
-                    while (wiimote.keys.home)
+                    /* チャタリング防止 */
+                    while (wiimote.keys.one)
                         wiimote_update(&wiimote);
                 }
                 break;
-            // [モード] マルチプレイの待機
-            case MD_MULTI_WAIT:
-                // 十字キー上が押されたとき
-                if (wiimote.keys.up) {
-                    // セレクターをデクリメント
-                    if (menu_sel != 0)
-                        menu_sel--;
-                    else
-                        menu_sel = 2;
-                    // チャタリング防止のための待機用ループ
-                    while (wiimote.keys.up)
-                        wiimote_update(&wiimote);
-                }
-                // 十字キー下が押されたとき
-                else if (wiimote.keys.down) {
-                    // セレクターをインクリメント
-                    if (menu_sel != 2)
-                        menu_sel++;
-                    else
-                        menu_sel = 0;
-                    // チャタリング防止のための待機用ループ
-                    while (wiimote.keys.down)
-                        wiimote_update(&wiimote);
-                }
-                // Aボタンが押されたとき
-                else if (wiimote.keys.a) {
-                    // セレクターによって条件分岐
-                    switch (menu_sel) {
-                    // ホストが選択されたとき
-                    case 0:
-                        gGame.mode = MD_MULTI_HOST_1;
-                        break;
-                    // クライアントが選択されたとき
-                    case 1:
-                        gGame.mode = MD_MULTI_CLIENT_1;
-                        break;
-                    // キャンセルボタンが選択されたとき
-                    case 2:
-                        player_num = 1;       // プレイヤーの数取り敢えず１に初期化
-                        gGame.mode = MD_MENU; // モードをメニューに設定
-                        break;
-                    default:
-                        break;
-                    }
-                    menu_sel = 0; // セレクターを初期化
-
-                    // チャタリング防止のための待機用ループ
-                    while (wiimote.keys.a)
-                        wiimote_update(&wiimote);
-                }
+            case MODE_COUNTDOWN:
                 break;
-            case MD_MULTI_HOST_1:
-                if (wiimote.keys.home) {
-                    flag_subloop = false;
-                } else if (wiimote.keys.up) {
-                    if (menu_sel != 0)
-                        menu_sel--;
-                } else if (wiimote.keys.down) {
-                    if (menu_sel != 3)
-                        menu_sel++;
-                } else if (wiimote.keys.right) {
-                    if (menu_sel != 3)
-                        menu_sel = 3;
-                } else if (wiimote.keys.left) {
-                    if (menu_sel == 3)
-                        menu_sel = 1;
-                }
-
-                if (wiimote.keys.a) {
-                    switch (menu_sel) {
-                    // 2 players
-                    case 0:
-                        player_num   = 2;
-                        gGame.mode   = MD_MULTI_HOST_2;
-                        flag_subloop = false;
-                        break;
-                    // 3 players
-                    case 1:
-                        player_num   = 3;
-                        gGame.mode   = MD_MULTI_HOST_2;
-                        flag_subloop = false;
-                        break;
-                    // 4 players
-                    case 2:
-                        player_num   = 4;
-                        gGame.mode   = MD_MULTI_HOST_2;
-                        flag_subloop = false;
-                        break;
-                    // CANCEL
-                    case 3:
-                        player_num   = 1; // プレイヤーの数取り敢えず１に初期化
-                        flag_subloop = false;
-                        gGame.mode   = MD_MENU; // モードをメニューに設定
-                        break;
-                    default:
-                        break;
-                    }
-                }
-
-                while (wiimote.keys.home || wiimote.keys.a || wiimote.keys.up || wiimote.keys.down || wiimote.keys.left || wiimote.keys.right)
-                    wiimote_update(&wiimote);
+            case MODE_TRANSITION:
                 break;
-            case MD_MULTI_HOST_2:
-                break;
-            case MD_MULTI_CLIENT_1:
-                break;
-            // [モード] 終了待機
-            case MD_EXIT_WAIT:
-                // 十字キー上が押されたとき
-                if (wiimote.keys.up) {
-                    // セレクターをデクリメント
-                    if (menu_sel != 0)
-                        menu_sel--;
-                    else
-                        menu_sel = 1;
-                    // チャタリング防止のため待機用ループ
-                    while (wiimote.keys.up)
-                        wiimote_update(&wiimote);
-                }
-                // 十字キー下が押されたとき
-                else if (wiimote.keys.down) {
-                    // セレクターをインクリメント
-                    if (menu_sel != 1)
-                        menu_sel++;
-                    else
-                        menu_sel = 0;
-                    // チャタリング防止のため待機用ループ
-                    while (wiimote.keys.down)
-                        wiimote_update(&wiimote);
-                }
-                // Aボタンが押されたとき
-                else if (wiimote.keys.a) {
-                    // セレクターによって条件分岐
-                    switch (menu_sel) {
-                    // ホストが選択されたとき
-                    case 0:
-                        gGame.mode = MD_EXIT;
-                        gGame.mode = MD_EXIT;
-                        break;
-                    case 1:
-                        // チャタリング防止のための待機用ループ
-                        while (wiimote.keys.a)
-                            wiimote_update(&wiimote);
-
-                        player_num = 1;       // プレイヤーの数取り敢えず１に初期化
-                        gGame.mode = MD_MENU; // モードをメニューに設定
-                        gGame.mode = MD_MENU; // モードをメニューに設定
-                        break;
-                    default:
-                        break;
-                    }
-                    menu_sel = 0; // セレクターを初期化
-                }
-                break;
-            // [モード] 終了
-            case MD_EXIT:
-                // Wiiリモコンが接続状態であればループ
-                flag_loop = false;
-            default:
+            case MODE_SOLO_PLAYING: // ソロプレイ　プレイ中
                 break;
             }
-
-            // SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
-        } else {
-            flag_loop = false;
         }
-    }
-    return 0;
-}
-
-// キーボードの入力制御関数
-int keyboard_func()
-{
-    // SDL_mutex *mtx = (SDL_mutex *)args; // 注意：引数はmtx
-
-    // Wiiリモコンがオープン（接続状態）であればループ
-    while (flag_loop) {
-        // キーボードの状態を取得・更新する
-        if (SDL_PollEvent(&event)) {
-            // SDL_LockMutex(mtx); // Mutexをロックして、他のスレッドが共有変数にアクセスできないようにする
-
-            switch (event.type) {
-            case SDL_KEYDOWN: // キーボードが押された時
-                switch (event.key.keysym.sym) {
-                case SDLK_ESCAPE: // Escキーが押された時
-                    flag_loop = false;
-                    break;
-                default:
-                    break;
-                }
-                break;
-            default:
-                break;
-            }
-            // SDL_UnlockMutex(mtx); // Mutexをアンロックし、他のスレッドが共有変数にアクセスできるようにする
-        }
-    }
-    return 0;
-}
-
-int wii_ir_func()
-{
-    // Wiiリモコンがオープン（接続状態）であればループ
-    while (flag_loop) {
-        wiimote_update(&wiimote);
-
-        // 赤外線センサの値を連続にする（x座標）
-        if (512 <= wiimote.ir2.x && wiimote.ir2.x <= 767)
-            wiimote.ir2.x -= 256;
-        else if (1024 <= wiimote.ir2.x && wiimote.ir2.x <= 1279)
-            wiimote.ir2.x -= 512;
-        else if (1536 <= wiimote.ir2.x && wiimote.ir2.x <= 1791)
-            wiimote.ir2.x -= 768;
-
-        wiimote.ir2.x = abs(1023 - wiimote.ir2.x); // x値反転
-
-        // 赤外線センサの値を連続にする（y座標）
-        if (512 <= wiimote.ir2.y && wiimote.ir2.y <= 767)
-            wiimote.ir2.y -= 256;
-        else if (1024 <= wiimote.ir2.y && wiimote.ir2.y <= 1279)
-            wiimote.ir2.y -= 512;
-        else if (1536 <= wiimote.ir2.y && wiimote.ir2.y <= 1791)
-            wiimote.ir2.y -= 768;
-
-        // map関数でウィンドウサイズに調整
-        pointer.x = map(wiimote.ir2.x, 100, 900, -50, 1050);
-        pointer.y = map(wiimote.ir2.y, 200, 700, -50, 550);
-
-        // ノイズ除去
-        if ((abs(pointer.x - pointer_prev.x) <= 5))
-            pointer.x = pointer_prev.x;
-        if (abs(pointer.y - pointer_prev.y) <= 5)
-            pointer.y = pointer_prev.y;
-
-        // 前回の座標として記憶
-        pointer_prev.x = pointer.x;
-        pointer_prev.y = pointer.y;
     }
     return 0;
 }

@@ -16,20 +16,24 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <SDL2/SDL.h>                // SDLを用いるために必要なヘッダファイル
-#include <SDL2/SDL2_gfxPrimitives.h> // 描画関係のヘッダファイル
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL.h>                // SDL2 標準 API
+#include <SDL2/SDL2_gfxPrimitives.h> // SDL2 図形描画系
+#include <SDL2/SDL_image.h>          // SDL2 画像描画系
+#include <SDL2/SDL_ttf.h>            // SDL2 文字描画系
 
 #include <libcwiimote/wiimote.h>     // Wiiリモコンを用いるために必要なヘッダファイル
 #include <libcwiimote/wiimote_api.h> // Wiiリモコンを用いるために必要なヘッダファイル
 
-// define
+#define SCREEN_WIDTH 1000 // ウィンドウの横サイズ
+#define SCREEN_HEIGHT 500 // ウィンドウの縦サイズ
+
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
-#define TARGET_NUM_MAX 10
+
+#define MODE_NUM 100  // モードの個数
+#define STAGE_TIME 15 // ステージごとの時間 sec
 
 #define DEFAULT_PORT 51000 // デフォルトのポート番号
-#define MAX_LEN_NAME 10    // 名前の最大文字数
+#define MAX_LEN_NAME 100   // 名前の最大文字数
 #define MAX_NUM_CLIENTS 4  // クライアントの最大数
 #define MAX_LEN_BUFFER 256 // バッファーの最大値
 #define MAX_LEN_ADDR 32    // アドレスの最大値
@@ -41,63 +45,40 @@
 #define DATA_TARGET_COMMAND 'T'
 #define START_COMMAND 'S' // スタートコマンド
 
-// ウインドウサイズ
-enum {
-    WD_Width  = 1000,
-    WD_Height = 500
-};
-
-enum {
-    SEL_OK     = 0,
-    SEL_CANCEL = 1,
-    SEL_HOST   = 0,
-    SEL_CLIENT = 1,
-};
+#define TARGET_NUM_MAX 10
+#define SERVER_ADDR "192.168.64.77" // サーバーのアドレス
 
 typedef enum {
-    TYPE_HOST   = 0,
-    TYPE_CLIENT = 1
-} TYPE;
+    PASSIVE = 0, // ゲームがパッシブ
+    ACTIVE  = 1  // ゲームがアクティブ
+} STATUS;
 
-// 画面のモード
 typedef enum {
-    MD_MENU              = 0, // メニュー
-    MD_SOLO_WAIT         = 1, // ソロプレイ待機
-    MD_SOLO_PLAYING_1    = 2, // ソロプレイ中
-    MD_SOLO_PLAYING_2    = 3, // ソロプレイのゲーム中
-    MD_MULTI_WAIT        = 4, // マルチプレイ待機
-    MD_MULTI_HOST_1      = 5,
-    MD_MULTI_HOST_2      = 6,
-    MD_MULTI_HOST_3      = 7,
-    MD_MULTI_HOST_4      = 8,
-    MD_MULTI_CLIENT_1    = 20,
-    MD_MULTI_CLIENT_2    = 21,
-    MD_MULTI_CLIENT_3    = 22,
-    MD_MULTI_PLAYING     = 95, // マルチプレイ中
-    MD_PLAYER_NAME_INPUT = 96, // プレイヤーネームの入力
-    MD_EXIT_WAIT         = 97, // 終了待機
-    MD_EXIT              = 98, // 終了
-    MD_WAIT              = 99  // 待機
+    MODE_MENU              = 0,  // メニュー画面
+    MODE_SOLO_OK_OR_CANCEL = 1,  // ソロプレイ select OK or CANCEL
+    MODE_INPUT_NAME        = 2,  // プレイヤー名入力
+    MODE_SOLO_PLAYING      = 3,  // ソロプレイ　プレイ中
+    MODE_COUNTDOWN         = 10, // ソロプレイ　カウントダウン中
+    MODE_TRANSITION        = 11  // ステージ遷移
 } MODE;
 
-// ゲームの状態
+/* ゲームで多用する共通変数は構造体 Game で管理 */
 typedef struct {
-    SDL_Window* window;     // ウィンドウデータを格納する構造体
-    SDL_Renderer* renderer; // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
-    SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
-    SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
+    STATUS status; // ACTIVE: イベントなどループ可, PASSIVE: メインループ抜ける
     MODE mode;
-    TYPE type;
+} GameInfo;
+extern GameInfo gGame; // ゲームで多用する共通変数は構造体 gGame で管理
+
+typedef struct {
     char name[MAX_LEN_NAME];
     int score;
-} GameInfo;
+} PLAYER;
+extern PLAYER gPlayer; // プレイヤーの情報
 
-// プレイヤーの状態
 typedef struct {
-    MODE mode;
-    int score;
-    char name[100];
-} Player;
+    int x;
+    int y;
+} POINT; // 座標
 
 typedef struct {
     int type;
@@ -105,135 +86,135 @@ typedef struct {
     int y;
     int cnt;
 } Target;
+extern Target target[TARGET_NUM_MAX];
 
-// クライアントの構造体
 typedef struct {
     int cid;
     int sock;
     struct sockaddr_in addr;
     char name[MAX_LEN_NAME];
-} CLIENT;
+} CLIENT; // クライアントの構造体
 
-// コンテナの構造体
 typedef struct {
     int cid;
     char command;
     char message[MAX_LEN_BUFFER];
     int score;
     Target target[10];
-} CONTAINER;
+} CONTAINER; // コンテナの構造体
 
-extern GameInfo gGame;    // ゲームの状態
-extern Player gPlayer[4]; // プレイヤーの状態
-extern Target target[10];
-extern Target c_target[10];
+/* SDL 関係 */
+extern SDL_Window *window;     // ウィンドウデータを格納する構造体
+extern SDL_Renderer *renderer; // 2Dレンダリングコンテキスト（描画設定）を格納する構造体
+extern SDL_Surface *surface;   // サーフェイス（メインメモリ上の描画データ）を格納する構造体
+extern SDL_Texture *texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
+extern SDL_Event event;        // SDLによるイベントを検知するための構造体
 
-extern SDL_Thread* wii_thread;            // wii_threadを用いる
-extern SDL_Thread* keyboard_thread;       // keyboard_threadを用いる
-extern SDL_Thread* wii_ir_thread;         // wii_ir_threadを用いる
-extern SDL_Thread* network_host_thread;   // network_host_threadを用いる
-extern SDL_Thread* network_client_thread; // network_client_threadを用いる
+/*  PressStart2Pのフォント格納データ */
+typedef struct {
+    TTF_Font *size10;
+    TTF_Font *size15;
+    TTF_Font *size20;
+    TTF_Font *size25;
+    TTF_Font *size50;
+} Font_PressStart2P;
+extern Font_PressStart2P fonts; // PressStart2Pのフォント格納データ
 
-extern SDL_mutex* mtx;  // 相互排除（Mutex）
-extern SDL_Event event; // SDLによるイベントを検知するための構造体
+/* スレッド関係の定義・変数 */
+extern SDL_Thread *keyboard_thread; // キーボード入力用のスレッド
+extern SDL_Thread *wiimote_thread;  // Wiiリモコン入力用のスレッド
 
-extern SDL_TimerID timer_id_1; // min_flips_callback用のタイマー
-extern SDL_TimerID timer_id_2; // カウントダウン用
-extern SDL_TimerID timer_id_3; // カウントダウン用
+/* タイマー関係の定義・変数 */
+extern SDL_TimerID timer_id_countdown;        // カウントダウン用のタイマー
+extern SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
 
-extern SDL_Surface* image_bg_1;       // 背景画像用のサーフェイス
-extern SDL_Surface* image_bg_2;       // 背景画像用のサーフェイス
-extern SDL_Surface* image_bg_3;       // 背景画像用のサーフェイス
-extern SDL_Surface* image_bg_4;       // メニュー画像用のサーフェイス
-extern SDL_Surface* image_menu_bg;    // メニュー画像陽のサーフェイス
-extern SDL_Surface* image_target[10]; // 的の画像用のサーフェイス
+/* 画像関係の定義・変数 */
+#define IMAGE_BG_NUM 4                              // 背景画像の数
+#define IMAGE_TARGET_NUM 5                          // 的の画像の数
+extern SDL_Surface *image_bg[IMAGE_BG_NUM];         // 背景画像
+extern SDL_Surface *image_target[IMAGE_TARGET_NUM]; // 的の画像
+extern SDL_Surface *image_menu;                     // メニュー画像
+extern SDL_Rect imageRect;                          // 画像の選択範囲
+extern SDL_Rect drawRect;                           // 画像の描画位置
+extern SDL_Rect txtRect;                            // 文字の選択範囲
+extern SDL_Rect pasteRect;                          // 文字の描画範囲
+extern Uint32 rmask, gmask, bmask, amask;           // サーフェイス作成時のマスクデータを格納する変数
+extern int iw, ih;                                  // テクスチャやサーフェイスの幅
 
-extern SDL_Rect src_rect_bg; // 画像の切り取り範囲
-extern SDL_Rect dst_rect_bg; // 画像の描画位置
-extern SDL_Rect txtRect;     // 文字を描画する際に使用
-extern SDL_Rect pasteRect;   // 文字を描画する際に使用
-extern SDL_Rect pointer;
-extern SDL_Rect pointer_prev;
-
-extern TTF_Font* font10;
-extern TTF_Font* font18;
-extern TTF_Font* font20;
-extern TTF_Font* font25; // TrueTypeフォントデータを格納する構造体
-extern TTF_Font* font50; // TrueTypeフォントデータを格納する構造体
-
+/* Wiimote関係 */
 extern wiimote_t wiimote; // Wiiリモコンの状態格納用
 
-extern Uint32 rmask, gmask, bmask, amask; // サーフェイス作成時のマスクデータを格納する変数
+/* その他 */
+extern int selecter;         // セレクター
+extern bool flag[100];       // フラグ
+extern int key_pos;          // プレイヤー名入力画面のセレクター
+extern char alphabet[27][2]; // アルファベット
 
-extern int iw, ih;        // 文字を描画する際に使用
-extern int player_num;    // プレイヤーの数
-extern int menu_sel;      // メニューのボタンのセレクト位置
-extern int menu_sel_num;  // メニューのボタンのセレクトの数
-extern int alpha_key_pos; // キーボード入力のセレクタ
-
-extern char alpha[27][2];
-
-extern bool flag_loop;    // メインループのループフラグ
-extern bool flag_subloop; // メインループのループフラグ
-
-// server.c
+/**********************************************************************
+******************************* server.c ******************************
+**********************************************************************/
 extern CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
 extern CONTAINER s_data;                  // 構造体 DATA を構造体変数 s_data で宣言
 extern int s_num_clients;                 // クライアントの数を格納
 extern int s_num_socks;                   // ソケットの数を格納
 extern fd_set s_mask;
 
-// client.c
+extern int server_main();
+extern void setup_server(int, u_short);
+extern int server_control_requests();
+extern void server_send_data(int cid, void *data, int size);
+extern int server_receive_data(int cid, void *data, int size);
+extern void terminate_server(void);
+extern void server_handle_error(char *message);
+
+/**********************************************************************
+******************************* client.c ******************************
+**********************************************************************/
+extern CLIENT c_clients[MAX_NUM_CLIENTS];
+extern CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
 extern int c_sock;
 extern int c_num_clients;
 extern int c_myid;
 extern int c_num_sock;
 extern fd_set c_mask;
-extern CLIENT c_clients[MAX_NUM_CLIENTS];
-extern CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
 
-// system.c
-extern void init_sys();        // SDLやWiiリモコンを初期化する関数
-extern void opening_process(); // 開放処理を行う関数
-
-// input.c
-extern int wii_func();      // Wiiリモコンの入力制御関数
-extern int keyboard_func(); // キーボードの入力制御関数
-extern int wii_ir_func();   // Wiiリモコンの赤外線センサの入力制御関数
-
-extern void md_multi_host();
-extern void md_multi_client();
-
-// define.c
-extern void Error();                                                     // エラーを色付きで出力する関数
-extern void Log();                                                       // ログを色付きで出力する関数
-extern void SystemLog();                                                 // ログを色付きで出力する関数
-extern int map(int x, int in_min, int in_max, int out_min, int out_max); // map関数
-
-// server.c
-extern int server_main();
-extern void setup_server(int, u_short);
-extern int server_control_requests();
-extern void server_send_data(int cid, void* data, int size);
-extern int server_receive_data(int cid, void* data, int size);
-extern void terminate_server(void);
-extern void server_handle_error(char* message);
-
-// client.c
 extern int client_main();
-extern void setup_client(char* server_name, u_short port);
+extern void setup_client(char *server_name, u_short port);
 extern int client_control_requests();
 extern int in_command(void);
 extern int exe_command(void);
-extern void client_send_data(void*, int);
-extern int client_receive_data(void*, int);
-extern void client_handle_error(char*);
+extern void client_send_data(void *, int);
+extern int client_receive_data(void *, int);
+extern void client_handle_error(char *);
 extern void terminate_client();
 
-// client.c
-extern int client_main();
+/**********************************************************************
+******************************* system.c ******************************
+**********************************************************************/
+/* system.c 関数 */
+extern void init_sys(int argc, char *argv[]);     // システムを初期化する関数
+extern void init_sdl2();                          // SDL2 を初期化する関数
+extern void init_wiimote(int argc, char *argv[]); // Wiiリモコンを初期化する関数
+extern void opening_sys();                        // システムを開放する関数
 
-// color code
+/**********************************************************************
+******************************+* input.c ******************************
+**********************************************************************/
+/* input.c 関数 */
+extern int keyboard_func(); // キーボード入力用の関数
+extern int wiimote_func();  // Wiiリモコン入力用の関数
+
+/**********************************************************************
+******************************* define.c ******************************
+**********************************************************************/
+/*  define.c 関数 */
+extern void Error(char *);     // エラーを色付きで出力する関数
+extern void Log(char *);       // ログを色付きで出力する関数
+extern void SystemLog(char *); // ログを色付きで出力する関数
+
+extern int map(int x, int in_min, int in_max, int out_min, int out_max); // map関数
+
+/* define.c 定義 */
 #define COLOR_BG_BLACK "\x1b[40m"
 #define COLOR_BG_RED "\x1b[41m"
 #define COLOR_BG_GREEN "\x1b[42m"

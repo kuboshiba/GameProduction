@@ -1,8 +1,8 @@
 CC = gcc
 
-CFLAGS = -O2 -Wall $(COPTIONS)
+CFLAGS = -O2 -Wall -no-pie $(COPTIONS)
 
-LDLIBS = -no-pie -lm -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_gfx -lcwiimote
+LDLIBS = -lm -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_gfx -lcwiimote
 
 TARGET = main
 OBJS = $(TARGET).o input.o system.o define.o server.o client.o

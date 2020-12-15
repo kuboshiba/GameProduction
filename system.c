@@ -1,127 +1,26 @@
 #include "header/define.h"
 
-// SDLやWiiリモコンを初期化する関数
+/*******************************************************************
+ * 関数名 : init_sys
+ * 　　型 : void
+ * 　引数 : int argc     引数の数
+ *          char* argv[] WiiリモコンのMACアドレス
+ * 　説明 : システムを初期化する関数
+ ******************************************************************/
 void init_sys(int argc, char* argv[])
 {
-    // SDL初期化
-    SDL_Init(SDL_INIT_VIDEO);
-    // SDL_IMG初期化
-    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
-    // SDL_TTF初期化
-    TTF_Init();
+    init_sdl2(); // SDL2を初期化する
 
-    font10 = TTF_OpenFont(FONT_PATH, 10); // フォントサイズ25読み込み
-    font18 = TTF_OpenFont(FONT_PATH, 18); // フォントサイズ25読み込み
-    font20 = TTF_OpenFont(FONT_PATH, 20); // フォントサイズ25読み込み
-    font25 = TTF_OpenFont(FONT_PATH, 25); // フォントサイズ25読み込み
-    font50 = TTF_OpenFont(FONT_PATH, 50); // フォントサイズ50読み込み
+    init_wiimote(argc, argv); // Wiiリモコンを初期化する
 
-    image_bg_1    = IMG_Load("./image/bg1.jpg");     // 背景画像読み込み
-    image_bg_2    = IMG_Load("./image/bg2.jpg");     // 背景画像読み込み
-    image_bg_3    = IMG_Load("./image/bg3.png");     // 背景画像読み込み
-    image_bg_4    = IMG_Load("./image/bg4.png");     // 背景画像読み込み
-    image_menu_bg = IMG_Load("./image/menu_bg.png"); // メニュー背景画像読み込み
+    gGame.mode = MODE_MENU; // モードをメニューに設定する
+    selecter   = 0;         // セレクターを 0 に初期化する
 
-    image_target[0] = IMG_Load("./image/target/100-1.png");
-    image_target[1] = IMG_Load("./image/target/200-1.png");
-    image_target[2] = IMG_Load("./image/target/500-1.png");
-    image_target[3] = IMG_Load("./image/target/1000-1.png");
-    image_target[4] = IMG_Load("./image/target/2000-1.png");
-
-    // SDL初期化
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
-        Error("SDLの初期化に失敗しました");
-        exit(-1);
-    }
-
-    // ウィンドウ生成
-    if ((gGame.window = SDL_CreateWindow("21-SHOOT", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WD_Width, WD_Height, 0)) == NULL) {
-        Error("ウィンドウの生成に失敗しました");
-        exit(-1);
-    }
-
-    // レンダリングコンテキスト（RC）作成
-    if ((gGame.renderer = SDL_CreateRenderer(gGame.window, -1, 0)) == NULL) {
-        Error("レンダラーの生成に失敗しました");
-        exit(-1);
-    }
-
-    // 初期画面
-    SDL_SetRenderDrawColor(gGame.renderer, 0, 0, 0, 255); // 生成したRCに描画色として青を設定
-    SDL_RenderClear(gGame.renderer);                      // 設定色でRCをクリア
-    gGame.surface = TTF_RenderUTF8_Blended(font25, "Press buttons 1 and 2", (SDL_Color) { 255, 255, 255, 255 });
-    gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
-    SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
-    txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-    pasteRect = (SDL_Rect) { 100, 100, iw, ih };
-    SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
-
-    gGame.surface = TTF_RenderUTF8_Blended(font25, "on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
-    gGame.texture = SDL_CreateTextureFromSurface(gGame.renderer, gGame.surface);
-    SDL_QueryTexture(gGame.texture, NULL, NULL, &iw, &ih);
-    txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-    pasteRect = (SDL_Rect) { 100, 150, iw, ih };
-    SDL_RenderCopy(gGame.renderer, gGame.texture, &txtRect, &pasteRect);
-    SDL_RenderPresent(gGame.renderer);
-
-    // Wiiリモコン処理
-    if (argc < 2) { // Wiiリモコン識別情報がコマンド引数で与えられなければ
-        Error("WiiリモコンのMACアドレスを引数に指定してください");
-        exit(1);
-    }
-
-    // Wiiリモコンの接続（１つのみ）
-    // コマンド引数に指定したWiiリモコン識別情報を渡して接続
-    SystemLog("Wiiリモコンの接続試行中...");
-    wiimote_connect(&wiimote, argv[1]);
-
-    if (!wiimote_is_open(&wiimote)) {
-        Error("Wiiリモコンの接続に失敗しました");
-        exit(1);
-    }
-
-    SystemLog("Wiiリモコンの接続に成功しました");
-
-    wiimote.led.one  = 1; // WiiリモコンのLEDの一番左を点灯させる（接続を知らせるために）
-    wiimote.mode.acc = 1; // センサからのデータを受け付けるモードに変更
-    wiimote.mode.ir  = 1; // 赤外線センサをON
-
-    wiimote_update(&wiimote); // Wiiリモコンの状態更新
-
-    // 相互排除（Mutex）あり
-    mtx = SDL_CreateMutex(); // 相互排除（Mutex）を用いる
-
-    // スレッドを作成・実行
-    wii_thread      = SDL_CreateThread(wii_func, "wii_thread", NULL);
-    keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", NULL);
-    wii_ir_thread   = SDL_CreateThread(wii_ir_func, "wii_ir_thread", NULL);
-
-// マスクを設定
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-#endif
-
-    // 合成画像作成用サーフェイスを作成
-    gGame.surface = SDL_CreateRGBSurface(0, WD_Width, WD_Height, 32, rmask, gmask, bmask, amask);
-
-    // 状態初期化
-    gGame.mode = MD_MENU;
-    for (int i = 0; i < 4; i++) {
-        gGame.mode  = MD_MENU; // 最初はメニュー画面なのでモードを設定
-        gGame.score = 0;       // スコアは0に設定
-        sprintf(gGame.name, "%s", "guest");
-    }
+    sprintf(gPlayer.name, "%s", "guest"); // プレイヤー名を仮で guest にする
+    gPlayer.score = 0;
 
     // 的の初期化
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < TARGET_NUM_MAX; i++) {
         target[i].type        = 5;
         target[i].x           = 0;
         target[i].y           = 0;
@@ -137,31 +36,162 @@ void init_sys(int argc, char* argv[])
     }
 }
 
-// 開放処理を行う関数
-void opening_process()
+/*******************************************************************
+ * 関数名 : init_sdl2
+ * 　　型 : void
+ * 　説明 : SDL2 を初期化する関数
+ ******************************************************************/
+void init_sdl2()
+{
+    /* SDL2 初期化 */
+    SDL_Init(SDL_INIT_VIDEO);              // SDL初期化
+    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG); // SDL_IMG初期化
+    TTF_Init();                            // SDL_TTF初期化
+
+    /* フォント読み込み 10 ~ 50px */
+    fonts.size10 = TTF_OpenFont(FONT_PATH, 10);
+    fonts.size15 = TTF_OpenFont(FONT_PATH, 15);
+    fonts.size20 = TTF_OpenFont(FONT_PATH, 20);
+    fonts.size25 = TTF_OpenFont(FONT_PATH, 25);
+    fonts.size50 = TTF_OpenFont(FONT_PATH, 50);
+
+    /* 背景画像読み込み */
+    image_bg[0] = IMG_Load("./image/bg1.jpg"); // プレイ中の背景
+    image_bg[1] = IMG_Load("./image/bg2.jpg");
+    image_bg[2] = IMG_Load("./image/bg3.png");
+    image_bg[3] = IMG_Load("./image/bg4.png");
+
+    image_menu = IMG_Load("./image/menu_bg.png"); // メニュー画面の背景
+
+    /* 的の画像読み込み */
+    image_target[0] = IMG_Load("./image/target/100-1.png");
+    image_target[1] = IMG_Load("./image/target/200-1.png");
+    image_target[2] = IMG_Load("./image/target/500-1.png");
+    image_target[3] = IMG_Load("./image/target/1000-1.png");
+    image_target[4] = IMG_Load("./image/target/2000-1.png");
+
+    /* SDL初期化 */
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+        Error("SDLの初期化に失敗しました");
+        exit(-1);
+    }
+
+    /* ウィンドウ生成 */
+    if ((window = SDL_CreateWindow("21-SHOOT", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0)) == NULL) {
+        Error("ウィンドウの生成に失敗しました");
+        exit(-1);
+    }
+
+    /* レンダリングコンテキスト（RC）作成 */
+    if ((renderer = SDL_CreateRenderer(window, -1, 0)) == NULL) {
+        Error("レンダラーの生成に失敗しました");
+        exit(EXIT_FAILURE); // システム強制終了
+    }
+
+    /* Surface 用のマスクを設定 */
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+
+    /* 合成画像作成用サーフェイスを作成 */
+    surface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, rmask, gmask, bmask, amask);
+
+    /* キーボード入力用のスレッドを起動 */
+    gGame.status    = ACTIVE; // ゲームをアクティブにする
+    keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", NULL);
+}
+
+/*******************************************************************
+ * 関数名 : init_wiimote
+ * 　　型 : void
+ * 　引数 : int argc     引数の数
+ *          char* argv[] WiiリモコンのMACアドレス
+ * 　説明 : Wiiリモコンを初期化する関数
+ ******************************************************************/
+void init_wiimote(int argc, char* argv[])
+{
+    /* Wiiリモコン処理 */
+    if (argc < 2) { // Wiiリモコン識別情報がコマンド引数で与えられなければ
+        Error("WiiリモコンのMACアドレスを引数に指定してください");
+        exit(EXIT_FAILURE); // システム強制終了
+    }
+
+    // Wiiリモコンの接続待機中の画面
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // 生成したRCに描画色として青を設定
+    SDL_RenderClear(renderer);                      // 設定色でRCをクリア
+    surface = TTF_RenderUTF8_Blended(fonts.size25, "Press buttons 1 and 2", (SDL_Color) { 255, 255, 255, 255 });
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+    txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+    pasteRect = (SDL_Rect) { 100, 100, iw, ih };
+    SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+    surface = TTF_RenderUTF8_Blended(fonts.size25, "on the wiimote now to connect.", (SDL_Color) { 255, 255, 255, 255 });
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+    txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+    pasteRect = (SDL_Rect) { 100, 150, iw, ih };
+    SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+    SDL_RenderPresent(renderer);
+
+    /* Wiiリモコンの接続（１つのみ）コマンド引数に指定したWiiリモコン識別情報を渡して接続 */
+    SystemLog("Wiiリモコンの接続試行中...");
+    wiimote_connect(&wiimote, argv[1]);
+
+    if (!wiimote_is_open(&wiimote)) {
+        Error("Wiiリモコンの接続に失敗しました");
+        Error("システムを終了します");
+        exit(EXIT_FAILURE); // システム強制終了
+    } else {
+        SystemLog("Wiiリモコンの接続に成功しました");
+    }
+
+    wiimote.led.one  = 1; // WiiリモコンのLEDの一番左を点灯させる（接続を知らせるために）
+    wiimote.mode.acc = 1; // センサからのデータを受け付けるモードに変更
+    wiimote.mode.ir  = 1; // 赤外線センサをON
+
+    wiimote_update(&wiimote); // Wiiリモコンの状態更新
+
+    /* Wiiリモコン入力用のスレッドを起動 */
+    wiimote_thread = SDL_CreateThread(wiimote_func, "wiimote_thread", NULL);
+}
+
+/*******************************************************************
+ * 関数名 : opening_sys
+ * 　　型 : void
+ * 　説明 : システムを開放する関数
+ ******************************************************************/
+void opening_sys()
 {
     SystemLog("Wiiリモコンの接続を解除します");
     wiimote_disconnect(&wiimote); // Wiiリモコン接続解除
 
-    // 各スレッドが終了するまでmain関数の処理を中断
+    /* 各スレッドが終了するまでmain関数の処理を中断 */
     SystemLog("各スレッドの終了待ち");
-    SDL_WaitThread(wii_thread, NULL);      // wii_threadの処理終了を待つ
     SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ
-    SDL_WaitThread(wii_ir_thread, NULL);   // wii_ir_threadの処理終了を待つ
+    SDL_WaitThread(wiimote_thread, NULL);  // wiimote_threadの処理終了を待つ
 
-    SDL_RemoveTimer(timer_id_1);
-    SDL_RemoveTimer(timer_id_2);
+    SDL_RemoveTimer(timer_id_countdown);
+    SDL_RemoveTimer(timer_id_transition_stage);
 
-    SystemLog("Mutexを破棄します");
-    SDL_DestroyMutex(mtx); // Mutexを破棄
-
-    // 終了処理
     SystemLog("レンダラーとウィンドウを破棄します");
-    SDL_DestroyRenderer(gGame.renderer); // RCの破棄（解放）
-    SDL_DestroyWindow(gGame.window);     // 生成したウィンドウの破棄（消去）
-    SDL_Quit();
+    SDL_DestroyRenderer(renderer); // RC の破棄（解放）
+    SDL_DestroyWindow(window);     // 生成したウィンドウの破棄（消去）
+    SDL_Quit();                    // SDL を終了する
 
-    TTF_CloseFont(font25);
-    TTF_CloseFont(font50);
-    TTF_Quit();
+    /* フォントをクローズ */
+    TTF_CloseFont(fonts.size10);
+    TTF_CloseFont(fonts.size15);
+    TTF_CloseFont(fonts.size20);
+    TTF_CloseFont(fonts.size25);
+    TTF_CloseFont(fonts.size50);
+    TTF_Quit(); // TTF を終了する
 }
