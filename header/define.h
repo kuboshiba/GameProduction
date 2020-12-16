@@ -142,6 +142,7 @@ extern SDL_TimerID timer_id_target;           // 的の生成タイマー
 extern SDL_Surface *image_bg[IMAGE_BG_NUM];         // 背景画像
 extern SDL_Surface *image_target[IMAGE_TARGET_NUM]; // 的の画像
 extern SDL_Surface *image_menu;                     // メニュー画像
+extern SDL_Surface *image_rect_1;                   // ゲーム中のステータスを表示する背景
 extern SDL_Rect imageRect;                          // 画像の選択範囲
 extern SDL_Rect drawRect;                           // 画像の描画位置
 extern SDL_Rect txtRect;                            // 文字の選択範囲

@@ -20,6 +20,7 @@ SDL_TimerID timer_id_target;           // 的の生成タイマー
 SDL_Surface* image_bg[IMAGE_BG_NUM];         // 背景画像
 SDL_Surface* image_target[IMAGE_TARGET_NUM]; // 的の画像
 SDL_Surface* image_menu;                     // メニュー画像
+SDL_Surface* image_rect_1;                   // ゲーム中のステータスを表示する背景
 SDL_Rect imageRect;                          // 画像の選択範囲
 SDL_Rect drawRect;                           // 画像の描画位置
 SDL_Rect txtRect;                            // 文字の選択範囲
@@ -416,13 +417,14 @@ void mode_solo_playing()
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
         drawRect  = (SDL_Rect) { 0, 0, iw, ih };
-        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-        SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
 
-        /* 右上に白の四角を描画　この上にステータスを描く */
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderFillRect(renderer, &(SDL_Rect) { 600, 0, 400, 100 });
+        /* 右上に透過画像を描画　この上にステータスを描く */
+        texture = SDL_CreateTextureFromSurface(renderer, image_rect_1);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, 400, 100 };
+        drawRect  = (SDL_Rect) { 600, 0, 400, 100 };
+        SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
 
         /* ステージ番号を描画 */
         sprintf(txt, "%s%d%s", "STAGE ", stage_pos + 1, " / 4");
@@ -511,9 +513,12 @@ void transition_stage(SDL_Surface* image_1, SDL_Surface* image_2)
         drawRect  = (SDL_Rect) { image_2_point.x, image_2_point.y, iw, ih };
         SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
 
-        /* 右上に白の四角を描画　この上にステータスを描く */
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderFillRect(renderer, &(SDL_Rect) { 600, 0, 400, 100 });
+        /* 右上に透過画像を描画　この上にステータスを描く */
+        texture = SDL_CreateTextureFromSurface(renderer, image_rect_1);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, 400, 100 };
+        drawRect  = (SDL_Rect) { 600, 0, 400, 100 };
+        SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
 
         /* ステージ番号を描画 */
         sprintf(txt, "%s%d%s%d%s", "STAGE ", stage_pos + 1, " >>> ", stage_pos + 2, " / 4");
@@ -617,9 +622,12 @@ void count_down_draw(int stage_pos)
             SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
         }
 
-        /* 右上に白の四角を描画　この上にステータスを描く */
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderFillRect(renderer, &(SDL_Rect) { 600, 0, 400, 100 });
+        /* 右上に透過画像を描画　この上にステータスを描く */
+        texture = SDL_CreateTextureFromSurface(renderer, image_rect_1);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, 400, 100 };
+        drawRect  = (SDL_Rect) { 600, 0, 400, 100 };
+        SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
 
         /* ステージ番号を描画 */
         sprintf(txt, "%s%d%s", "STAGE ", stage_pos + 1, " / 4");

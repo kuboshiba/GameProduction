@@ -65,6 +65,8 @@ void init_sdl2()
 
     image_menu = IMG_Load("./image/menu_bg.png"); // メニュー画面の背景
 
+    image_rect_1 = IMG_Load("./image/rect_bg1.png"); // ゲーム中のステータスを表示する背景
+
     /* 的の画像読み込み */
     image_target[0] = IMG_Load("./image/target/100-1.png");
     image_target[1] = IMG_Load("./image/target/200-1.png");
@@ -182,8 +184,19 @@ void opening_sys()
     SDL_WaitThread(wiimote_thread, NULL);    // wiimote_threadの処理終了を待つ
     SDL_WaitThread(wiimote_ir_thread, NULL); // wiimote_ir_threadの処理終了を待つ
 
+    /* タイマーを除去 */
+    SystemLog("タイマーを除去します");
     SDL_RemoveTimer(timer_id_countdown);
     SDL_RemoveTimer(timer_id_transition_stage);
+
+    /* サーフェイスを開放 */
+    SystemLog("サーフェイスを開放します");
+    for (int i = 0; i < IMAGE_BG_NUM; i++)
+        SDL_FreeSurface(image_bg[i]);
+    for (int i = 0; i < IMAGE_TARGET_NUM; i++)
+        SDL_FreeSurface(image_target[i]);
+    SDL_FreeSurface(image_menu);
+    SDL_FreeSurface(image_rect_1);
 
     SystemLog("レンダラーとウィンドウを破棄します");
     SDL_DestroyRenderer(renderer); // RC の破棄（解放）
@@ -191,6 +204,7 @@ void opening_sys()
     SDL_Quit();                    // SDL を終了する
 
     /* フォントをクローズ */
+    SystemLog("フォントを開放します");
     TTF_CloseFont(fonts.size10);
     TTF_CloseFont(fonts.size15);
     TTF_CloseFont(fonts.size20);
