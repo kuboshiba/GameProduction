@@ -76,6 +76,52 @@ int wiimote_func()
 }
 
 /*******************************************************************
+ * 関数名 : wiimote_ir_func
+ * 　　型 : int
+ * 　説明 : Wiiリモコンの赤外線センサの取得とポインター生成関数
+ ******************************************************************/
+int wiimote_ir_func()
+{
+    /* Wiiリモコンがオープン（接続状態）であればループ */
+    while (gGame.status == ACTIVE) {
+        wiimote_update(&wiimote);
+
+        /* 赤外線センサの値を連続にする（x座標）*/
+        if (512 <= wiimote.ir2.x && wiimote.ir2.x <= 767)
+            wiimote.ir2.x -= 256;
+        else if (1024 <= wiimote.ir2.x && wiimote.ir2.x <= 1279)
+            wiimote.ir2.x -= 512;
+        else if (1536 <= wiimote.ir2.x && wiimote.ir2.x <= 1791)
+            wiimote.ir2.x -= 768;
+
+        wiimote.ir2.x = abs(1023 - wiimote.ir2.x); // x値反転
+
+        /* 赤外線センサの値を連続にする（y座標）*/
+        if (512 <= wiimote.ir2.y && wiimote.ir2.y <= 767)
+            wiimote.ir2.y -= 256;
+        else if (1024 <= wiimote.ir2.y && wiimote.ir2.y <= 1279)
+            wiimote.ir2.y -= 512;
+        else if (1536 <= wiimote.ir2.y && wiimote.ir2.y <= 1791)
+            wiimote.ir2.y -= 768;
+
+        /* map関数でウィンドウサイズに調整 */
+        pointer.x = map(wiimote.ir2.x, 100, 900, -50, 1050);
+        pointer.y = map(wiimote.ir2.y, 200, 700, -50, 550);
+
+        /* ノイズ除去 */
+        if ((abs(pointer.x - pointer_prev.x) <= 5))
+            pointer.x = pointer_prev.x;
+        if (abs(pointer.y - pointer_prev.y) <= 5)
+            pointer.y = pointer_prev.y;
+
+        /* 前回の座標として記憶 */
+        pointer_prev.x = pointer.x;
+        pointer_prev.y = pointer.y;
+    }
+    return 0;
+}
+
+/*******************************************************************
  * 関数名 : wiimote_func__menu
  * 　　型 : void
  * 　説明 : Wiiリモコン入力用の関数　メニュー画面

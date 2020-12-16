@@ -17,9 +17,9 @@ void init_sys(int argc, char* argv[])
     selecter   = 0;         // セレクターを 0 に初期化する
 
     sprintf(gPlayer.name, "%s", "guest"); // プレイヤー名を仮で guest にする
-    gPlayer.score = 0;
+    gPlayer.score = 0;                    // プレイヤーのスコアを０に初期化
 
-    // 的の初期化
+    /* 的の初期化 */
     for (int i = 0; i < TARGET_NUM_MAX; i++) {
         target[i].type        = 5;
         target[i].x           = 0;
@@ -34,6 +34,8 @@ void init_sys(int argc, char* argv[])
         c_data.target[i].y    = 0;
         c_data.target[i].cnt  = 0;
     }
+
+    wiimote_ir_thread = SDL_CreateThread(wiimote_ir_func, "wii_ir_thread", NULL);
 }
 
 /*******************************************************************
@@ -176,8 +178,9 @@ void opening_sys()
 
     /* 各スレッドが終了するまでmain関数の処理を中断 */
     SystemLog("各スレッドの終了待ち");
-    SDL_WaitThread(keyboard_thread, NULL); // keyboard_threadの処理終了を待つ
-    SDL_WaitThread(wiimote_thread, NULL);  // wiimote_threadの処理終了を待つ
+    SDL_WaitThread(keyboard_thread, NULL);   // keyboard_threadの処理終了を待つ
+    SDL_WaitThread(wiimote_thread, NULL);    // wiimote_threadの処理終了を待つ
+    SDL_WaitThread(wiimote_ir_thread, NULL); // wiimote_ir_threadの処理終了を待つ
 
     SDL_RemoveTimer(timer_id_countdown);
     SDL_RemoveTimer(timer_id_transition_stage);

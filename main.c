@@ -7,15 +7,16 @@ SDL_Surface* surface;   // サーフェイス（メインメモリ上の描画�
 SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格納する構造体
 SDL_Event event;        // SDLによるイベントを検知するための構造体
 
-/* スレッド関係 */
-SDL_Thread* keyboard_thread; // キーボード入力用のスレッド
-SDL_Thread* wiimote_thread;  // Wiiリモコン入力用のスレッド
+/* SDL2 スレッド関係 */
+SDL_Thread* keyboard_thread;   // キーボード入力用のスレッド
+SDL_Thread* wiimote_thread;    // Wiiリモコン入力用のスレッド
+SDL_Thread* wiimote_ir_thread; // Wiiリモコンの赤外線センサの取得とポインター生成のスレッド
 
 SDL_TimerID timer_id_countdown;        // カウントダウン用のタイマー
 SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
 SDL_TimerID timer_id_target;           // 的の生成タイマー
 
-/* 画像関係の定義・変数 */
+/* SDL2 画像関係の定義・変数 */
 SDL_Surface* image_bg[IMAGE_BG_NUM];         // 背景画像
 SDL_Surface* image_target[IMAGE_TARGET_NUM]; // 的の画像
 SDL_Surface* image_menu;                     // メニュー画像
@@ -23,30 +24,31 @@ SDL_Rect imageRect;                          // 画像の選択範囲
 SDL_Rect drawRect;                           // 画像の描画位置
 SDL_Rect txtRect;                            // 文字の選択範囲
 SDL_Rect pasteRect;                          // 文字の描画範囲
+POINT image_1_point = { 0, 0 };              // 現在画像の座標
+POINT image_2_point = { 1000, 0 };           // 遷移する画像の座標
 Uint32 rmask, gmask, bmask, amask;           // サーフェイス作成時のマスクデータを格納する変数
 int iw, ih;                                  // テクスチャやサーフェイスの幅
+
+/* Wiiリモコン関係 */
+wiimote_t wiimote;                        // Wiiリモコンの状態格納用
+SDL_Rect pointer      = { 0, 0, 15, 15 }; // Wiiリモコンの赤外線センサーの座標
+SDL_Rect pointer_prev = { 0, 0, 15, 15 }; // Wiiリモコンの赤外線センサーの前の座標
 
 /* その他 構造体 */
 GameInfo gGame;                // ゲームで多用する共通変数は構造体 gGame で管理
 PLAYER gPlayer;                // プレイヤーの情報
 Font_PressStart2P fonts;       // PressStart2Pのフォント格納データ
-wiimote_t wiimote;             // Wiiリモコンの状態格納用
 Target target[TARGET_NUM_MAX]; // サーバーが持つ的の情報
 
-/* その他 変数 */
+/* その他 グローバル変数 */
 int selecter       = 0;  // セレクター
 int key_pos        = 0;  // プレイヤー名入力画面のセレクター
 int count_down_val = 3;  // カウントダウン用の変数
 int stage_pos      = 0;  // 何ステージかを格納
 int interval       = 50; // SDL_Delayの遅延
 char txt[100];
-char alphabet[27][2] = { "a", "b", "c", "d", "e", "f", "g", "h", "i",
-    "j", "k", "l", "m", "n", "o", "p", "q", "r",
-    "s", "t", "u", "v", "w", "x", "y", "z" };
+char alphabet[27][2] = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" };
 bool flag[MODE_NUM]  = { true }; // フラグ
-
-POINT image_1_point = { 0, 0 };    // 現在画像の座標
-POINT image_2_point = { 1000, 0 }; // 遷移する画像の座標
 
 /* main.c 関数 */
 void mode_menu();                                  // メニュー画面を描画する関数
@@ -139,14 +141,14 @@ int main(int argc, char* argv[])
  ******************************************************************/
 void mode_menu()
 {
-    // メニュー画像を描画
+    /* メニュー画像を描画 */
     texture = SDL_CreateTextureFromSurface(renderer, image_menu);
     SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
     imageRect = (SDL_Rect) { 0, 0, iw, ih };
     drawRect  = (SDL_Rect) { 0, 0, iw, ih };
     SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
 
-    // セレクトボタンを配置
+    /* セレクトボタンを配置 */
     surface = TTF_RenderUTF8_Blended(fonts.size25, "SOLO", (SDL_Color) { 0, 0, 0, 255 });
     texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
@@ -175,7 +177,7 @@ void mode_menu()
     pasteRect = (SDL_Rect) { 400, 270 + 3 * 50, iw, ih };
     SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
 
-    // セレクターを描画
+    /* セレクターを描画 */
     surface = TTF_RenderUTF8_Blended(fonts.size25, "> ", (SDL_Color) { 0, 0, 0, 255 });
     texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
@@ -189,6 +191,9 @@ void mode_menu()
     txtRect   = (SDL_Rect) { 0, 0, iw, ih };
     pasteRect = (SDL_Rect) { 800, 445, iw, ih };
     SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+    /* ポインターをウィンドウに描画 */
+    filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
 }
 
 /*******************************************************************
@@ -203,7 +208,7 @@ void mode_solo_ok_or_cancel()
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        // メニュー画像を描画
+        /* メニュー画像を描画 */
         texture = SDL_CreateTextureFromSurface(renderer, image_menu);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
@@ -217,7 +222,7 @@ void mode_solo_ok_or_cancel()
         pasteRect = (SDL_Rect) { 350, 280, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
 
-        // セレクトボタンを描画
+        /* セレクトボタンを描画 */
         surface = TTF_RenderUTF8_Blended(fonts.size25, "OK", (SDL_Color) { 0, 0, 0, 255 });
         texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
@@ -232,7 +237,7 @@ void mode_solo_ok_or_cancel()
         pasteRect = (SDL_Rect) { 450, 390, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
 
-        // セレクターを描画
+        /* セレクターを描画 */
         surface = TTF_RenderUTF8_Blended(fonts.size25, "> ", (SDL_Color) { 0, 0, 0, 255 });
         texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
@@ -246,6 +251,9 @@ void mode_solo_ok_or_cancel()
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
         pasteRect = (SDL_Rect) { 725, 445, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
@@ -331,6 +339,9 @@ void mode_input_name()
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderDrawRect(renderer, &(SDL_Rect) { 150, 170, 450, 50 });
 
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
     }
@@ -400,7 +411,7 @@ void mode_solo_playing()
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        // 背景画像を描画
+        /* 背景画像を描画 */
         texture = SDL_CreateTextureFromSurface(renderer, image_bg[stage_pos]);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
@@ -440,7 +451,7 @@ void mode_solo_playing()
         pasteRect = (SDL_Rect) { 610, 70, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
 
-        // 的を描画
+        /* 的を描画 */
         for (int i = 0; i < TARGET_NUM_MAX; i++) {
             if (s_data.target[i].type != 5) {
                 texture = SDL_CreateTextureFromSurface(renderer, image_target[s_data.target[i].type]);
@@ -450,6 +461,9 @@ void mode_solo_playing()
                 SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
             }
         }
+
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
@@ -471,7 +485,7 @@ void transition_stage(SDL_Surface* image_1, SDL_Surface* image_2)
     gGame.mode            = MODE_TRANSITION;
     flag[MODE_TRANSITION] = true;
     while (flag[MODE_TRANSITION]) {
-        // 画像２が x座標０で描画されたら break
+        /* 画像２が x座標０で描画されたら break */
         if (image_2_point.x <= 0) {
             image_1_point.x = 0;
             image_2_point.x = 1000;
@@ -483,14 +497,14 @@ void transition_stage(SDL_Surface* image_1, SDL_Surface* image_2)
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        // 背景画像１を描画
+        /* 背景画像１を描画 */
         texture = SDL_CreateTextureFromSurface(renderer, image_1);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
         drawRect  = (SDL_Rect) { image_1_point.x, image_1_point.y, iw, ih };
         SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
 
-        // 背景画像２を描画
+        /* 背景画像２を描画 */
         texture = SDL_CreateTextureFromSurface(renderer, image_2);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
@@ -528,6 +542,9 @@ void transition_stage(SDL_Surface* image_1, SDL_Surface* image_2)
         pasteRect = (SDL_Rect) { 610, 70, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
 
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
     }
@@ -559,14 +576,14 @@ Uint32 timer_transition_stage(Uint32 interval, void* param)
  ******************************************************************/
 void count_down_draw(int stage_pos)
 {
-    // カウントダウン用のタイマー起動
+    /* カウントダウン用のタイマー起動 */
     timer_id_countdown   = SDL_AddTimer(1000, count_down, &count_down_val);
     flag[MODE_COUNTDOWN] = true;
     while (flag[MODE_COUNTDOWN]) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        // 背景画像を描画
+        /* 背景画像を描画 */
         texture = SDL_CreateTextureFromSurface(renderer, image_bg[stage_pos]);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
         imageRect = (SDL_Rect) { 0, 0, iw, ih };
@@ -575,13 +592,13 @@ void count_down_draw(int stage_pos)
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
 
-        // カウントダウンを数値から文字列に変換
+        /* カウントダウンを数値から文字列に変換 */
         sprintf(txt, "%d", count_down_val);
 
-        // ０は文字列STARTを描画
+        /* ０は文字列STARTを描画 */
         if (count_down_val <= 0) {
             sprintf(txt, "%s", "START");
-            // カウントダウン表示
+            /* カウントダウン表示 */
             surface = TTF_RenderUTF8_Blended(fonts.size50, txt, (SDL_Color) { 255, 0, 0, 255 });
             texture = SDL_CreateTextureFromSurface(renderer, surface);
             SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
@@ -589,9 +606,9 @@ void count_down_draw(int stage_pos)
             pasteRect = (SDL_Rect) { 350, 250, iw, ih };
             SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
         }
-        // ３〜１ までのカウントダウン描画
+        /* ３〜１ までのカウントダウン描画 */
         else {
-            // カウントダウン表示
+            /* カウントダウン表示 */
             surface = TTF_RenderUTF8_Blended(fonts.size50, txt, (SDL_Color) { 255, 0, 0, 255 });
             texture = SDL_CreateTextureFromSurface(renderer, surface);
             SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
@@ -631,11 +648,13 @@ void count_down_draw(int stage_pos)
         pasteRect = (SDL_Rect) { 610, 70, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
 
-        // 描画
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
 
-        // カウントダウンが -1 より小さければ break
+        /* カウントダウンが -1 より小さければ break */
         if (count_down_val <= -1) {
             flag[MODE_COUNTDOWN] = false;        // break
             count_down_val       = 3;            // カウントダウンの変数を初期化
@@ -878,6 +897,9 @@ void result_draw()
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
         pasteRect = (SDL_Rect) { 250 + selecter * 300, 370, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);

@@ -88,14 +88,16 @@ typedef struct {
     int y;
     int cnt;
 } Target;
-extern Target target[TARGET_NUM_MAX];
+extern Target target[TARGET_NUM_MAX]; // 的の情報
 
 typedef struct {
     int cid;
     int sock;
     struct sockaddr_in addr;
     char name[MAX_LEN_NAME];
-} CLIENT; // クライアントの構造体
+} CLIENT;                                 // クライアントの構造体
+extern CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
+extern CLIENT c_clients[MAX_NUM_CLIENTS];
 
 typedef struct {
     int cid;
@@ -103,7 +105,9 @@ typedef struct {
     char message[MAX_LEN_BUFFER];
     int score;
     Target target[10];
-} CONTAINER; // コンテナの構造体
+} CONTAINER;             // コンテナの構造体
+extern CONTAINER s_data; // 構造体 DATA を構造体変数 s_data で宣言
+extern CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
 
 /* SDL 関係 */
 extern SDL_Window *window;     // ウィンドウデータを格納する構造体
@@ -123,12 +127,14 @@ typedef struct {
 extern Font_PressStart2P fonts; // PressStart2Pのフォント格納データ
 
 /* スレッド関係の定義・変数 */
-extern SDL_Thread *keyboard_thread; // キーボード入力用のスレッド
-extern SDL_Thread *wiimote_thread;  // Wiiリモコン入力用のスレッド
+extern SDL_Thread *keyboard_thread;   // キーボード入力用のスレッド
+extern SDL_Thread *wiimote_thread;    // Wiiリモコン入力用のスレッド
+extern SDL_Thread *wiimote_ir_thread; // Wiiリモコンの赤外線センサの取得とポインター生成のスレッド
 
 /* タイマー関係の定義・変数 */
 extern SDL_TimerID timer_id_countdown;        // カウントダウン用のタイマー
 extern SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
+extern SDL_TimerID timer_id_target;           // 的の生成タイマー
 
 /* 画像関係の定義・変数 */
 #define IMAGE_BG_NUM 4                              // 背景画像の数
@@ -143,23 +149,23 @@ extern SDL_Rect pasteRect;                          // 文字の描画範囲
 extern Uint32 rmask, gmask, bmask, amask;           // サーフェイス作成時のマスクデータを格納する変数
 extern int iw, ih;                                  // テクスチャやサーフェイスの幅
 
-/* Wiimote関係 */
-extern wiimote_t wiimote; // Wiiリモコンの状態格納用
+/* Wiiリモコン関係 */
+extern wiimote_t wiimote;     // Wiiリモコンの状態格納用
+extern SDL_Rect pointer;      // Wiiリモコンの赤外線センサーの座標
+extern SDL_Rect pointer_prev; // Wiiリモコンの赤外線センサーの前の座標
 
 /* その他 */
 extern int selecter;         // セレクター
-extern bool flag[100];       // フラグ
 extern int key_pos;          // プレイヤー名入力画面のセレクター
 extern char alphabet[27][2]; // アルファベット
+extern bool flag[100];       // フラグ
 
 /**********************************************************************
 ******************************* server.c ******************************
 **********************************************************************/
-extern CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
-extern CONTAINER s_data;                  // 構造体 DATA を構造体変数 s_data で宣言
-extern int s_num_clients;                 // クライアントの数を格納
-extern int s_num_socks;                   // ソケットの数を格納
-extern fd_set s_mask;
+extern int s_num_clients; // クライアントの数を格納
+extern int s_num_socks;   // ソケットの数を格納
+extern fd_set s_mask;     // サーバーのマスク
 
 extern int server_main();
 extern void setup_server(int, u_short);
@@ -172,13 +178,11 @@ extern void server_handle_error(char *message);
 /**********************************************************************
 ******************************* client.c ******************************
 **********************************************************************/
-extern CLIENT c_clients[MAX_NUM_CLIENTS];
-extern CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
-extern int c_sock;
-extern int c_num_clients;
-extern int c_myid;
-extern int c_num_sock;
-extern fd_set c_mask;
+extern int c_sock;        // クライアントのソケット
+extern int c_num_clients; // クライアントの数を格納
+extern int c_myid;        // クライアントのID
+extern int c_num_sock;    // クライアントのソケットの数
+extern fd_set c_mask;     // クライアントのマスク
 
 extern int client_main();
 extern void setup_client(char *server_name, u_short port);
@@ -203,8 +207,9 @@ extern void opening_sys();                        // システムを開放する
 ******************************+* input.c ******************************
 **********************************************************************/
 /* input.c 関数 */
-extern int keyboard_func(); // キーボード入力用の関数
-extern int wiimote_func();  // Wiiリモコン入力用の関数
+extern int keyboard_func();   // キーボード入力用の関数
+extern int wiimote_func();    // Wiiリモコン入力用の関数
+extern int wiimote_ir_func(); // Wiiリモコン入力用の関数
 
 /**********************************************************************
 ******************************* define.c ******************************
