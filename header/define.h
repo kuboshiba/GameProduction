@@ -29,8 +29,8 @@
 
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
 
-#define MODE_NUM 100 // モードの個数
-#define STAGE_TIME 2 // ステージごとの時間 sec
+#define MODE_NUM 100  // モードの個数
+#define STAGE_TIME 10 // ステージごとの時間 sec
 
 #define DEFAULT_PORT 51000 // デフォルトのポート番号
 #define MAX_LEN_NAME 100   // 名前の最大文字数

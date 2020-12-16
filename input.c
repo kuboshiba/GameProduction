@@ -26,7 +26,8 @@ int keyboard_func()
                     /* フラグを全て false にする */
                     for (int i = 0; i < MODE_NUM; i++)
                         flag[i] = false;
-                    return 0;
+                    opening_sys();
+                    exit(EXIT_SUCCESS);
                 }
             }
         }
@@ -380,4 +381,44 @@ void wiimote_func__result()
  ******************************************************************/
 void wiimote_func__solo_playing()
 {
+    /* Wiiリモコンの Bボタン が押されたとき
+       的との当たり判定を実行する
+    */
+    if (wiimote.keys.b) {
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            /* 的を表示している場合　ポインターと的の当たり判定をする */
+            if (s_data.target[i].type != 5) {
+                int a = (s_data.target[i].x + 25) - pointer.x;
+                int b = (s_data.target[i].y + 25) - pointer.y;
+                int c = sqrt(a * a + b * b);
+
+                /* 当たっている場合 */
+                if (c <= 34) {
+                    switch (s_data.target[i].type) {
+                    case 0: // 100点
+                        gPlayer.score += 100;
+                        break;
+                    case 1: // 200点
+                        gPlayer.score += 200;
+                        break;
+                    case 2: // 500点
+                        gPlayer.score += 500;
+                        break;
+                    case 3: // 1000点
+                        gPlayer.score += 1000;
+                        break;
+                    case 4: // 2000点
+                        gPlayer.score += 2000;
+                        break;
+                    }
+                    s_data.target[i].type = 5; // 的を消す
+                    s_data.target[i].cnt  = 0; // カウンターを初期化
+                }
+            }
+        }
+
+        /* チャタリング防止 */
+        while (wiimote.keys.b)
+            wiimote_update(&wiimote);
+    }
 }
