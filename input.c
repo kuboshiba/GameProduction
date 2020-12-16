@@ -26,7 +26,7 @@ int keyboard_func()
                     /* フラグを全て false にする */
                     for (int i = 0; i < MODE_NUM; i++)
                         flag[i] = false;
-                    return;
+                    return 0;
                 }
             }
         }
