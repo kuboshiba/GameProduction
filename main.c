@@ -379,7 +379,7 @@ void mode_solo_playing()
         totalTime = (int)(endTime - startTime);
 
         /* 経過時間が STAGE_TIME になるとステージ遷移 */
-        if (totalTime == STAGE_TIME + 1) {
+        if (totalTime >= STAGE_TIME + 1) {
             SDL_RemoveTimer(timer_id_target);
             /* ラストステージじゃなかったらステージを遷移 */
             if (stage_pos != 3) {
