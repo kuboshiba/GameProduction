@@ -16,6 +16,9 @@ SDL_TimerID timer_id_countdown;        // カウントダウン用のタイマ�
 SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
 SDL_TimerID timer_id_target;           // 的の生成タイマー
 
+/* MUSIC */
+Mix_Music* bgm_title;
+
 /* SDL2 画像関係の定義・変数 */
 SDL_Surface* image_bg[IMAGE_BG_NUM];         // 背景画像
 SDL_Surface* image_target[IMAGE_TARGET_NUM]; // 的の画像

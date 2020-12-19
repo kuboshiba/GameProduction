@@ -50,6 +50,11 @@ void init_sdl2()
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG); // SDL_IMG初期化
     TTF_Init();                            // SDL_TTF初期化
 
+    Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
+    bgm_title = Mix_LoadMUS("sound/music/title_01.mp3");
+    Mix_AllocateChannels(16);
+    Mix_PlayMusic(bgm_title, -1);
+
     /* フォント読み込み 10 ~ 50px */
     fonts.size10 = TTF_OpenFont(FONT_PATH, 10);
     fonts.size15 = TTF_OpenFont(FONT_PATH, 15);
@@ -178,6 +183,9 @@ void opening_sys()
 {
     SystemLog("Wiiリモコンの接続を解除します");
     wiimote_disconnect(&wiimote); // Wiiリモコン接続解除
+
+    Mix_FreeMusic(bgm_title);
+    Mix_CloseAudio();
 
     /* 各スレッドが終了するまでmain関数の処理を中断 */
     SystemLog("各スレッドの終了待ち");

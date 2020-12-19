@@ -137,6 +137,9 @@ extern SDL_TimerID timer_id_countdown;        // カウントダウン用のタ�
 extern SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
 extern SDL_TimerID timer_id_target;           // 的の生成タイマー
 
+/* MUSIC */
+extern Mix_Music *bgm_title;
+
 /* 画像関係の定義・変数 */
 #define IMAGE_BG_NUM 4                              // 背景画像の数
 #define IMAGE_TARGET_NUM 5                          // 的の画像の数
