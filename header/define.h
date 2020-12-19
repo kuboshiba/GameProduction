@@ -19,6 +19,7 @@
 #include <SDL2/SDL.h>                // SDL2 標準 API
 #include <SDL2/SDL2_gfxPrimitives.h> // SDL2 図形描画系
 #include <SDL2/SDL_image.h>          // SDL2 画像描画系
+#include <SDL2/SDL_mixer.h>          // SDL2 音声再生系
 #include <SDL2/SDL_ttf.h>            // SDL2 文字描画系
 
 #include <libcwiimote/wiimote.h>     // Wiiリモコンを用いるために必要なヘッダファイル
@@ -58,10 +59,10 @@ typedef enum {
     MODE_SOLO_OK_OR_CANCEL = 1,  // ソロプレイ select OK or CANCEL
     MODE_INPUT_NAME        = 2,  // プレイヤー名入力
     MODE_SOLO_PLAYING      = 3,  // ソロプレイ　プレイ中
-    MODE_SOLO_REPLAY       = 4,  // ソロプレイ　リプレイ
     MODE_COUNTDOWN         = 10, // ソロプレイ　カウントダウン中
     MODE_TRANSITION        = 11, // ステージ遷移
-    MODE_RESULT            = 12  // リザルト
+    MODE_RESULT            = 12, // リザルト
+    MODE_SETTING           = 13  // 設定画面
 } MODE;
 
 /* ゲームで多用する共通変数は構造体 Game で管理 */
@@ -142,7 +143,7 @@ extern SDL_TimerID timer_id_target;           // 的の生成タイマー
 extern SDL_Surface *image_bg[IMAGE_BG_NUM];         // 背景画像
 extern SDL_Surface *image_target[IMAGE_TARGET_NUM]; // 的の画像
 extern SDL_Surface *image_menu;                     // メニュー画像
-extern SDL_Surface *image_rect_1;                   // ゲーム中のステータスを表示する背景
+extern SDL_Surface *image_rect[10];                 // ゲーム中のステータスを表示する背景
 extern SDL_Rect imageRect;                          // 画像の選択範囲
 extern SDL_Rect drawRect;                           // 画像の描画位置
 extern SDL_Rect txtRect;                            // 文字の選択範囲

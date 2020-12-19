@@ -63,9 +63,6 @@ int wiimote_func()
             case MODE_RESULT:
                 wiimote_func__result();
                 break;
-            case MODE_SOLO_REPLAY: // ソロプレイ　リプレイ
-                wiimote_func__solo_playing();
-                break;
             case MODE_COUNTDOWN: // カウントダウン時
                 break;
             case MODE_TRANSITION: // 画面遷移のアニメーション時
@@ -167,6 +164,7 @@ void wiimote_func__menu()
         case 1: // MULTI マルチプレイ
             break;
         case 2: // SETTING 設定
+            gGame.mode = MODE_SETTING;
             break;
         case 3:                     // EXIT 終了
             gGame.status = PASSIVE; // ゲームの状態を PASSIVE にする
@@ -214,10 +212,10 @@ void wiimote_func__solo_ok_cancel()
     /* Wiiリモコンの Aボタンが押されたとき */
     else if (wiimote.keys.a) {
         /*
-                        セレクター値によって条件分岐
-                        0: OK ソロプレイする >>> プレイヤー名入力へ
-                        1: CANCEL >>> メニュー画面へ
-                    */
+            セレクター値によって条件分岐
+            0: OK ソロプレイする >>> プレイヤー名入力へ
+            1: CANCEL >>> メニュー画面へ
+        */
         switch (selecter) {
         case 0: // OK >>> プレイヤー名入力へ
             gGame.mode = MODE_INPUT_NAME;
@@ -363,7 +361,7 @@ void wiimote_func__result()
             break;
         case 1: // REPLAY
             flag[MODE_RESULT] = false;
-            gGame.mode        = MODE_SOLO_REPLAY;
+            gGame.mode        = MODE_SOLO_PLAYING;
             break;
         }
         selecter = 0; // セレクター初期化
@@ -381,7 +379,8 @@ void wiimote_func__result()
  ******************************************************************/
 void wiimote_func__solo_playing()
 {
-    /* Wiiリモコンの Bボタン が押されたとき
+    /* 
+       Wiiリモコンの Bボタン が押されたとき
        的との当たり判定を実行する
     */
     if (wiimote.keys.b) {

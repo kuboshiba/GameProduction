@@ -65,7 +65,8 @@ void init_sdl2()
 
     image_menu = IMG_Load("./image/menu_bg.png"); // メニュー画面の背景
 
-    image_rect_1 = IMG_Load("./image/rect_bg1.png"); // ゲーム中のステータスを表示する背景
+    image_rect[0] = IMG_Load("./image/rect_bg1.png"); // ゲーム中のステータスを表示する背景
+    image_rect[1] = IMG_Load("./image/rect_bg2.png");
 
     /* 的の画像読み込み */
     image_target[0] = IMG_Load("./image/target/100-1.png");
@@ -196,7 +197,8 @@ void opening_sys()
     for (int i = 0; i < IMAGE_TARGET_NUM; i++)
         SDL_FreeSurface(image_target[i]);
     SDL_FreeSurface(image_menu);
-    SDL_FreeSurface(image_rect_1);
+    SDL_FreeSurface(image_rect[0]);
+    SDL_FreeSurface(image_rect[1]);
 
     SystemLog("レンダラーとウィンドウを破棄します");
     SDL_DestroyRenderer(renderer); // RC の破棄（解放）
