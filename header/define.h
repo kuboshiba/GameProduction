@@ -62,12 +62,11 @@ typedef enum {
     MODE_COUNTDOWN         = 10, // ソロプレイ　カウントダウン中
     MODE_TRANSITION        = 11, // ステージ遷移
     MODE_RESULT            = 12, // リザルト
-    MODE_SETTING           = 13  // 設定画面
+    MODE_SETTING           = 13, // 設定画面
 } MODE;
 
 /* ゲームで多用する共通変数は構造体 Game で管理 */
 typedef struct {
-    STATUS status; // ACTIVE: イベントなどループ可, PASSIVE: メインループ抜ける
     MODE mode;
 } GameInfo;
 extern GameInfo gGame; // ゲームで多用する共通変数は構造体 gGame で管理

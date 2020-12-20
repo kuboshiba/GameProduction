@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     init_sys(argc, argv); // システム初期化
 
     /* ゲームがアクティブ状態であればループ */
-    while (gGame.status == ACTIVE) {
+    while (wiimote_is_open(&wiimote)) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
@@ -124,7 +124,9 @@ int main(int argc, char* argv[])
             break;
         case MODE_SOLO_PLAYING:
             mode_solo_playing(); // ソロプレイ中
-            result_draw();       // リザルト描画
+            break;
+        case MODE_RESULT:
+            result_draw(); // リザルト描画
             break;
         case MODE_SETTING: // 設定画面
             mode_setting();
@@ -278,7 +280,7 @@ void mode_solo_ok_or_cancel()
 void mode_input_name()
 {
     flag[MODE_INPUT_NAME] = true;
-    while (flag[MODE_INPUT_NAME]) {
+    while (flag[MODE_INPUT_NAME] && wiimote_is_open(&wiimote)) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
@@ -382,7 +384,7 @@ void mode_solo_playing()
 
     /* ステージ１〜４までループ */
     flag[MODE_SOLO_PLAYING] = true;
-    while (flag[MODE_SOLO_PLAYING]) {
+    while (flag[MODE_SOLO_PLAYING] && wiimote_is_open(&wiimote)) {
         /* 経過時間を算出 */
         endTime   = clock() / CLOCKS_PER_SEC;
         totalTime = (int)(endTime - startTime);
@@ -479,6 +481,8 @@ void mode_solo_playing()
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
     }
+
+    gGame.mode = MODE_RESULT;
 }
 
 /*******************************************************************
@@ -495,7 +499,7 @@ void transition_stage(SDL_Surface* image_1, SDL_Surface* image_2)
 
     gGame.mode            = MODE_TRANSITION;
     flag[MODE_TRANSITION] = true;
-    while (flag[MODE_TRANSITION]) {
+    while (flag[MODE_TRANSITION] && wiimote_is_open(&wiimote)) {
         /* 画像２が x座標０で描画されたら break */
         if (image_2_point.x <= 0) {
             image_1_point.x = 0;
@@ -593,7 +597,7 @@ void count_down_draw(int stage_pos)
     /* カウントダウン用のタイマー起動 */
     timer_id_countdown   = SDL_AddTimer(1000, count_down, &count_down_val);
     flag[MODE_COUNTDOWN] = true;
-    while (flag[MODE_COUNTDOWN]) {
+    while (flag[MODE_COUNTDOWN] && wiimote_is_open(&wiimote)) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
@@ -863,7 +867,7 @@ void result_draw()
 {
     gGame.mode        = MODE_RESULT;
     flag[MODE_RESULT] = true;
-    while (flag[MODE_RESULT]) {
+    while (flag[MODE_RESULT] && wiimote_is_open(&wiimote)) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 

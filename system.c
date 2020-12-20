@@ -35,7 +35,14 @@ void init_sys(int argc, char* argv[])
         c_data.target[i].cnt  = 0;
     }
 
+    keyboard_thread   = SDL_CreateThread(keyboard_func, "keyboard_thread", NULL);
     wiimote_ir_thread = SDL_CreateThread(wiimote_ir_func, "wii_ir_thread", NULL);
+
+    Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
+    bgm_title = Mix_LoadMUS("sound/music/title_01.mp3");
+    Mix_AllocateChannels(16);
+    Mix_PlayMusic(bgm_title, -1);
+    Mix_VolumeMusic(10);
 }
 
 /*******************************************************************
@@ -49,11 +56,6 @@ void init_sdl2()
     SDL_Init(SDL_INIT_VIDEO);              // SDL初期化
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG); // SDL_IMG初期化
     TTF_Init();                            // SDL_TTF初期化
-
-    Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
-    bgm_title = Mix_LoadMUS("sound/music/title_01.mp3");
-    Mix_AllocateChannels(16);
-    Mix_PlayMusic(bgm_title, -1);
 
     /* フォント読み込み 10 ~ 50px */
     fonts.size10 = TTF_OpenFont(FONT_PATH, 10);
@@ -113,10 +115,6 @@ void init_sdl2()
 
     /* 合成画像作成用サーフェイスを作成 */
     surface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, rmask, gmask, bmask, amask);
-
-    /* キーボード入力用のスレッドを起動 */
-    gGame.status    = ACTIVE; // ゲームをアクティブにする
-    keyboard_thread = SDL_CreateThread(keyboard_func, "keyboard_thread", NULL);
 }
 
 /*******************************************************************
@@ -181,9 +179,13 @@ void init_wiimote(int argc, char* argv[])
  ******************************************************************/
 void opening_sys()
 {
-    SystemLog("Wiiリモコンの接続を解除します");
-    wiimote_disconnect(&wiimote); // Wiiリモコン接続解除
+    /* Wiiリモコンの接続を解除する */
+    if (wiimote_is_open(&wiimote)) {
+        SystemLog("Wiiリモコンの接続を解除します");
+        wiimote_disconnect(&wiimote); // Wiiリモコン接続解除
+    }
 
+    /* 音楽関係を開放する */
     Mix_FreeMusic(bgm_title);
     Mix_CloseAudio();
 
@@ -221,4 +223,6 @@ void opening_sys()
     TTF_CloseFont(fonts.size25);
     TTF_CloseFont(fonts.size50);
     TTF_Quit(); // TTF を終了する
+
+    exit(EXIT_SUCCESS); // ゲームを終了する
 }

@@ -14,20 +14,19 @@ void wiimote_func__solo_playing();   // Wiiリモコン入力用の関数　ソ�
 int keyboard_func()
 {
     /* ゲームがアクティブ状態であればループ */
-    while (gGame.status == ACTIVE) {
+    while (wiimote_is_open(&wiimote)) {
         /* イベントを更新する */
         if (SDL_PollEvent(&event)) {
             /* キーボードの入力タイプによって条件分岐*/
             if (event.type == SDL_KEYDOWN) { // キーが押されたとき
                 /* キーの種類によって条件分岐 */
                 switch (event.key.keysym.sym) {
-                case SDLK_ESCAPE:           // Escキーが押された時
-                    gGame.status = PASSIVE; // ゲームの状態を PASSIVE にする
+                case SDLK_ESCAPE: // Escキーが押された時
                     /* フラグを全て false にする */
                     for (int i = 0; i < MODE_NUM; i++)
                         flag[i] = false;
-                    opening_sys();
-                    exit(EXIT_SUCCESS);
+                    wiimote_disconnect(&wiimote); // Wiiリモコンの接続を解除する
+                    break;
                 }
             }
         }
@@ -42,32 +41,33 @@ int keyboard_func()
  ******************************************************************/
 int wiimote_func()
 {
-    /* ゲームがアクティブ状態であればループ */
-    while (gGame.status == ACTIVE) {
-        /* Wiiリモコンの状態を取得・更新する */
-        if (wiimote_update(&wiimote)) {
-            /* モードによって条件分岐*/
-            switch (gGame.mode) {
-            case MODE_MENU: // メニュー
-                wiimote_func__menu();
-                break;
-            case MODE_SOLO_OK_OR_CANCEL: // ソロプレイをするかどうか OK or CANCEL
-                wiimote_func__solo_ok_cancel();
-                break;
-            case MODE_INPUT_NAME: // プレイヤー名を入力する
-                wiimote_func__input_name();
-                break;
-            case MODE_SOLO_PLAYING: // ソロプレイ　プレイ中
-                wiimote_func__solo_playing();
-                break;
-            case MODE_RESULT:
-                wiimote_func__result();
-                break;
-            case MODE_COUNTDOWN: // カウントダウン時
-                break;
-            case MODE_TRANSITION: // 画面遷移のアニメーション時
-                break;
-            }
+    /* Wiiリモコンの状態を取得・更新する */
+    while (wiimote_is_open(&wiimote)) {
+        wiimote_update(&wiimote);
+
+        /* モードによって条件分岐*/
+        switch (gGame.mode) {
+        case MODE_MENU: // メニュー
+            wiimote_func__menu();
+            break;
+        case MODE_SOLO_OK_OR_CANCEL: // ソロプレイをするかどうか OK or CANCEL
+            wiimote_func__solo_ok_cancel();
+            break;
+        case MODE_INPUT_NAME: // プレイヤー名を入力する
+            wiimote_func__input_name();
+            break;
+        case MODE_SOLO_PLAYING: // ソロプレイ　プレイ中
+            wiimote_func__solo_playing();
+            break;
+        case MODE_RESULT:
+            wiimote_func__result();
+            break;
+        case MODE_SETTING:
+            break;
+        case MODE_COUNTDOWN: // カウントダウン時
+            break;
+        case MODE_TRANSITION: // 画面遷移のアニメーション時
+            break;
         }
     }
     return 0;
@@ -81,7 +81,7 @@ int wiimote_func()
 int wiimote_ir_func()
 {
     /* Wiiリモコンがオープン（接続状態）であればループ */
-    while (gGame.status == ACTIVE) {
+    while (wiimote_is_open(&wiimote)) {
         wiimote_update(&wiimote);
 
         /* 赤外線センサの値を連続にする（x座標）*/
@@ -135,7 +135,8 @@ void wiimote_func__menu()
 
         /* チャタリング防止 */
         while (wiimote.keys.up)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの 十字キー下 が押されたとき */
     else if (wiimote.keys.down) {
@@ -146,7 +147,8 @@ void wiimote_func__menu()
 
         /* チャタリング防止 */
         while (wiimote.keys.down)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの Aボタンが押されたとき */
     else if (wiimote.keys.a) {
@@ -166,17 +168,19 @@ void wiimote_func__menu()
         case 2: // SETTING 設定
             gGame.mode = MODE_SETTING;
             break;
-        case 3:                     // EXIT 終了
-            gGame.status = PASSIVE; // ゲームの状態を PASSIVE にする
+        case 3: // EXIT 終了
             /* フラグを全て false にする */
             for (int i = 0; i < MODE_NUM; i++)
                 flag[i] = false;
+
+            wiimote_disconnect(&wiimote); // Wiiリモコンの接続を解除する
             return;
         }
 
         /* チャタリング防止 */
         while (wiimote.keys.a)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
 }
 
@@ -196,7 +200,8 @@ void wiimote_func__solo_ok_cancel()
 
         /* チャタリング防止 */
         while (wiimote.keys.up)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの 十字キー下 が押されたとき */
     else if (wiimote.keys.down) {
@@ -207,7 +212,8 @@ void wiimote_func__solo_ok_cancel()
 
         /* チャタリング防止 */
         while (wiimote.keys.down)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの Aボタンが押されたとき */
     else if (wiimote.keys.a) {
@@ -230,7 +236,8 @@ void wiimote_func__solo_ok_cancel()
 
         /* チャタリング防止 */
         while (wiimote.keys.a)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
 }
 
@@ -252,7 +259,8 @@ void wiimote_func__input_name()
 
         /* チャタリング防止 */
         while (wiimote.keys.up)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの 十字キー下 が押されたとき */
     else if (wiimote.keys.down) {
@@ -265,7 +273,8 @@ void wiimote_func__input_name()
 
         /* チャタリング防止 */
         while (wiimote.keys.down)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの 十字キー左 が押されたとき */
     else if (wiimote.keys.left) {
@@ -278,7 +287,8 @@ void wiimote_func__input_name()
 
         /* チャタリング防止 */
         while (wiimote.keys.left)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの 十字キー右 が押されたとき */
     else if (wiimote.keys.right) {
@@ -291,7 +301,8 @@ void wiimote_func__input_name()
 
         /* チャタリング防止 */
         while (wiimote.keys.right)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの Aボタン が押されたとき */
     else if (wiimote.keys.a) {
@@ -303,7 +314,8 @@ void wiimote_func__input_name()
 
         /* チャタリング防止 */
         while (wiimote.keys.a)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの Bボタン が押されたとき */
     else if (wiimote.keys.b) {
@@ -313,7 +325,8 @@ void wiimote_func__input_name()
 
         /* チャタリング防止 */
         while (wiimote.keys.b)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの 1ボタン が押されたとき */
     else if (wiimote.keys.one) {
@@ -323,7 +336,8 @@ void wiimote_func__input_name()
 
         /* チャタリング防止 */
         while (wiimote.keys.one)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
 }
 
@@ -341,7 +355,8 @@ void wiimote_func__result()
 
         /* チャタリング防止 */
         while (wiimote.keys.left)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの 十字キー右 が押されたとき */
     else if (wiimote.keys.right) {
@@ -350,7 +365,8 @@ void wiimote_func__result()
 
         /* チャタリング防止 */
         while (wiimote.keys.right)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
     /* Wiiリモコンの Aボタン が押されたとき */
     else if (wiimote.keys.a) {
@@ -368,7 +384,8 @@ void wiimote_func__result()
 
         /* チャタリング防止 */
         while (wiimote.keys.a)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
 }
 
@@ -418,6 +435,7 @@ void wiimote_func__solo_playing()
 
         /* チャタリング防止 */
         while (wiimote.keys.b)
-            wiimote_update(&wiimote);
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
     }
 }
