@@ -18,11 +18,11 @@ void init_sys(int argc, char* argv[])
 
     /* 音楽関係初期化・設定 */
     Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
-    bgm_menu   = Mix_LoadMUS("sound/music/title_01.mp3");
-    bgm_volume = 10;
+    bgm_menu     = Mix_LoadMUS("sound/music/title_01.mp3");
+    music_volume = 12;
     Mix_AllocateChannels(16);
     Mix_PlayMusic(bgm_menu, -1);
-    Mix_VolumeMusic(bgm_volume);
+    Mix_VolumeMusic(music_volume);
 
     gGame.mode = MODE_MENU; // モードをメニューに設定する
     selecter   = 0;         // セレクターを 0 に初期化する

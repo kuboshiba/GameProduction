@@ -473,17 +473,52 @@ void wiimote_func__setting()
     }
     /* Wiiリモコンの 十字キー左 が押されたとき */
     else if (wiimote.keys.left) {
+        /* selecter によって条件分岐
+            音量を下げる
+            0: MUSIC
+            1: 
+        */
+        switch (selecter) {
+        case 0: // MUSIC
+            /* 音量を下げる */
+            if (0 <= music_volume - 4) {
+                music_volume -= 4;
+                Mix_VolumeMusic(music_volume);
+                SDL_Delay(100);
+            }
+            break;
+        case 1:
+            break;
+        }
+
         /* チャタリング防止 */
-        while (wiimote.keys.left)
-            if (wiimote_is_open(&wiimote))
-                wiimote_update(&wiimote);
+        // while (wiimote.keys.left)
+        //     if (wiimote_is_open(&wiimote))
+        //         wiimote_update(&wiimote);
     }
     /* Wiiリモコンの 十字キー右 が押されたとき */
     else if (wiimote.keys.right) {
+        /* selecter によって条件分岐
+            音量を挙げる
+            0: MUSIC
+            1: 
+        */
+        switch (selecter) {
+        case 0: // MUSIC
+            if (music_volume + 4 <= 128) {
+                music_volume += 4;
+                Mix_VolumeMusic(music_volume);
+                SDL_Delay(100);
+            }
+            break;
+        case 1:
+            break;
+        }
+
         /* チャタリング防止 */
-        while (wiimote.keys.right)
-            if (wiimote_is_open(&wiimote))
-                wiimote_update(&wiimote);
+        // while (wiimote.keys.right)
+        //     if (wiimote_is_open(&wiimote))
+        //         wiimote_update(&wiimote);
     }
     /* Wiiリモコンの １ボタン が押されたとき */
     else if (wiimote.keys.one) {

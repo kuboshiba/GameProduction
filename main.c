@@ -18,7 +18,7 @@ SDL_TimerID timer_id_target;           // 的の生成タイマー
 
 /* MUSIC */
 Mix_Music* bgm_menu; // BGM ファイルを読み込む構造体
-int bgm_volume;      // BGM の音量
+int music_volume;    // BGM の音量
 
 /* SDL2 画像関係の定義・変数 */
 SDL_Surface* image_bg[IMAGE_BG_NUM];         // 背景画像
@@ -969,24 +969,20 @@ void mode_setting()
         pasteRect = (SDL_Rect) { 250, 200, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
 
+        /* BGMのスライドバー描画 */
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
         SDL_RenderFillRect(renderer, &(SDL_Rect) { 410, 200, 400, 20 });
 
-        filledCircleColor(renderer, 410, 210, 10, 0xff0000ff);
+        filledCircleColor(renderer, 410, 210, 10, 0xc8c8c8ff);
+        filledCircleColor(renderer, 810, 210, 10, 0xc8c8c8ff);
 
-        /* SE の設定 */
-        surface = TTF_RenderUTF8_Blended(fonts.size25, "SE", (SDL_Color) { 0, 0, 0, 255 });
-        texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
-        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 250, 280, iw, ih };
-        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+        int buf_x;
+        buf_x = map(music_volume, 0, 128, 410, 810);
 
-        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-        SDL_RenderFillRect(renderer, &(SDL_Rect) { 410, 280, 400, 20 });
+        /* BGMのスライドバーのポインター描画 */
+        filledCircleColor(renderer, buf_x, 210, 10, 0xff0000ff);
 
-        filledCircleColor(renderer, 410, 290, 10, 0xff0000ff);
-
+        /* 「１ボタンでメニューに戻る」　文字列描画 */
         surface = TTF_RenderUTF8_Blended(fonts.size25, "Press 1: OK", (SDL_Color) { 0, 0, 0, 255 });
         texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
