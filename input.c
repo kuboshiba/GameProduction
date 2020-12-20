@@ -5,6 +5,7 @@ void wiimote_func__solo_ok_cancel(); // Wiiリモコン入力用の関数　ソ�
 void wiimote_func__input_name();     // Wiiリモコン入力用の関数　プレイヤー入力
 void wiimote_func__result();         // Wiiリモコン入力用の関数　リザルト画面
 void wiimote_func__solo_playing();   // Wiiリモコン入力用の関数　ソロプレイ中
+void wiimote_func__setting();        // Wiiリモコン入力用の関数　設定画面
 
 /*******************************************************************
  * 関数名 : keyboard_func
@@ -63,6 +64,7 @@ int wiimote_func()
             wiimote_func__result();
             break;
         case MODE_SETTING:
+            wiimote_func__setting();
             break;
         case MODE_COUNTDOWN: // カウントダウン時
             break;
@@ -176,6 +178,8 @@ void wiimote_func__menu()
             wiimote_disconnect(&wiimote); // Wiiリモコンの接続を解除する
             return;
         }
+
+        selecter = 0; // セレクター初期化
 
         /* チャタリング防止 */
         while (wiimote.keys.a)
@@ -432,6 +436,60 @@ void wiimote_func__solo_playing()
                 }
             }
         }
+
+        /* チャタリング防止 */
+        while (wiimote.keys.b)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+}
+
+/*******************************************************************
+ * 関数名 : wiimote_func__setting
+ * 　　型 : void
+ * 　説明 : Wiiリモコン入力用の関数　設定画面
+ ******************************************************************/
+void wiimote_func__setting()
+{
+    /* Wiiリモコンの 十字キー上 が押されたとき */
+    if (wiimote.keys.up) {
+        if (selecter != 0)
+            selecter--;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.up)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの 十字キー下 が押されたとき */
+    else if (wiimote.keys.down) {
+        if (selecter != 1)
+            selecter++;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.down)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの 十字キー左 が押されたとき */
+    else if (wiimote.keys.left) {
+        /* チャタリング防止 */
+        while (wiimote.keys.left)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの 十字キー右 が押されたとき */
+    else if (wiimote.keys.right) {
+        /* チャタリング防止 */
+        while (wiimote.keys.right)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの １ボタン が押されたとき */
+    else if (wiimote.keys.one) {
+        selecter           = 0; // セレクター初期化
+        flag[MODE_SETTING] = false;
+        gGame.mode         = MODE_MENU;
 
         /* チャタリング防止 */
         while (wiimote.keys.b)

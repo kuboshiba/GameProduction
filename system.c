@@ -38,11 +38,13 @@ void init_sys(int argc, char* argv[])
     keyboard_thread   = SDL_CreateThread(keyboard_func, "keyboard_thread", NULL);
     wiimote_ir_thread = SDL_CreateThread(wiimote_ir_func, "wii_ir_thread", NULL);
 
+    /* 音楽関係初期化・設定 */
     Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
-    bgm_title = Mix_LoadMUS("sound/music/title_01.mp3");
+    bgm_menu   = Mix_LoadMUS("sound/music/title_01.mp3");
+    bgm_volume = 10;
     Mix_AllocateChannels(16);
-    Mix_PlayMusic(bgm_title, -1);
-    Mix_VolumeMusic(10);
+    Mix_PlayMusic(bgm_menu, -1);
+    Mix_VolumeMusic(bgm_volume);
 }
 
 /*******************************************************************
@@ -186,7 +188,7 @@ void opening_sys()
     }
 
     /* 音楽関係を開放する */
-    Mix_FreeMusic(bgm_title);
+    Mix_FreeMusic(bgm_menu);
     Mix_CloseAudio();
 
     /* 各スレッドが終了するまでmain関数の処理を中断 */

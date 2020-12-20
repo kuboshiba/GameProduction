@@ -137,7 +137,8 @@ extern SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイ�
 extern SDL_TimerID timer_id_target;           // 的の生成タイマー
 
 /* MUSIC */
-extern Mix_Music *bgm_title;
+extern Mix_Music *bgm_menu; // BGM ファイルを読み込む構造体
+extern int bgm_volume;      // BGM の音量
 
 /* 画像関係の定義・変数 */
 #define IMAGE_BG_NUM 4                              // 背景画像の数
