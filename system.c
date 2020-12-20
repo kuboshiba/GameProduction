@@ -13,6 +13,17 @@ void init_sys(int argc, char* argv[])
 
     init_wiimote(argc, argv); // Wiiリモコンを初期化する
 
+    keyboard_thread   = SDL_CreateThread(keyboard_func, "keyboard_thread", NULL); // キーボード入力スレッド作成
+    wiimote_ir_thread = SDL_CreateThread(wiimote_ir_func, "wii_ir_thread", NULL); // Wiiリモコンの入力スレッド作成
+
+    /* 音楽関係初期化・設定 */
+    Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
+    bgm_menu   = Mix_LoadMUS("sound/music/title_01.mp3");
+    bgm_volume = 10;
+    Mix_AllocateChannels(16);
+    Mix_PlayMusic(bgm_menu, -1);
+    Mix_VolumeMusic(bgm_volume);
+
     gGame.mode = MODE_MENU; // モードをメニューに設定する
     selecter   = 0;         // セレクターを 0 に初期化する
 
@@ -34,17 +45,6 @@ void init_sys(int argc, char* argv[])
         c_data.target[i].y    = 0;
         c_data.target[i].cnt  = 0;
     }
-
-    keyboard_thread   = SDL_CreateThread(keyboard_func, "keyboard_thread", NULL);
-    wiimote_ir_thread = SDL_CreateThread(wiimote_ir_func, "wii_ir_thread", NULL);
-
-    /* 音楽関係初期化・設定 */
-    Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
-    bgm_menu   = Mix_LoadMUS("sound/music/title_01.mp3");
-    bgm_volume = 10;
-    Mix_AllocateChannels(16);
-    Mix_PlayMusic(bgm_menu, -1);
-    Mix_VolumeMusic(bgm_volume);
 }
 
 /*******************************************************************
