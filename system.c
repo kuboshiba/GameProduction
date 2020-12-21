@@ -72,10 +72,122 @@ void init_sdl2()
     image_bg[2] = IMG_Load("./image/bg3.png");
     image_bg[3] = IMG_Load("./image/bg4.png");
 
+    /* ステージ１の画像読み込み */
+    image[0].background = IMG_Load("./image/none/bg.png");
+
+    image[0].object[0]      = IMG_Load("./image/none/cloud1.png");
+    image[0].object_x[0]    = 63;
+    image[0].object_y[0]    = 13;
+    image[0].object_type[0] = OBJECT_TYPE_CLOUD;
+    image[0].object[1]      = IMG_Load("./image/none/cloud1.png");
+    image[0].object_x[1]    = 294;
+    image[0].object_y[1]    = 32;
+    image[0].object_type[1] = OBJECT_TYPE_CLOUD;
+    image[0].object[2]      = IMG_Load("./image/none/cloud1.png");
+    image[0].object_x[2]    = 645;
+    image[0].object_y[2]    = 17;
+    image[0].object_type[2] = OBJECT_TYPE_CLOUD;
+    image[0].object[3]      = IMG_Load("./image/stage1/stage1_box.png");
+    image[0].object_x[3]    = 525;
+    image[0].object_y[3]    = 281;
+    image[0].object_type[3] = OBJECT_TYPE_STATIC;
+    image[0].object[4]      = IMG_Load("./image/stage1/stage1_tree.png");
+    image[0].object_x[4]    = 75;
+    image[0].object_y[4]    = 220;
+    image[0].object_type[4] = OBJECT_TYPE_STATIC;
+
+    image[0].object_num = 5;
+
+    /* ステージ２の画像読み込み */
+    image[1].background = IMG_Load("./image/none/bg.png");
+
+    image[1].object[0]      = IMG_Load("./image/none/cloud1.png");
+    image[1].object_x[0]    = 294;
+    image[1].object_y[0]    = 32;
+    image[1].object_type[0] = OBJECT_TYPE_CLOUD;
+    image[1].object[1]      = IMG_Load("./image/none/cloud1.png");
+    image[1].object_x[1]    = 645;
+    image[1].object_y[1]    = 17;
+    image[1].object_type[1] = OBJECT_TYPE_CLOUD;
+    image[1].object[2]      = IMG_Load("./image/stage2/stage2_flower1.png");
+    image[1].object_x[2]    = 500;
+    image[1].object_y[2]    = 375;
+    image[1].object_type[2] = OBJECT_TYPE_STATIC;
+    image[1].object[3]      = IMG_Load("./image/stage2/stage2_flower2.png");
+    image[1].object_x[3]    = 650;
+    image[1].object_y[3]    = 375;
+    image[1].object_type[3] = OBJECT_TYPE_STATIC;
+    image[1].object[4]      = IMG_Load("./image/stage2/stage2_flower3.png");
+    image[1].object_x[4]    = 800;
+    image[1].object_y[4]    = 375;
+    image[1].object_type[4] = OBJECT_TYPE_STATIC;
+    image[1].object[5]      = IMG_Load("./image/stage2/stage2_house.png");
+    image[1].object_x[5]    = 50;
+    image[1].object_y[5]    = 1;
+    image[1].object_type[5] = OBJECT_TYPE_STATIC;
+
+    image[1].object_num = 6;
+
+    /* ステージ３の画像読み込み */
+    image[2].background = IMG_Load("./image/none/bg.png");
+
+    image[2].object[0]       = IMG_Load("./image/none/cloud1.png");
+    image[2].object_x[0]     = 63;
+    image[2].object_y[0]     = 13;
+    image[2].object_type[0]  = OBJECT_TYPE_CLOUD;
+    image[2].object[1]       = IMG_Load("./image/none/cloud1.png");
+    image[2].object_x[1]     = 294;
+    image[2].object_y[1]     = 32;
+    image[2].object_type[1]  = OBJECT_TYPE_CLOUD;
+    image[2].object[2]       = IMG_Load("./image/none/cloud1.png");
+    image[2].object_x[2]     = 645;
+    image[2].object_y[2]     = 17;
+    image[2].object_type[2]  = OBJECT_TYPE_STATIC;
+    image[2].object[3]       = IMG_Load("./image/stage3/stage3_grave.png");
+    image[2].object_x[3]     = 450;
+    image[2].object_y[3]     = 413;
+    image[2].object_type[3]  = OBJECT_TYPE_STATIC;
+    image[2].object[4]       = IMG_Load("./image/stage3/stage3_grave.png");
+    image[2].object_x[4]     = 550;
+    image[2].object_y[4]     = 413;
+    image[2].object_type[4]  = OBJECT_TYPE_STATIC;
+    image[2].object[5]       = IMG_Load("./image/stage3/stage3_house1.png");
+    image[2].object_x[5]     = 30;
+    image[2].object_y[5]     = 131;
+    image[2].object_type[5]  = OBJECT_TYPE_STATIC;
+    image[2].object[6]       = IMG_Load("./image/stage3/stage3_house2.png");
+    image[2].object_x[6]     = 280;
+    image[2].object_y[6]     = 225;
+    image[2].object_type[6]  = OBJECT_TYPE_STATIC;
+    image[2].object[7]       = IMG_Load("./image/stage3/stage3_juuzi1.png");
+    image[2].object_x[7]     = 650;
+    image[2].object_y[7]     = 388;
+    image[2].object_type[7]  = OBJECT_TYPE_STATIC;
+    image[2].object[8]       = IMG_Load("./image/stage3/stage3_juuzi2.png");
+    image[2].object_x[8]     = 750;
+    image[2].object_y[8]     = 413;
+    image[2].object_type[8]  = OBJECT_TYPE_STATIC;
+    image[2].object[9]       = IMG_Load("./image/stage3/stage3_koumori.png");
+    image[2].object_x[9]     = 350;
+    image[2].object_y[9]     = 200;
+    image[2].object_type[9]  = OBJECT_TYPE_STATIC;
+    image[2].object[10]      = IMG_Load("./image/stage3/stage3_pumpkin.png");
+    image[2].object_x[10]    = 850;
+    image[2].object_y[10]    = 375;
+    image[2].object_type[10] = OBJECT_TYPE_STATIC;
+    image[2].object_num      = 11;
+
+    /* ステージ４の画像読み込み */
+    image[3].background = IMG_Load("./image/none/bg.png");
+    image[3].object[0]  = IMG_Load("./image/stage4/stage4_tree.png");
+    image[3].object[1]  = IMG_Load("./image/stage4/stage4_yukidaruma.png");
+    image[3].object_num = 2;
+
     image_menu = IMG_Load("./image/menu_bg.png"); // メニュー画面の背景
 
-    image_rect[0] = IMG_Load("./image/rect_bg1.png"); // ゲーム中のステータスを表示する背景
-    image_rect[1] = IMG_Load("./image/rect_bg2.png");
+    /* 透過画像の読み込み */
+    image_rect[0] = IMG_Load("./image/transparent/rect_bg1.png");
+    image_rect[1] = IMG_Load("./image/transparent/rect_bg2.png");
 
     /* 的の画像読み込み */
     image_target[0] = IMG_Load("./image/target/100-1.png");

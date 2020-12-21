@@ -30,8 +30,8 @@
 
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
 
-#define MODE_NUM 100  // モードの個数
-#define STAGE_TIME 10 // ステージごとの時間 sec
+#define MODE_NUM 100 // モードの個数
+#define STAGE_TIME 3 // ステージごとの時間 sec
 
 #define DEFAULT_PORT 51000 // デフォルトのポート番号
 #define MAX_LEN_NAME 100   // 名前の最大文字数
@@ -153,6 +153,22 @@ extern SDL_Rect txtRect;                            // 文字の選択範囲
 extern SDL_Rect pasteRect;                          // 文字の描画範囲
 extern Uint32 rmask, gmask, bmask, amask;           // サーフェイス作成時のマスクデータを格納する変数
 extern int iw, ih;                                  // テクスチャやサーフェイスの幅
+
+typedef enum {
+    OBJECT_TYPE_STATIC = 0,
+    OBJECT_TYPE_CLOUD  = 1
+} OBJECT_TYPE;
+
+#define OBJECT_NUM_MAX 50
+typedef struct {
+    SDL_Surface *background;             // バックグラウンド
+    SDL_Surface *object[OBJECT_NUM_MAX]; // オブジェクト
+    int object_x[OBJECT_NUM_MAX];
+    int object_y[OBJECT_NUM_MAX];
+    OBJECT_TYPE object_type[OBJECT_NUM_MAX];
+    int object_num; // オブジェクトの数
+} IMAGE_OBJECT;
+extern IMAGE_OBJECT image[IMAGE_BG_NUM]; // 画像をステージごとにまとめた構造体
 
 /* Wiiリモコン関係 */
 extern wiimote_t wiimote;     // Wiiリモコンの状態格納用
