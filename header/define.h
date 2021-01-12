@@ -62,6 +62,7 @@ typedef enum {
     MODE_MULTI_HOST_OR_CLIENT         = 4,  // マルチプレイ　ホストかクライアントか選択
     MODE_MULTI_HOST_PLAYER_NUM_DECIDE = 5,  // マルチプレイ　ホスト選択時人数決定
     MODE_MULTI_CLIENT                 = 6,  // マルチプレイ　クライアント
+    MODE_MULTI_HOST_SERVER_SETUP      = 7,  // サーバーセットアップ
     MODE_COUNTDOWN                    = 10, // ソロプレイ　カウントダウン中
     MODE_TRANSITION                   = 11, // ステージ遷移
     MODE_RESULT                       = 12, // リザルト
@@ -71,6 +72,7 @@ typedef enum {
 /* ゲームで多用する共通変数は構造体 Game で管理 */
 typedef struct {
     MODE mode;
+    int player_num;
 } GameInfo;
 extern GameInfo gGame; // ゲームで多用する共通変数は構造体 gGame で管理
 

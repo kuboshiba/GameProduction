@@ -7,6 +7,7 @@ void wiimote_func__result();               // Wiiリモコン入力用の関数�
 void wiimote_func__solo_playing();         // Wiiリモコン入力用の関数　ソロプレイ中
 void wiimote_func__setting();              // Wiiリモコン入力用の関数　設定画面
 void wiimote_func__multi_host_or_client(); // Wiiリモコン入力用の関数　ホストかクライアントか決定
+void wiimote_func__multi_host_player_num_decide();
 
 /*******************************************************************
  * 関数名 : keyboard_func
@@ -69,6 +70,9 @@ int wiimote_func()
             break;
         case MODE_MULTI_HOST_OR_CLIENT:
             wiimote_func__multi_host_or_client();
+            break;
+        case MODE_MULTI_HOST_PLAYER_NUM_DECIDE:
+            wiimote_func__multi_host_player_num_decide();
             break;
         case MODE_COUNTDOWN: // カウントダウン時
             break;
@@ -583,6 +587,60 @@ void wiimote_func__multi_host_or_client()
         selecter = 0;
 
         flag[MODE_MULTI_HOST_OR_CLIENT] = false;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.a)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+}
+
+void wiimote_func__multi_host_player_num_decide()
+{
+    /* Wiiリモコンの 十字キー上 が押されたとき */
+    if (wiimote.keys.up) {
+        if (selecter != 0)
+            selecter--;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.up)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの 十字キー下 が押されたとき */
+    else if (wiimote.keys.down) {
+        if (selecter != 3)
+            selecter++;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.down)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの Aボタン が押されたとき */
+    else if (wiimote.keys.a) {
+
+        switch (selecter) {
+        case 0: // 2 players
+            gGame.player_num = 2;
+            gGame.mode       = MODE_MULTI_HOST_SERVER_SETUP;
+            break;
+        case 1: // 3 players
+            gGame.player_num = 3;
+            gGame.mode       = MODE_MULTI_HOST_SERVER_SETUP;
+            break;
+        case 2: // 4 players
+            gGame.player_num = 4;
+            gGame.mode       = MODE_MULTI_HOST_SERVER_SETUP;
+            break;
+        case 3: // RETURN MENU
+            gGame.mode = MODE_MENU;
+            break;
+        }
+
+        selecter = 0;
+
+        flag[MODE_MULTI_HOST_PLAYER_NUM_DECIDE] = false;
 
         /* チャタリング防止 */
         while (wiimote.keys.a)

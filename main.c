@@ -68,6 +68,8 @@ void transition_stage_1(int, int);                 // 画面遷移関数
 void create_target();                              // 的を生成する関数
 void result_draw();                                // リザルトを描画する関数
 void mode_multi_host_or_client();                  // マルチプレイでホストかクライアントを選択する関数
+void mode_multi_host_player_num_decide();          // マルチプレイ　ホストが人数を設定
+void mode_multi_host_server_setup();               // サーバーセットアップ
 Uint32 count_down(Uint32, void*);                  // カウントダウン処理
 Uint32 timer_transition_stage(Uint32, void*);      // 画面遷移のアニメーション関数
 Uint32 target_cnt(Uint32, void*);                  // タイマーで的を生成する関数
@@ -133,7 +135,14 @@ int main(int argc, char* argv[])
             result_draw(); // リザルト描画
             break;
         case MODE_MULTI_HOST_OR_CLIENT:
-            mode_multi_host_or_client();
+            mode_multi_host_or_client(); // ホストかクライアントを選択
+            break;
+        case MODE_MULTI_HOST_PLAYER_NUM_DECIDE:
+            mode_multi_host_player_num_decide(); // ホストがプレイヤー人数を決定
+            break;
+        case MODE_MULTI_HOST_SERVER_SETUP:
+            mode_multi_host_server_setup(); // サーバーをセットアップする
+        case MODE_MULTI_CLIENT:
             break;
         case MODE_SETTING: // 設定画面
             mode_setting();
@@ -1188,4 +1197,77 @@ void mode_multi_host_or_client()
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
     }
+}
+
+/*******************************************************************
+ * 関数名 : mode_multi_host_player_num_decide
+ * 　　型 : void
+ * 　説明 : マルチプレイでホストが人数を設定
+ ******************************************************************/
+void mode_multi_host_player_num_decide()
+{
+    gGame.mode                              = MODE_MULTI_HOST_PLAYER_NUM_DECIDE;
+    flag[MODE_MULTI_HOST_PLAYER_NUM_DECIDE] = true;
+
+    while (flag[MODE_MULTI_HOST_PLAYER_NUM_DECIDE] && wiimote_is_open(&wiimote)) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size25, "Set the number of players", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 200, 100, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size25, "2 players", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 400, 200, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size25, "3 players", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 400, 250, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size25, "4 players", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 400, 300, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size25, "CANCEL", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 400, 350, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size25, ">", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 350, 200 + selecter * 50, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(interval);
+    }
+}
+
+/*******************************************************************
+ * 関数名 : mode_multi_host_server_setup
+ * 　　型 : void
+ * 　説明 : サーバーセットアップ
+ ******************************************************************/
+void mode_multi_host_server_setup()
+{
 }
