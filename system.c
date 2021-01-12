@@ -179,9 +179,29 @@ void init_sdl2()
 
     /* ステージ４の画像読み込み */
     image[3].background = IMG_Load("./image/none/bg.png");
-    image[3].object[0]  = IMG_Load("./image/stage4/stage4_tree.png");
-    image[3].object[1]  = IMG_Load("./image/stage4/stage4_yukidaruma.png");
-    image[3].object_num = 2;
+
+    image[3].object[0]      = IMG_Load("./image/stage4/stage4_tree.png");
+    image[3].object_x[0]    = 20;
+    image[3].object_y[0]    = 151;
+    image[3].object_type[0] = OBJECT_TYPE_STATIC;
+    image[3].object[1]      = IMG_Load("./image/stage4/stage4_yukidaruma.png");
+    image[3].object_x[1]    = 700;
+    image[3].object_y[1]    = 313;
+    image[3].object_type[1] = OBJECT_TYPE_STATIC;
+    image[3].object[2]      = IMG_Load("./image/none/cloud1.png");
+    image[3].object_x[2]    = 63;
+    image[3].object_y[2]    = 13;
+    image[3].object_type[2] = OBJECT_TYPE_CLOUD;
+    image[3].object[3]      = IMG_Load("./image/none/cloud1.png");
+    image[3].object_x[3]    = 294;
+    image[3].object_y[3]    = 32;
+    image[3].object_type[3] = OBJECT_TYPE_CLOUD;
+    image[3].object[4]      = IMG_Load("./image/none/cloud1.png");
+    image[3].object_x[4]    = 645;
+    image[3].object_y[4]    = 17;
+    image[3].object_type[4] = OBJECT_TYPE_CLOUD;
+
+    image[3].object_num = 5;
 
     image_menu = IMG_Load("./image/menu_bg.png"); // メニュー画面の背景
 
