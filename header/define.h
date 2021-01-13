@@ -61,8 +61,9 @@ typedef enum {
     MODE_SOLO_PLAYING                 = 3,  // ソロプレイ　プレイ中
     MODE_MULTI_HOST_OR_CLIENT         = 4,  // マルチプレイ　ホストかクライアントか選択
     MODE_MULTI_HOST_PLAYER_NUM_DECIDE = 5,  // マルチプレイ　ホスト選択時人数決定
-    MODE_MULTI_CLIENT                 = 6,  // マルチプレイ　クライアント
-    MODE_MULTI_HOST_SERVER_SETUP      = 7,  // サーバーセットアップ
+    MODE_MULTI_HOST_SERVER_SETUP      = 6,  // サーバーセットアップ
+    MODE_MULTI_CLIENT_INPUT_NAME      = 7,  // クライアントの名前入力
+    MODE_MULTI_CLIENT_WAIT            = 8,  // クライアントの待機
     MODE_COUNTDOWN                    = 10, // ソロプレイ　カウントダウン中
     MODE_TRANSITION                   = 11, // ステージ遷移
     MODE_RESULT                       = 12, // リザルト
@@ -132,9 +133,11 @@ typedef struct {
 extern Font_PressStart2P fonts; // PressStart2Pのフォント格納データ
 
 /* スレッド関係の定義・変数 */
-extern SDL_Thread *keyboard_thread;   // キーボード入力用のスレッド
-extern SDL_Thread *wiimote_thread;    // Wiiリモコン入力用のスレッド
-extern SDL_Thread *wiimote_ir_thread; // Wiiリモコンの赤外線センサの取得とポインター生成のスレッド
+extern SDL_Thread *keyboard_thread;       // キーボード入力用のスレッド
+extern SDL_Thread *wiimote_thread;        // Wiiリモコン入力用のスレッド
+extern SDL_Thread *wiimote_ir_thread;     // Wiiリモコンの赤外線センサの取得とポインター生成のスレッド
+extern SDL_Thread *network_host_thread;   // network_host_threadを用いる
+extern SDL_Thread *network_client_thread; // network_client_threadを用いる
 
 /* タイマー関係の定義・変数 */
 extern SDL_TimerID timer_id_countdown;        // カウントダウン用のタイマー

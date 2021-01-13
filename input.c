@@ -8,6 +8,7 @@ void wiimote_func__solo_playing();         // Wiiリモコン入力用の関数�
 void wiimote_func__setting();              // Wiiリモコン入力用の関数　設定画面
 void wiimote_func__multi_host_or_client(); // Wiiリモコン入力用の関数　ホストかクライアントか決定
 void wiimote_func__multi_host_player_num_decide();
+void wiimote_func__multi_client_input_name();
 
 /*******************************************************************
  * 関数名 : keyboard_func
@@ -62,17 +63,24 @@ int wiimote_func()
         case MODE_SOLO_PLAYING: // ソロプレイ　プレイ中
             wiimote_func__solo_playing();
             break;
-        case MODE_RESULT:
+        case MODE_RESULT: // リザルトを表示する
             wiimote_func__result();
             break;
-        case MODE_SETTING:
+        case MODE_SETTING: // セッティング画面を描画する
             wiimote_func__setting();
             break;
-        case MODE_MULTI_HOST_OR_CLIENT:
+        case MODE_MULTI_HOST_OR_CLIENT: // ホストかクライアントを選択する
             wiimote_func__multi_host_or_client();
             break;
-        case MODE_MULTI_HOST_PLAYER_NUM_DECIDE:
+        case MODE_MULTI_HOST_PLAYER_NUM_DECIDE: // プレイヤーの人数を選択する
             wiimote_func__multi_host_player_num_decide();
+            break;
+        case MODE_MULTI_CLIENT_INPUT_NAME:
+            wiimote_func__multi_client_input_name();
+            break;
+        case MODE_MULTI_CLIENT_WAIT:
+            break;
+        case MODE_MULTI_HOST_SERVER_SETUP: // サーバーをセットアップする
             break;
         case MODE_COUNTDOWN: // カウントダウン時
             break;
@@ -577,7 +585,7 @@ void wiimote_func__multi_host_or_client()
             gGame.mode = MODE_MULTI_HOST_PLAYER_NUM_DECIDE;
             break;
         case 1: // CLIENT
-            gGame.mode = MODE_MULTI_CLIENT;
+            gGame.mode = MODE_MULTI_CLIENT_INPUT_NAME;
             break;
         case 2: // RETURN MENU
             gGame.mode = MODE_MENU;
@@ -595,6 +603,11 @@ void wiimote_func__multi_host_or_client()
     }
 }
 
+/*******************************************************************
+ * 関数名 : wiimote_func__multi_host_player_num_decide
+ * 　　型 : void
+ * 　説明 : Wiiリモコン入力用の関数　プレイヤーの人数を選択
+ ******************************************************************/
 void wiimote_func__multi_host_player_num_decide()
 {
     /* Wiiリモコンの 十字キー上 が押されたとき */
@@ -644,6 +657,106 @@ void wiimote_func__multi_host_player_num_decide()
 
         /* チャタリング防止 */
         while (wiimote.keys.a)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+}
+
+/*******************************************************************
+ * 関数名 : wiimote_func__multi_client_input_name
+ * 　　型 : void
+ * 　説明 : Wiiリモコン入力用の関数　クライアントの名前入力
+ ******************************************************************/
+void wiimote_func__multi_client_input_name()
+{
+    /* Wiiリモコンの 十字キー上 が押されたとき */
+    if (wiimote.keys.up) {
+        if (9 <= key_pos && key_pos <= 25)
+            key_pos -= 9;
+        else if (key_pos == 8)
+            key_pos = 25;
+        else
+            key_pos += 18;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.up)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの 十字キー下 が押されたとき */
+    else if (wiimote.keys.down) {
+        if (0 <= key_pos && key_pos <= 16)
+            key_pos += 9;
+        else if (key_pos == 17)
+            key_pos = 25;
+        else
+            key_pos -= 18;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.down)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの 十字キー左 が押されたとき */
+    else if (wiimote.keys.left) {
+        if (key_pos == 0 || key_pos == 9)
+            key_pos += 8;
+        else if (key_pos == 18)
+            key_pos = 25;
+        else
+            key_pos--;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.left)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの 十字キー右 が押されたとき */
+    else if (wiimote.keys.right) {
+        if (key_pos == 8 || key_pos == 17)
+            key_pos -= 8;
+        else if (key_pos == 25)
+            key_pos = 18;
+        else
+            key_pos++;
+
+        /* チャタリング防止 */
+        while (wiimote.keys.right)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの Aボタン が押されたとき */
+    else if (wiimote.keys.a) {
+        char buf[MAX_LEN_NAME] = "\0";
+        if (strlen(gPlayer.name) <= 15) {
+            sprintf(buf, "%s%s", gPlayer.name, alphabet[key_pos]);
+            sprintf(gPlayer.name, "%s", buf);
+        }
+
+        /* チャタリング防止 */
+        while (wiimote.keys.a)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの Bボタン が押されたとき */
+    else if (wiimote.keys.b) {
+        int len = strlen(gPlayer.name);
+        if (0 < len)
+            gPlayer.name[len - 1] = '\0';
+
+        /* チャタリング防止 */
+        while (wiimote.keys.b)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+    /* Wiiリモコンの 1ボタン が押されたとき */
+    else if (wiimote.keys.one) {
+        gGame.mode                         = MODE_MULTI_CLIENT_WAIT; // モード遷移
+        flag[MODE_MULTI_CLIENT_INPUT_NAME] = false;                  // フラグ初期化
+        key_pos                            = 0;                      // セレクター初期化
+
+        /* チャタリング防止 */
+        while (wiimote.keys.one)
             if (wiimote_is_open(&wiimote))
                 wiimote_update(&wiimote);
     }

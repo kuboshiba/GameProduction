@@ -8,9 +8,11 @@ SDL_Texture* texture;   // テクスチャ（VRAM上の描画データ）を格�
 SDL_Event event;        // SDLによるイベントを検知するための構造体
 
 /* SDL2 スレッド関係 */
-SDL_Thread* keyboard_thread;   // キーボード入力用のスレッド
-SDL_Thread* wiimote_thread;    // Wiiリモコン入力用のスレッド
-SDL_Thread* wiimote_ir_thread; // Wiiリモコンの赤外線センサの取得とポインター生成のスレッド
+SDL_Thread* keyboard_thread;       // キーボード入力用のスレッド
+SDL_Thread* wiimote_thread;        // Wiiリモコン入力用のスレッド
+SDL_Thread* wiimote_ir_thread;     // Wiiリモコンの赤外線センサの取得とポインター生成のスレッド
+SDL_Thread* network_host_thread;   // network_host_thread
+SDL_Thread* network_client_thread; // network_client_thread
 
 SDL_TimerID timer_id_countdown;        // カウントダウン用のタイマー
 SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
@@ -70,6 +72,8 @@ void result_draw();                                // リザルトを描画す�
 void mode_multi_host_or_client();                  // マルチプレイでホストかクライアントを選択する関数
 void mode_multi_host_player_num_decide();          // マルチプレイ　ホストが人数を設定
 void mode_multi_host_server_setup();               // サーバーセットアップ
+void mode_multi_client_input_name();               // クライアントの名前を入力
+void mode_multi_client_wait();                     // クライアントの待機画面
 Uint32 count_down(Uint32, void*);                  // カウントダウン処理
 Uint32 timer_transition_stage(Uint32, void*);      // 画面遷移のアニメーション関数
 Uint32 target_cnt(Uint32, void*);                  // タイマーで的を生成する関数
@@ -142,7 +146,12 @@ int main(int argc, char* argv[])
             break;
         case MODE_MULTI_HOST_SERVER_SETUP:
             mode_multi_host_server_setup(); // サーバーをセットアップする
-        case MODE_MULTI_CLIENT:
+            break;
+        case MODE_MULTI_CLIENT_INPUT_NAME:
+            mode_multi_client_input_name(); // クライントの名前を入力
+            break;
+        case MODE_MULTI_CLIENT_WAIT:
+            mode_multi_client_wait(); // クライアントの待機画面
             break;
         case MODE_SETTING: // 設定画面
             mode_setting();
@@ -1270,4 +1279,124 @@ void mode_multi_host_player_num_decide()
  ******************************************************************/
 void mode_multi_host_server_setup()
 {
+    network_host_thread = SDL_CreateThread(server_main, "network_host_thread", NULL);
+
+    gGame.mode = MODE_MULTI_CLIENT_INPUT_NAME;
+}
+
+/*******************************************************************
+ * 関数名 : mode_multi_client_input_name
+ * 　　型 : void
+ * 　説明 : クライアントの名前入力
+ ******************************************************************/
+void mode_multi_client_input_name()
+{
+    gGame.mode = MODE_MULTI_CLIENT_INPUT_NAME;
+
+    flag[MODE_MULTI_CLIENT_INPUT_NAME] = true;
+    while (flag[MODE_MULTI_CLIENT_INPUT_NAME] && wiimote_is_open(&wiimote)) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        /* 「プレイヤー名を入力してください」を描画 */
+        surface = TTF_RenderUTF8_Blended(fonts.size25, "Please input your name", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 158, 100, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* アルファベットの四角を描画 */
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (i == 2 && j == 8)
+                    break;
+                if (0 <= key_pos && key_pos <= 25 && key_pos == (j + 9 * i)) {
+                    SDL_SetRenderDrawColor(renderer, 120, 120, 120, 255);
+                    SDL_RenderFillRect(renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
+                }
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                SDL_RenderDrawRect(renderer, &(SDL_Rect) { 150 + j * 50, 250 + i * 50, 40, 40 });
+            }
+        }
+
+        /* アルファベットを描画 */
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 9; j++) {
+                surface = TTF_RenderUTF8_Blended(fonts.size25, alphabet[j + i * 9], (SDL_Color) { 255, 255, 255, 255 });
+                texture = SDL_CreateTextureFromSurface(renderer, surface);
+                SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+                txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+                pasteRect = (SDL_Rect) { 158 + j * 50, 258 + i * 50, iw, ih };
+                SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+            }
+        }
+
+        /* ボタンの説明の描画 */
+        surface = TTF_RenderUTF8_Blended(fonts.size20, "Press A: Input", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 650, 250, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size20, "Press B: Delete ", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 650, 300, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size20, "Press 1: Play ", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 650, 350, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* プレイヤー名の描画 */
+        surface = TTF_RenderUTF8_Blended(fonts.size25, gPlayer.name, (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 158, 180, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &(SDL_Rect) { 150, 170, 450, 50 });
+
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(interval);
+    }
+}
+
+/*******************************************************************
+ * 関数名 : mode_multi_client_wait
+ * 　　型 : void
+ * 　説明 : クライアントの待機画面
+ ******************************************************************/
+void mode_multi_client_wait()
+{
+    flag[MODE_MULTI_CLIENT_WAIT] = true;
+    while (flag[MODE_MULTI_CLIENT_WAIT] && wiimote_is_open(&wiimote)) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        /* ボタンの説明の描画 */
+        surface = TTF_RenderUTF8_Blended(fonts.size15, "Connecting to the server...", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(interval);
+    }
 }
