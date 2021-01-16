@@ -45,6 +45,7 @@
 #define DATA_COMMAND 'D'    // データ送信コマンド
 #define DATA_TARGET_COMMAND 'T'
 #define START_COMMAND 'S' // スタートコマンド
+#define SYNC_COMMAND 'Y'
 
 #define TARGET_NUM_MAX 10
 #define SERVER_ADDR "192.168.64.34" // サーバーのアドレス
@@ -66,6 +67,7 @@ typedef enum {
     MODE_MULTI_CLIENT_SETUP           = 8,  // クライアントのセットアップ
     MODE_MULTI_CLIENT_WAIT            = 9,  // クライアントの待機
     MODE_MULTI_PLAYING                = 10, // マルチプレイ　プレイ中
+    MODE_MULTI_PLAYING_WAIT           = 11, // マルチプレイ　同期待ち
     MODE_COUNTDOWN                    = 20, // ソロプレイ　カウントダウン中
     MODE_TRANSITION                   = 21, // ステージ遷移
     MODE_RESULT                       = 22, // リザルト
@@ -199,6 +201,7 @@ extern bool flag[100];       // フラグ
 extern int s_num_clients; // クライアントの数を格納
 extern int s_num_socks;   // ソケットの数を格納
 extern fd_set s_mask;     // サーバーのマスク
+extern int flag_sync;     // 同期用のフラグ
 
 extern int server_main();
 extern void setup_server(int, u_short);

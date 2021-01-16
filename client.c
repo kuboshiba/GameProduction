@@ -191,6 +191,10 @@ int exe_command()
             c_data.target[i].y    = c_container.target[i].y;
         }
         break;
+    case SYNC_COMMAND:
+        flag[MODE_MULTI_PLAYING_WAIT] = false;
+        puts("OK");
+        break;
     }
 
     return result;

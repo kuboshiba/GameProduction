@@ -88,6 +88,7 @@ CONTAINER s_data;                  // 構造体 DATA を構造体変数 s_data �
 int s_num_clients;                 // クライアントの数を格納
 int s_num_socks;                   // ソケットの数を格納
 fd_set s_mask;
+int flag_sync;
 
 int server_main();
 void setup_server(int, u_short);
@@ -1469,6 +1470,27 @@ void mode_multi_playing()
 
             /* ラストステージじゃなかったらステージを遷移 */
             if (stage_pos != 3) {
+                CONTAINER sync_data;
+                sync_data.command = SYNC_COMMAND;
+                client_send_data(&sync_data, sizeof(CONTAINER));
+
+                // 同期中
+                flag[MODE_MULTI_PLAYING_WAIT] = true;
+                while (flag[MODE_MULTI_PLAYING_WAIT] && wiimote_is_open(&wiimote)) {
+                    surface = TTF_RenderUTF8_Blended(fonts.size15, "in sync...", (SDL_Color) { 255, 255, 255, 255 });
+                    texture = SDL_CreateTextureFromSurface(renderer, surface);
+                    SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+                    txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+                    pasteRect = (SDL_Rect) { 0, 0, iw, ih };
+                    SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+                    /* ポインターをウィンドウに描画 */
+                    filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+                    SDL_RenderPresent(renderer);
+                    SDL_Delay(interval);
+                }
+
                 transition_stage_1(stage_pos, stage_pos + 1);
 
                 stage_pos++;                     // ステージをインクリメント

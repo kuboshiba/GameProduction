@@ -46,6 +46,8 @@ void init_sys(int argc, char* argv[])
         c_data.target[i].y    = 0;
         c_data.target[i].cnt  = 0;
     }
+
+    flag_sync = 0;
 }
 
 /*******************************************************************

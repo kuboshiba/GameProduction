@@ -153,6 +153,14 @@ int server_control_requests()
                 // 終了コードを result に格納
                 result = 0;
                 break;
+            case SYNC_COMMAND:
+                flag_sync++;
+                if (flag_sync == 2) {
+                    data.command = SYNC_COMMAND;
+                    server_send_data(BROADCAST, &data, sizeof(CONTAINER));
+                    flag_sync = 0;
+                }
+                break;
             // それ以外のコマンドが送信された場合
             default:
                 // 異常なエラーであることを表示する
