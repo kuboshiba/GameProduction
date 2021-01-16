@@ -932,6 +932,9 @@ void create_target()
             }
         }
     }
+
+    s_data.command = DATA_TARGET_COMMAND;
+    server_send_data(BROADCAST, &s_data, sizeof(CONTAINER));
 }
 
 /*******************************************************************
@@ -1014,6 +1017,10 @@ Uint32 target_cnt(Uint32 interval, void* param)
             s_data.target[i].cnt++; // 的のカウンターをインクリメント
         }
     }
+
+    s_data.command = DATA_TARGET_COMMAND;
+    server_send_data(BROADCAST, &s_data, sizeof(CONTAINER));
+
     return interval;
 }
 
@@ -1296,8 +1303,8 @@ void mode_multi_host_player_num_decide()
 void mode_multi_host_server_setup()
 {
     network_host_thread = SDL_CreateThread(server_main, "network_host_thread", NULL);
-
-    gGame.mode = MODE_MULTI_CLIENT_INPUT_NAME;
+    gGame.type          = 1;
+    gGame.mode          = MODE_MULTI_CLIENT_INPUT_NAME;
 }
 
 /*******************************************************************
@@ -1431,17 +1438,128 @@ void mode_multi_client_wait()
 
 void mode_multi_playing()
 {
+    stage_pos     = 0; // ステージを 0 に初期化
+    gPlayer.score = 0; // プレイヤーのスコアを初期化
+    /* ステージ１のカウントダウンを描画する */
+    gGame.mode = MODE_COUNTDOWN;     // モードをカウントダウンに
+    count_down_draw(stage_pos);      // カウントダウン開始
+    gGame.mode = MODE_MULTI_PLAYING; // モードをソロプレイ中に
+
+    /* 時間の記録（スタート） */
+    double startTime, endTime;
+    int totalTime = 0;
+    startTime     = clock() / CLOCKS_PER_SEC;
+
+    /* 的の生成と的の表示時間用のタイマーをセット */
+    if (gGame.type == 1) {
+        create_target();
+        timer_id_target = SDL_AddTimer(1000, target_cnt, &target);
+    }
+
     flag[MODE_MULTI_PLAYING] = true;
     while (flag[MODE_MULTI_PLAYING] && wiimote_is_open(&wiimote)) {
+        /* 経過時間を算出 */
+        endTime   = clock() / CLOCKS_PER_SEC;
+        totalTime = (int)(endTime - startTime);
+
+        /* 経過時間が STAGE_TIME になるとステージ遷移 */
+        if (totalTime >= STAGE_TIME + 1) {
+            if (gGame.type == 1)
+                SDL_RemoveTimer(timer_id_target);
+
+            /* ラストステージじゃなかったらステージを遷移 */
+            if (stage_pos != 3) {
+                transition_stage_1(stage_pos, stage_pos + 1);
+
+                stage_pos++;                     // ステージをインクリメント
+                gGame.mode = MODE_COUNTDOWN;     // モードをカウントダウンに
+                count_down_draw(stage_pos);      // カウントダウン開始
+                gGame.mode = MODE_MULTI_PLAYING; // モードをソロプレイ中に
+
+                /* 時間の記録（スタート） */
+                totalTime = 0;
+                startTime = clock() / CLOCKS_PER_SEC;
+
+                /* 経過時間を算出 */
+                endTime   = clock() / CLOCKS_PER_SEC;
+                totalTime = (int)(endTime - startTime);
+
+                /* 的の生成と的の表示時間用のタイマーをセット */
+                if (gGame.type == 1) {
+                    create_target();
+                    timer_id_target = SDL_AddTimer(1000, target_cnt, &target);
+                }
+            }
+            /* ラストステージの場合 */
+            else {
+                /* ソロプレイ中のループから抜ける */
+                flag[MODE_MULTI_PLAYING] = false;
+                break;
+            }
+        }
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        surface = TTF_RenderUTF8_Blended(fonts.size15, "start", (SDL_Color) { 255, 255, 255, 255 });
+        /* 背景画像を描画 */
+        texture = SDL_CreateTextureFromSurface(renderer, image[stage_pos].background);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, iw, ih };
+        drawRect  = (SDL_Rect) { 0, 0, iw, ih };
+        SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
+
+        for (int i = 0; i < image[stage_pos].object_num; i++) {
+            texture = SDL_CreateTextureFromSurface(renderer, image[stage_pos].object[i]);
+            SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+            imageRect = (SDL_Rect) { 0, 0, iw, ih };
+            drawRect  = (SDL_Rect) { image[stage_pos].object_x[i], image[stage_pos].object_y[i], iw, ih };
+            SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
+        }
+
+        /* 右上に透過画像を描画　この上にステータスを描く */
+        texture = SDL_CreateTextureFromSurface(renderer, image_rect[0]);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        imageRect = (SDL_Rect) { 0, 0, 400, 100 };
+        drawRect  = (SDL_Rect) { 600, 0, 400, 100 };
+        SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
+
+        /* ステージ番号を描画 */
+        sprintf(txt, "%s%d%s", "STAGE ", stage_pos + 1, " / 4");
+        surface = TTF_RenderUTF8_Blended(fonts.size20, txt, (SDL_Color) { 30, 30, 30, 255 });
         texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
-        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        pasteRect = (SDL_Rect) { 610, 10, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* 残り秒数を描画 */
+        sprintf(txt, "%s%d%s%d%s", "TIME  ", totalTime, " / ", STAGE_TIME, " sec");
+        surface = TTF_RenderUTF8_Blended(fonts.size20, txt, (SDL_Color) { 30, 30, 30, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 610, 40, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* スコアを描画 */
+        sprintf(txt, "%s%d", "SCORE ", gPlayer.score);
+        surface = TTF_RenderUTF8_Blended(fonts.size20, txt, (SDL_Color) { 30, 30, 30, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 610, 70, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* 的を描画 */
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            if (c_data.target[i].type != 5) {
+                texture = SDL_CreateTextureFromSurface(renderer, image_target[c_data.target[i].type]);
+                SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+                imageRect = (SDL_Rect) { 0, 0, iw, ih };
+                drawRect  = (SDL_Rect) { c_data.target[i].x, c_data.target[i].y, iw, ih };
+                SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
+            }
+        }
 
         /* ポインターをウィンドウに描画 */
         filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);

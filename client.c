@@ -161,26 +161,35 @@ int in_command()
 // コマンドを実行する関数
 int exe_command()
 {
+    CONTAINER c_container;
     int result = 1;
-    memset(&data, 0, sizeof(CONTAINER));
-    client_receive_data(&data, sizeof(data));
+    memset(&c_container, 0, sizeof(CONTAINER));
+    client_receive_data(&c_container, sizeof(c_container));
 
-    // data.command によって条件分岐
-    switch (data.command) {
+    // c_container.command によって条件分岐
+    switch (c_container.command) {
     // メッセージコマンドの場合
     case MESSAGE_COMMAND:
-        fprintf(stderr, "client[%d] %s: %s\n", data.cid, c_clients[data.cid].name, data.message);
+        fprintf(stderr, "client[%d] %s: %s\n", c_container.cid, c_clients[c_container.cid].name, c_container.message);
         result = 1;
         break;
     // 終了コマンドの場合
     case QUIT_COMMAND:
-        fprintf(stderr, "client[%d] %s sent quit command.\n", data.cid, c_clients[data.cid].name);
+        fprintf(stderr, "client[%d] %s sent quit command.\n", c_container.cid, c_clients[c_container.cid].name);
         result = 0;
         break;
     // ゲーム開始コマンド
     case START_COMMAND:
         flag[MODE_MULTI_CLIENT_WAIT] = false;
         gGame.mode                   = MODE_MULTI_PLAYING;
+        break;
+    case DATA_TARGET_COMMAND:
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            c_data.target[i].type = c_container.target[i].type;
+            c_data.target[i].cnt  = c_container.target[i].cnt;
+            c_data.target[i].x    = c_container.target[i].x;
+            c_data.target[i].y    = c_container.target[i].y;
+        }
         break;
     }
 
