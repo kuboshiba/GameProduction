@@ -73,6 +73,7 @@ void mode_multi_host_or_client();                  // マルチプレイでホ�
 void mode_multi_host_player_num_decide();          // マルチプレイ　ホストが人数を設定
 void mode_multi_host_server_setup();               // サーバーセットアップ
 void mode_multi_client_input_name();               // クライアントの名前を入力
+void mode_multi_client_setup();                    // クライアントをセットアップ
 void mode_multi_client_wait();                     // クライアントの待機画面
 Uint32 count_down(Uint32, void*);                  // カウントダウン処理
 Uint32 timer_transition_stage(Uint32, void*);      // 画面遷移のアニメーション関数
@@ -149,6 +150,9 @@ int main(int argc, char* argv[])
             break;
         case MODE_MULTI_CLIENT_INPUT_NAME:
             mode_multi_client_input_name(); // クライントの名前を入力
+            break;
+        case MODE_MULTI_CLIENT_SETUP:
+            mode_multi_client_setup(); // クライアントをセットアップ
             break;
         case MODE_MULTI_CLIENT_WAIT:
             mode_multi_client_wait(); // クライアントの待機画面
@@ -521,6 +525,12 @@ void mode_solo_playing()
     gGame.mode = MODE_RESULT;
 }
 
+/*******************************************************************
+ * 関数名 : transition_stage_1
+ * 　　型 : void
+ * 　引数 : stage_now(現在のステージ), stage_next(次のステージ)
+ * 　説明 : ステージ遷移のアニメーションを実行する関数
+ ******************************************************************/
 void transition_stage_1(int stage_now, int stage_next)
 {
     int mode_buf = gGame.mode; // 現在のモードを記憶
@@ -1371,6 +1381,18 @@ void mode_multi_client_input_name()
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
     }
+}
+
+/*******************************************************************
+ * 関数名 : mode_multi_client_setup
+ * 　　型 : void
+ * 　説明 : クライアントのセットアップ
+ ******************************************************************/
+void mode_multi_client_setup()
+{
+    network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
+
+    gGame.mode = MODE_MULTI_CLIENT_WAIT;
 }
 
 /*******************************************************************

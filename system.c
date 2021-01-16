@@ -25,7 +25,8 @@ void init_sys(int argc, char* argv[])
     Mix_VolumeMusic(music_volume);
 
     gGame.mode = MODE_MENU; // モードをメニューに設定する
-    selecter   = 0;         // セレクターを 0 に初期化する
+    gGame.type = 0;
+    selecter   = 0; // セレクターを 0 に初期化する
 
     sprintf(gPlayer.name, "%s", "guest"); // プレイヤー名を仮で guest にする
     gPlayer.score = 0;                    // プレイヤーのスコアを０に初期化

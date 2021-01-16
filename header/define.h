@@ -30,8 +30,8 @@
 
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
 
-#define MODE_NUM 100 // モードの個数
-#define STAGE_TIME 3 // ステージごとの時間 sec
+#define MODE_NUM 100  // モードの個数
+#define STAGE_TIME 10 // ステージごとの時間 sec
 
 #define DEFAULT_PORT 51000 // デフォルトのポート番号
 #define MAX_LEN_NAME 100   // 名前の最大文字数
@@ -47,7 +47,7 @@
 #define START_COMMAND 'S' // スタートコマンド
 
 #define TARGET_NUM_MAX 10
-#define SERVER_ADDR "192.168.64.77" // サーバーのアドレス
+#define SERVER_ADDR "192.168.64.34" // サーバーのアドレス
 
 typedef enum {
     PASSIVE = 0, // ゲームがパッシブ
@@ -55,15 +55,16 @@ typedef enum {
 } STATUS;
 
 typedef enum {
-    MODE_MENU                         = 0,  // メニュー画面
-    MODE_SOLO_OK_OR_CANCEL            = 1,  // ソロプレイ select OK or CANCEL
-    MODE_INPUT_NAME                   = 2,  // プレイヤー名入力
-    MODE_SOLO_PLAYING                 = 3,  // ソロプレイ　プレイ中
-    MODE_MULTI_HOST_OR_CLIENT         = 4,  // マルチプレイ　ホストかクライアントか選択
-    MODE_MULTI_HOST_PLAYER_NUM_DECIDE = 5,  // マルチプレイ　ホスト選択時人数決定
-    MODE_MULTI_HOST_SERVER_SETUP      = 6,  // サーバーセットアップ
-    MODE_MULTI_CLIENT_INPUT_NAME      = 7,  // クライアントの名前入力
-    MODE_MULTI_CLIENT_WAIT            = 8,  // クライアントの待機
+    MODE_MENU                         = 0, // メニュー画面
+    MODE_SOLO_OK_OR_CANCEL            = 1, // ソロプレイ select OK or CANCEL
+    MODE_INPUT_NAME                   = 2, // プレイヤー名入力
+    MODE_SOLO_PLAYING                 = 3, // ソロプレイ　プレイ中
+    MODE_MULTI_HOST_OR_CLIENT         = 4, // マルチプレイ　ホストかクライアントか選択
+    MODE_MULTI_HOST_PLAYER_NUM_DECIDE = 5, // マルチプレイ　ホスト選択時人数決定
+    MODE_MULTI_HOST_SERVER_SETUP      = 6, // サーバーセットアップ
+    MODE_MULTI_CLIENT_INPUT_NAME      = 7, // クライアントの名前入力
+    MODE_MULTI_CLIENT_SETUP           = 8,
+    MODE_MULTI_CLIENT_WAIT            = 9,  // クライアントの待機
     MODE_COUNTDOWN                    = 10, // ソロプレイ　カウントダウン中
     MODE_TRANSITION                   = 11, // ステージ遷移
     MODE_RESULT                       = 12, // リザルト
@@ -74,6 +75,7 @@ typedef enum {
 typedef struct {
     MODE mode;
     int player_num;
+    int type;
 } GameInfo;
 extern GameInfo gGame; // ゲームで多用する共通変数は構造体 gGame で管理
 

@@ -78,6 +78,8 @@ int wiimote_func()
         case MODE_MULTI_CLIENT_INPUT_NAME:
             wiimote_func__multi_client_input_name();
             break;
+        case MODE_MULTI_CLIENT_SETUP:
+            break;
         case MODE_MULTI_CLIENT_WAIT:
             break;
         case MODE_MULTI_HOST_SERVER_SETUP: // サーバーをセットアップする
@@ -751,9 +753,9 @@ void wiimote_func__multi_client_input_name()
     }
     /* Wiiリモコンの 1ボタン が押されたとき */
     else if (wiimote.keys.one) {
-        gGame.mode                         = MODE_MULTI_CLIENT_WAIT; // モード遷移
-        flag[MODE_MULTI_CLIENT_INPUT_NAME] = false;                  // フラグ初期化
-        key_pos                            = 0;                      // セレクター初期化
+        gGame.mode                         = MODE_MULTI_CLIENT_SETUP; // モード遷移
+        flag[MODE_MULTI_CLIENT_INPUT_NAME] = false;                   // フラグ初期化
+        key_pos                            = 0;                       // セレクター初期化
 
         /* チャタリング防止 */
         while (wiimote.keys.one)
