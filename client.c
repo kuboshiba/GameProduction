@@ -42,7 +42,6 @@ void setup_client(char *server_name, u_short port)
 
     sv_addr.sin_family = AF_INET;     // アドレスの種類 = インターネット
     sv_addr.sin_port   = htons(port); // ポート番号 = port
-    // sv_addr.sin_addr.s_addr = *(u_int *)server->h_addr_list[0]; // 任意アドレスから受信可
     inet_aton(SERVER_ADDR, &sv_addr.sin_addr);
 
     // サーバーへの通信リクエスト
@@ -51,18 +50,7 @@ void setup_client(char *server_name, u_short port)
         client_handle_error("connect()");
     }
 
-    // 名前の入力
-    fprintf(stderr, "Input your name: ");
-    char user_name[MAX_LEN_NAME];
-
-    // 名前の文字数チェック
-    if (fgets(user_name, sizeof(user_name), stdin) == NULL) {
-        // 異常終了
-        client_handle_error("fgets()");
-    }
-
-    user_name[strlen(user_name) - 1] = '\0';
-    client_send_data(user_name, MAX_LEN_NAME); // 名前を送信
+    client_send_data(gPlayer.name, MAX_LEN_NAME); // 名前を送信
 
     // 他のクライアントを待つ
     fprintf(stderr, "Waiting for other clients...\n");

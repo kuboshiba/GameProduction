@@ -55,20 +55,20 @@ typedef enum {
 } STATUS;
 
 typedef enum {
-    MODE_MENU                         = 0, // メニュー画面
-    MODE_SOLO_OK_OR_CANCEL            = 1, // ソロプレイ select OK or CANCEL
-    MODE_INPUT_NAME                   = 2, // プレイヤー名入力
-    MODE_SOLO_PLAYING                 = 3, // ソロプレイ　プレイ中
-    MODE_MULTI_HOST_OR_CLIENT         = 4, // マルチプレイ　ホストかクライアントか選択
-    MODE_MULTI_HOST_PLAYER_NUM_DECIDE = 5, // マルチプレイ　ホスト選択時人数決定
-    MODE_MULTI_HOST_SERVER_SETUP      = 6, // サーバーセットアップ
-    MODE_MULTI_CLIENT_INPUT_NAME      = 7, // クライアントの名前入力
-    MODE_MULTI_CLIENT_SETUP           = 8,
+    MODE_MENU                         = 0,  // メニュー画面
+    MODE_SOLO_OK_OR_CANCEL            = 1,  // ソロプレイ select OK or CANCEL
+    MODE_INPUT_NAME                   = 2,  // プレイヤー名入力
+    MODE_SOLO_PLAYING                 = 3,  // ソロプレイ　プレイ中
+    MODE_MULTI_HOST_OR_CLIENT         = 4,  // マルチプレイ　ホストかクライアントか選択
+    MODE_MULTI_HOST_PLAYER_NUM_DECIDE = 5,  // マルチプレイ　ホスト選択時人数決定
+    MODE_MULTI_HOST_SERVER_SETUP      = 6,  // サーバーセットアップ
+    MODE_MULTI_CLIENT_INPUT_NAME      = 7,  // クライアントの名前入力
+    MODE_MULTI_CLIENT_SETUP           = 8,  // クライアントのセットアップ
     MODE_MULTI_CLIENT_WAIT            = 9,  // クライアントの待機
-    MODE_COUNTDOWN                    = 10, // ソロプレイ　カウントダウン中
-    MODE_TRANSITION                   = 11, // ステージ遷移
-    MODE_RESULT                       = 12, // リザルト
-    MODE_SETTING                      = 13, // 設定画面
+    MODE_COUNTDOWN                    = 20, // ソロプレイ　カウントダウン中
+    MODE_TRANSITION                   = 21, // ステージ遷移
+    MODE_RESULT                       = 22, // リザルト
+    MODE_SETTING                      = 23, // 設定画面
 } MODE;
 
 /* ゲームで多用する共通変数は構造体 Game で管理 */
