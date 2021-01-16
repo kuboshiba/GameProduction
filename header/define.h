@@ -40,12 +40,13 @@
 #define MAX_LEN_ADDR 32    // アドレスの最大値
 #define BROADCAST -1       // デフォルトのブロードキャスト値
 
-#define MESSAGE_COMMAND 'M' // メッセージコマンド
-#define QUIT_COMMAND 'Q'    // 終了コマンド
-#define DATA_COMMAND 'D'    // データ送信コマンド
-#define DATA_TARGET_COMMAND 'T'
-#define START_COMMAND 'S' // スタートコマンド
-#define SYNC_COMMAND 'Y'
+#define MESSAGE_COMMAND 'A' // メッセージコマンド
+#define QUIT_COMMAND 'B'    // 終了コマンド
+#define DATA_COMMAND 'C'    // データ送信コマンド
+#define DATA_TARGET_COMMAND 'D'
+#define START_COMMAND 'E' // スタートコマンド
+#define SYNC_COMMAND 'F'
+#define C_TO_S_TARGET_COMMAND 'G'
 
 #define TARGET_NUM_MAX 10
 #define SERVER_ADDR "192.168.64.34" // サーバーのアドレス

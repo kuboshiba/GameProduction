@@ -1,14 +1,15 @@
 #include "header/define.h"
 
-void wiimote_func__menu();                 // Wiiリモコン入力用の関数　メニュー画面
-void wiimote_func__solo_ok_cancel();       // Wiiリモコン入力用の関数　ソロプレイするかどうか
-void wiimote_func__input_name();           // Wiiリモコン入力用の関数　プレイヤー入力
-void wiimote_func__result();               // Wiiリモコン入力用の関数　リザルト画面
-void wiimote_func__solo_playing();         // Wiiリモコン入力用の関数　ソロプレイ中
-void wiimote_func__setting();              // Wiiリモコン入力用の関数　設定画面
-void wiimote_func__multi_host_or_client(); // Wiiリモコン入力用の関数　ホストかクライアントか決定
-void wiimote_func__multi_host_player_num_decide();
-void wiimote_func__multi_client_input_name();
+void wiimote_func__menu();                         // Wiiリモコン入力用の関数　メニュー画面
+void wiimote_func__solo_ok_cancel();               // Wiiリモコン入力用の関数　ソロプレイするかどうか
+void wiimote_func__input_name();                   // Wiiリモコン入力用の関数　プレイヤー入力
+void wiimote_func__result();                       // Wiiリモコン入力用の関数　リザルト画面
+void wiimote_func__solo_playing();                 // Wiiリモコン入力用の関数　ソロプレイ中
+void wiimote_func__setting();                      // Wiiリモコン入力用の関数　設定画面
+void wiimote_func__multi_host_or_client();         // Wiiリモコン入力用の関数　ホストかクライアントか決定
+void wiimote_func__multi_host_player_num_decide(); // Wiiリモコン入力用の関数　プレイヤーの数入力
+void wiimote_func__multi_client_input_name();      // Wiiリモコン入力用の関数　プレイヤー名の入力
+void wiimote_func__multi_playing();                // Wiiリモコン入力用の関数　マルチプレイ中
 
 /*******************************************************************
  * 関数名 : keyboard_func
@@ -78,11 +79,14 @@ int wiimote_func()
         case MODE_MULTI_CLIENT_INPUT_NAME:
             wiimote_func__multi_client_input_name();
             break;
-        case MODE_MULTI_CLIENT_SETUP:
+        case MODE_MULTI_PLAYING: // マルチプレイ　プレイ中
+            wiimote_func__multi_playing();
             break;
-        case MODE_MULTI_CLIENT_WAIT:
+        case MODE_MULTI_PLAYING_WAIT: // マルチプレイ中　同期中
             break;
-        case MODE_MULTI_PLAYING:
+        case MODE_MULTI_CLIENT_SETUP: // クライアントのセットアップ
+            break;
+        case MODE_MULTI_CLIENT_WAIT: // クライアントの接続待機中
             break;
         case MODE_MULTI_HOST_SERVER_SETUP: // サーバーをセットアップする
             break;
@@ -761,6 +765,61 @@ void wiimote_func__multi_client_input_name()
 
         /* チャタリング防止 */
         while (wiimote.keys.one)
+            if (wiimote_is_open(&wiimote))
+                wiimote_update(&wiimote);
+    }
+}
+
+/*******************************************************************
+ * 関数名 : wiimote_func__multi_playing
+ * 　　型 : void
+ * 　説明 : Wiiリモコン入力用の関数　マルチプレイ中
+ ******************************************************************/
+void wiimote_func__multi_playing()
+{
+    /* 
+       Wiiリモコンの Bボタン が押されたとき
+       的との当たり判定を実行する
+    */
+    if (wiimote.keys.b) {
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            /* 的を表示している場合　ポインターと的の当たり判定をする */
+            if (c_data.target[i].type != 5) {
+                int a = (c_data.target[i].x + 25) - pointer.x;
+                int b = (c_data.target[i].y + 25) - pointer.y;
+                int c = sqrt(a * a + b * b);
+
+                /* 当たっている場合 */
+                if (c <= 34) {
+                    switch (c_data.target[i].type) {
+                    case 0: // 100点
+                        gPlayer.score += 100;
+                        break;
+                    case 1: // 200点
+                        gPlayer.score += 200;
+                        break;
+                    case 2: // 500点
+                        gPlayer.score += 500;
+                        break;
+                    case 3: // 1000点
+                        gPlayer.score += 1000;
+                        break;
+                    case 4: // 2000点
+                        gPlayer.score += 2000;
+                        break;
+                    }
+                    c_data.target[i].type = 5; // 的を消す
+                    c_data.target[i].cnt  = 0; // カウンターを初期化
+
+                    c_data.command = C_TO_S_TARGET_COMMAND;
+                    client_send_data(&c_data, sizeof(c_data));
+                    break;
+                }
+            }
+        }
+
+        /* チャタリング防止 */
+        while (wiimote.keys.b)
             if (wiimote_is_open(&wiimote))
                 wiimote_update(&wiimote);
     }

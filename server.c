@@ -161,6 +161,16 @@ int server_control_requests()
                     flag_sync = 0;
                 }
                 break;
+            case C_TO_S_TARGET_COMMAND:
+                for (int i = 0; i < TARGET_NUM_MAX; i++) {
+                    s_data.target[i].type = data.target[i].type;
+                    s_data.target[i].cnt  = data.target[i].cnt;
+                    s_data.target[i].x    = data.target[i].x;
+                    s_data.target[i].y    = data.target[i].y;
+                }
+                data.command = DATA_TARGET_COMMAND;
+                server_send_data(BROADCAST, &data, sizeof(CONTAINER));
+                break;
             // それ以外のコマンドが送信された場合
             default:
                 // 異常なエラーであることを表示する

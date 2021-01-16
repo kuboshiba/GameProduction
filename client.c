@@ -193,7 +193,6 @@ int exe_command()
         break;
     case SYNC_COMMAND:
         flag[MODE_MULTI_PLAYING_WAIT] = false;
-        puts("OK");
         break;
     }
 

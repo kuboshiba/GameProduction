@@ -17,6 +17,7 @@ SDL_Thread* network_client_thread; // network_client_thread
 SDL_TimerID timer_id_countdown;        // カウントダウン用のタイマー
 SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
 SDL_TimerID timer_id_target;           // 的の生成タイマー
+SDL_TimerID timer_id_animation;        // アニメーションの生成タイマー
 
 /* MUSIC */
 Mix_Music* bgm_menu; // BGM ファイルを読み込む構造体
@@ -79,6 +80,7 @@ void mode_multi_playing();                         // マルチプレイ　プ�
 Uint32 count_down(Uint32, void*);                  // カウントダウン処理
 Uint32 timer_transition_stage(Uint32, void*);      // 画面遷移のアニメーション関数
 Uint32 target_cnt(Uint32, void*);                  // タイマーで的を生成する関数
+Uint32 animation_func(Uint32, void*);
 
 CONTAINER data;
 
@@ -1457,6 +1459,8 @@ void mode_multi_playing()
         timer_id_target = SDL_AddTimer(1000, target_cnt, &target);
     }
 
+    timer_id_animation = SDL_AddTimer(250, animation_func, NULL);
+
     flag[MODE_MULTI_PLAYING] = true;
     while (flag[MODE_MULTI_PLAYING] && wiimote_is_open(&wiimote)) {
         /* 経過時間を算出 */
@@ -1467,6 +1471,8 @@ void mode_multi_playing()
         if (totalTime >= STAGE_TIME + 1) {
             if (gGame.type == 1)
                 SDL_RemoveTimer(timer_id_target);
+
+            SDL_RemoveTimer(timer_id_animation);
 
             /* ラストステージじゃなかったらステージを遷移 */
             if (stage_pos != 3) {
@@ -1511,6 +1517,7 @@ void mode_multi_playing()
                     create_target();
                     timer_id_target = SDL_AddTimer(1000, target_cnt, &target);
                 }
+                timer_id_animation = SDL_AddTimer(250, animation_func, NULL);
             }
             /* ラストステージの場合 */
             else {
@@ -1589,4 +1596,14 @@ void mode_multi_playing()
         SDL_RenderPresent(renderer);
         SDL_Delay(interval);
     }
+}
+
+Uint32 animation_func(Uint32 interval, void* param)
+{
+    for (int i = 0; i < OBJECT_NUM_MAX; i++) {
+        if (image[stage_pos].object_type[i] == OBJECT_TYPE_CLOUD) {
+            image[stage_pos].object_x[i] -= 5;
+        }
+    }
+    return interval;
 }
