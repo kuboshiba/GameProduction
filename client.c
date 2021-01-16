@@ -58,6 +58,35 @@ void setup_client(char *server_name, u_short port)
     fprintf(stderr, "Number of clients = %d.\n", c_num_clients);
     client_receive_data(&c_myid, sizeof(int));
     fprintf(stderr, "Your ID = %d.\n", c_myid);
+
+    switch (c_myid) {
+    case 0:
+        wiimote.led.one   = 1;
+        wiimote.led.two   = 0;
+        wiimote.led.three = 0;
+        wiimote.led.four  = 0;
+        break;
+    case 1:
+        wiimote.led.one   = 0;
+        wiimote.led.two   = 1;
+        wiimote.led.three = 0;
+        wiimote.led.four  = 0;
+        break;
+    case 2:
+        wiimote.led.one   = 0;
+        wiimote.led.two   = 0;
+        wiimote.led.three = 1;
+        wiimote.led.four  = 0;
+        break;
+    case 3:
+        wiimote.led.one   = 0;
+        wiimote.led.two   = 0;
+        wiimote.led.three = 0;
+        wiimote.led.four  = 1;
+        break;
+    }
+    wiimote_update(&wiimote); // Wiiリモコンの状態更新
+
     int i;
     for (i = 0; i < c_num_clients; i++) {
         client_receive_data(&c_clients[i], sizeof(CLIENT));
