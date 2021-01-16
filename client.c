@@ -162,20 +162,25 @@ int in_command()
 int exe_command()
 {
     int result = 1;
-    memset(&c_data, 0, sizeof(CONTAINER));
-    client_receive_data(&c_data, sizeof(c_data));
+    memset(&data, 0, sizeof(CONTAINER));
+    client_receive_data(&data, sizeof(data));
 
     // data.command によって条件分岐
-    switch (c_data.command) {
+    switch (data.command) {
     // メッセージコマンドの場合
     case MESSAGE_COMMAND:
-        fprintf(stderr, "client[%d] %s: %s\n", c_data.cid, c_clients[c_data.cid].name, c_data.message);
+        fprintf(stderr, "client[%d] %s: %s\n", data.cid, c_clients[data.cid].name, data.message);
         result = 1;
         break;
     // 終了コマンドの場合
     case QUIT_COMMAND:
-        fprintf(stderr, "client[%d] %s sent quit command.\n", c_data.cid, c_clients[c_data.cid].name);
+        fprintf(stderr, "client[%d] %s sent quit command.\n", data.cid, c_clients[data.cid].name);
         result = 0;
+        break;
+    // ゲーム開始コマンド
+    case START_COMMAND:
+        flag[MODE_MULTI_CLIENT_WAIT] = false;
+        gGame.mode                   = MODE_MULTI_PLAYING;
         break;
     }
 

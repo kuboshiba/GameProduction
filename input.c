@@ -82,6 +82,8 @@ int wiimote_func()
             break;
         case MODE_MULTI_CLIENT_WAIT:
             break;
+        case MODE_MULTI_PLAYING:
+            break;
         case MODE_MULTI_HOST_SERVER_SETUP: // サーバーをセットアップする
             break;
         case MODE_COUNTDOWN: // カウントダウン時

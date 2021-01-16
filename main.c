@@ -75,9 +75,12 @@ void mode_multi_host_server_setup();               // サーバーセットア�
 void mode_multi_client_input_name();               // クライアントの名前を入力
 void mode_multi_client_setup();                    // クライアントをセットアップ
 void mode_multi_client_wait();                     // クライアントの待機画面
+void mode_multi_playing();                         // マルチプレイ　プレイ中
 Uint32 count_down(Uint32, void*);                  // カウントダウン処理
 Uint32 timer_transition_stage(Uint32, void*);      // 画面遷移のアニメーション関数
 Uint32 target_cnt(Uint32, void*);                  // タイマーで的を生成する関数
+
+CONTAINER data;
 
 /* server 関係 */
 CLIENT s_clients[MAX_NUM_CLIENTS]; // 構造体 CLIENT を構造体配列 s_clients
@@ -156,6 +159,9 @@ int main(int argc, char* argv[])
             break;
         case MODE_MULTI_CLIENT_WAIT:
             mode_multi_client_wait(); // クライアントの待機画面
+            break;
+        case MODE_MULTI_PLAYING:
+            mode_multi_playing(); // マルチプレイ　プレイ中
             break;
         case MODE_SETTING: // 設定画面
             mode_setting();
@@ -1407,8 +1413,30 @@ void mode_multi_client_wait()
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        /* ボタンの説明の描画 */
+        /* 接続中の表示 */
         surface = TTF_RenderUTF8_Blended(fonts.size15, "Connecting to the server...", (SDL_Color) { 255, 255, 255, 255 });
+        texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+        txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+        pasteRect = (SDL_Rect) { 10, 10, iw, ih };
+        SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* ポインターをウィンドウに描画 */
+        filledCircleColor(renderer, pointer.x, pointer.y, 10, 0xff0000ff);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(interval);
+    }
+}
+
+void mode_multi_playing()
+{
+    flag[MODE_MULTI_PLAYING] = true;
+    while (flag[MODE_MULTI_PLAYING] && wiimote_is_open(&wiimote)) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        surface = TTF_RenderUTF8_Blended(fonts.size15, "start", (SDL_Color) { 255, 255, 255, 255 });
         texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };

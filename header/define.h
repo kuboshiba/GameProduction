@@ -65,6 +65,7 @@ typedef enum {
     MODE_MULTI_CLIENT_INPUT_NAME      = 7,  // クライアントの名前入力
     MODE_MULTI_CLIENT_SETUP           = 8,  // クライアントのセットアップ
     MODE_MULTI_CLIENT_WAIT            = 9,  // クライアントの待機
+    MODE_MULTI_PLAYING                = 10, // マルチプレイ　プレイ中
     MODE_COUNTDOWN                    = 20, // ソロプレイ　カウントダウン中
     MODE_TRANSITION                   = 21, // ステージ遷移
     MODE_RESULT                       = 22, // リザルト
@@ -113,7 +114,8 @@ typedef struct {
     char message[MAX_LEN_BUFFER];
     int score;
     Target target[10];
-} CONTAINER;             // コンテナの構造体
+} CONTAINER; // コンテナの構造体
+extern CONTAINER data;
 extern CONTAINER s_data; // 構造体 DATA を構造体変数 s_data で宣言
 extern CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
 

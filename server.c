@@ -110,9 +110,8 @@ void setup_server(int num_cl, u_short port)
     fprintf(stderr, "Server setup is done.\n");
 
     // クライアントにスタートを知らせるコマンド送信
-    // CONTAINER data;
-    // data.command = START_COMMAND;
-    // server_send_data(BROADCAST, &data, sizeof(CONTAINER));
+    data.command = START_COMMAND;
+    server_send_data(BROADCAST, &data, sizeof(CONTAINER));
 }
 
 /*******************************************************************
@@ -123,7 +122,7 @@ void setup_server(int num_cl, u_short port)
 int server_control_requests()
 {
     fd_set read_flag = s_mask;
-    memset(&s_data, 0, sizeof(CONTAINER));
+    memset(&data, 0, sizeof(CONTAINER));
 
     if (select(s_num_socks, (fd_set *)&read_flag, NULL, NULL, NULL) == -1) {
         server_handle_error("select()");
@@ -133,15 +132,15 @@ int server_control_requests()
     for (i = 0; i < s_num_clients; i++) {
         if (FD_ISSET(s_clients[i].sock, &read_flag)) {
             // データを受け取る
-            server_receive_data(i, &s_data, sizeof(s_data));
+            server_receive_data(i, &data, sizeof(data));
             // データのコマンドによって条件分岐
-            switch (s_data.command) {
+            switch (data.command) {
             // メッセージが送られてきた場合
             case MESSAGE_COMMAND:
                 // メッセージ内容をコンソールに表示
-                fprintf(stderr, "client[%d] %s: message = %s\n", s_clients[i].cid, s_clients[i].name, s_data.message);
-                // s_data をブロードキャスト
-                server_send_data(BROADCAST, &s_data, sizeof(s_data));
+                fprintf(stderr, "client[%d] %s: message = %s\n", s_clients[i].cid, s_clients[i].name, data.message);
+                // data をブロードキャスト
+                server_send_data(BROADCAST, &data, sizeof(data));
                 // 終了コードを result に格納
                 result = 1;
                 break;
@@ -149,15 +148,15 @@ int server_control_requests()
             case QUIT_COMMAND:
                 // 終了コマンドを送信したクライアントを表示
                 fprintf(stderr, "client[%d] %s: quit\n", s_clients[i].cid, s_clients[i].name);
-                // s_data をブロードキャスト
-                server_send_data(BROADCAST, &s_data, sizeof(s_data));
+                // data をブロードキャスト
+                server_send_data(BROADCAST, &data, sizeof(data));
                 // 終了コードを result に格納
                 result = 0;
                 break;
             // それ以外のコマンドが送信された場合
             default:
                 // 異常なエラーであることを表示する
-                fprintf(stderr, "server_control_requests(): %c is not a valid command.\n", s_data.command);
+                fprintf(stderr, "server_control_requests(): %c is not a valid command.\n", data.command);
                 exit(1);
             }
         }
@@ -169,18 +168,18 @@ int server_control_requests()
 /*******************************************************************
  * 関数名 : server_send_data
  * 　　型 : void
- * 　引数 : cid（クライアントID）, s_data（データ構造体）
+ * 　引数 : cid（クライアントID）, data（データ構造体）
  *              size（データ構造体のサイズ）
  * 　説明 : データ受信制御を行う関数
  ******************************************************************/
-void server_send_data(int cid, void *s_data, int size)
+void server_send_data(int cid, void *data, int size)
 {
     if ((cid != BROADCAST) && (0 > cid || cid >= s_num_clients)) {
         // 異常終了
         fprintf(stderr, "server_send_data(): client id is illeagal.\n");
         exit(1);
     }
-    if ((s_data == NULL) || (size <= 0)) {
+    if ((data == NULL) || (size <= 0)) {
         // 異常終了
         fprintf(stderr, "server_send_data(): data is illeagal.\n");
         exit(1);
@@ -189,12 +188,12 @@ void server_send_data(int cid, void *s_data, int size)
     if (cid == BROADCAST) {
         int i;
         for (i = 0; i < s_num_clients; i++) {
-            if (write(s_clients[i].sock, s_data, size) < 0) {
+            if (write(s_clients[i].sock, data, size) < 0) {
                 server_handle_error("write()");
             }
         }
     } else {
-        if (write(s_clients[cid].sock, s_data, size) < 0) {
+        if (write(s_clients[cid].sock, data, size) < 0) {
             server_handle_error("write()");
         }
     }
@@ -203,24 +202,24 @@ void server_send_data(int cid, void *s_data, int size)
 /*******************************************************************
  * 関数名 : server_receive_data
  * 　　型 : int
- * 　引数 : cid（クライアントID）, s_data（データ構造体）
+ * 　引数 : cid（クライアントID）, data（データ構造体）
  *              size（データ構造体のサイズ）
  * 　説明 : データを受信する関数
  ******************************************************************/
-int server_receive_data(int cid, void *s_data, int size)
+int server_receive_data(int cid, void *data, int size)
 {
     if ((cid != BROADCAST) && (0 > cid || cid >= s_num_clients)) {
         // 異常終了
         fprintf(stderr, "server_receive_data(): client id is illeagal.\n");
         exit(1);
     }
-    if ((s_data == NULL) || (size <= 0)) {
+    if ((data == NULL) || (size <= 0)) {
         // 異常終了
         fprintf(stderr, "server_receive_data(): data is illeagal.\n");
         exit(1);
     }
 
-    return read(s_clients[cid].sock, s_data, size);
+    return read(s_clients[cid].sock, data, size);
 }
 
 /*******************************************************************
