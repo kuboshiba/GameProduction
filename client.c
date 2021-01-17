@@ -189,6 +189,9 @@ int exe_command()
             c_data.target[i].cnt  = c_container.target[i].cnt;
             c_data.target[i].x    = c_container.target[i].x;
             c_data.target[i].y    = c_container.target[i].y;
+
+            c_data.target[i].type_buf = c_container.target[i].type_buf;
+            c_data.target[i].c_myid   = c_container.target[i].c_myid;
         }
 
         for (int i = 0; i < c_num_clients; i++) {

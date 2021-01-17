@@ -19,6 +19,8 @@ SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
 SDL_TimerID timer_id_target;           // 的の生成タイマー
 SDL_TimerID timer_id_animation;        // アニメーションの生成タイマー
 
+SDL_TimerID timer_id_target_animation[TARGET_NUM_MAX]; // アニメーションの生成タイマー
+
 /* MUSIC */
 Mix_Music* bgm_menu; // BGM ファイルを読み込む構造体
 int music_volume;    // BGM の音量
@@ -37,6 +39,7 @@ POINT image_2_point = { 1000, 0 };           // 遷移する画像の座標
 Uint32 rmask, gmask, bmask, amask;           // サーフェイス作成時のマスクデータを格納する変数
 int iw, ih;                                  // テクスチャやサーフェイスの幅
 IMAGE_OBJECT image[IMAGE_BG_NUM];
+IMAGE_TARGET_ANIME image_target_anime[TARGET_NUM_MAX];
 
 /* Wiiリモコン関係 */
 wiimote_t wiimote;                        // Wiiリモコンの状態格納用
@@ -58,6 +61,8 @@ int interval       = 50; // SDL_Delayの遅延
 char txt[100];
 char alphabet[27][2] = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" };
 bool flag[MODE_NUM]  = { true }; // フラグ
+
+int target_animation_frame[TARGET_NUM_MAX] = { 0 };
 
 /* main.c 関数 */
 void mode_menu();                                  // メニュー画面を描画する関数
@@ -81,6 +86,7 @@ Uint32 count_down(Uint32, void*);                  // カウントダウン処�
 Uint32 timer_transition_stage(Uint32, void*);      // 画面遷移のアニメーション関数
 Uint32 target_cnt(Uint32, void*);                  // タイマーで的を生成する関数
 Uint32 animation_func(Uint32, void*);
+Uint32 animation_target_func(Uint32, void*);
 
 CONTAINER data;
 
@@ -867,18 +873,21 @@ void create_target()
 {
     /* 座標関係初期化 */
     for (int i = 0; i < TARGET_NUM_MAX; i++) {
-        target[i].type        = 5;
-        target[i].x           = 0;
-        target[i].y           = 0;
-        target[i].cnt         = 0;
-        s_data.target[i].type = 5;
-        s_data.target[i].x    = 0;
-        s_data.target[i].y    = 0;
-        s_data.target[i].cnt  = 0;
-        c_data.target[i].type = 5;
-        c_data.target[i].x    = 0;
-        c_data.target[i].y    = 0;
-        c_data.target[i].cnt  = 0;
+        target[i].type            = 5;
+        target[i].type_buf        = 5;
+        target[i].x               = 0;
+        target[i].y               = 0;
+        target[i].cnt             = 0;
+        s_data.target[i].type     = 5;
+        s_data.target[i].type_buf = 5;
+        s_data.target[i].x        = 0;
+        s_data.target[i].y        = 0;
+        s_data.target[i].cnt      = 0;
+        c_data.target[i].type     = 5;
+        c_data.target[i].type_buf = 5;
+        c_data.target[i].x        = 0;
+        c_data.target[i].y        = 0;
+        c_data.target[i].cnt      = 0;
     }
 
     /* 的を生成する */
@@ -951,7 +960,7 @@ Uint32 target_cnt(Uint32 interval, void* param)
     /* 的を全てチェック */
     for (int i = 0; i < TARGET_NUM_MAX; i++) {
         /* 表示している的であれば */
-        if (s_data.target[i].type != 5) {
+        if (s_data.target[i].type != 5 && s_data.target[i].type != 6) {
             /* カウンターが既定値に達していれば的を消す */
             if (s_data.target[i].cnt == 3) {
                 s_data.target[i].type = 5;
@@ -1597,12 +1606,27 @@ void mode_multi_playing()
 
         /* 的を描画 */
         for (int i = 0; i < TARGET_NUM_MAX; i++) {
-            if (c_data.target[i].type != 5) {
+            if (c_data.target[i].type < 5) {
                 texture = SDL_CreateTextureFromSurface(renderer, image_target[c_data.target[i].type]);
                 SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
                 imageRect = (SDL_Rect) { 0, 0, iw, ih };
                 drawRect  = (SDL_Rect) { c_data.target[i].x, c_data.target[i].y, iw, ih };
                 SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
+            } else if (c_data.target[i].type == 6 && c_data.target[i].c_myid == c_myid) {
+                texture = SDL_CreateTextureFromSurface(renderer, image_target_anime[c_data.target[i].type_buf].frame[target_animation_frame[i]]);
+                SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+                imageRect = (SDL_Rect) { 0, 0, iw, ih };
+                drawRect  = (SDL_Rect) { c_data.target[i].x, c_data.target[i].y, iw, ih };
+                SDL_RenderCopy(renderer, texture, &imageRect, &drawRect);
+
+                if (target_animation_frame[i] == 8) {
+                    target_animation_frame[i] = 0;
+                    c_data.target[i].type     = 5;
+                    c_data.command            = C_TO_S_TARGET_COMMAND;
+                    client_send_data(&c_data, sizeof(c_data));
+
+                    SDL_RemoveTimer(timer_id_target_animation[i]);
+                }
             }
         }
 
@@ -1619,6 +1643,17 @@ Uint32 animation_func(Uint32 interval, void* param)
     for (int i = 0; i < OBJECT_NUM_MAX; i++) {
         if (image[stage_pos].object_type[i] == OBJECT_TYPE_CLOUD) {
             image[stage_pos].object_x[i] -= 5;
+        }
+    }
+    return interval;
+}
+
+Uint32 animation_target_func(Uint32 interval, void* param)
+{
+    for (int i = 0; i < TARGET_NUM_MAX; i++) {
+        if (c_data.target[i].c_myid == c_myid && c_data.target[i].type == 6) {
+            if (target_animation_frame[i] < 8)
+                target_animation_frame[i]++;
         }
     }
     return interval;

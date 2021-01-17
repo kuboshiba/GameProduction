@@ -31,7 +31,7 @@
 #define FONT_PATH "./font/PressStart2P-Regular.ttf" // フォントのパス
 
 #define MODE_NUM 100  // モードの個数
-#define STAGE_TIME 10 // ステージごとの時間 sec
+#define STAGE_TIME 15 // ステージごとの時間 sec
 
 #define DEFAULT_PORT 51000 // デフォルトのポート番号
 #define MAX_LEN_NAME 100   // 名前の最大文字数
@@ -48,7 +48,7 @@
 #define SYNC_COMMAND 'F'
 #define C_TO_S_TARGET_COMMAND 'G'
 
-#define TARGET_NUM_MAX 10
+#define TARGET_NUM_MAX 15
 #define SERVER_ADDR "192.168.64.34" // サーバーのアドレス
 
 typedef enum {
@@ -99,6 +99,8 @@ typedef struct {
     int x;
     int y;
     int cnt;
+    int type_buf;
+    int c_myid;
 } Target;
 extern Target target[TARGET_NUM_MAX]; // 的の情報
 
@@ -116,11 +118,16 @@ typedef struct {
     char command;
     char message[MAX_LEN_BUFFER];
     int score[MAX_NUM_CLIENTS];
-    Target target[10];
+    Target target[TARGET_NUM_MAX];
 } CONTAINER; // コンテナの構造体
 extern CONTAINER data;
 extern CONTAINER s_data; // 構造体 DATA を構造体変数 s_data で宣言
 extern CONTAINER c_data; // 構造体 DATA を構造体変数 s_data で宣言
+
+typedef struct {
+    SDL_Surface *frame[10];
+} IMAGE_TARGET_ANIME;
+extern IMAGE_TARGET_ANIME image_target_anime[TARGET_NUM_MAX];
 
 /* SDL 関係 */
 extern SDL_Window *window;     // ウィンドウデータを格納する構造体
@@ -147,9 +154,11 @@ extern SDL_Thread *network_host_thread;   // network_host_threadを用いる
 extern SDL_Thread *network_client_thread; // network_client_threadを用いる
 
 /* タイマー関係の定義・変数 */
-extern SDL_TimerID timer_id_countdown;        // カウントダウン用のタイマー
-extern SDL_TimerID timer_id_transition_stage; // ステージ遷移用のタイマー
-extern SDL_TimerID timer_id_target;           // 的の生成タイマー
+extern SDL_TimerID timer_id_countdown;                        // カウントダウン用のタイマー
+extern SDL_TimerID timer_id_transition_stage;                 // ステージ遷移用のタイマー
+extern SDL_TimerID timer_id_target;                           // 的の生成タイマー
+extern SDL_TimerID timer_id_target_animation[TARGET_NUM_MAX]; // アニメーションの生成タイマー
+extern Uint32 animation_target_func(Uint32, void *);
 
 /* MUSIC */
 extern Mix_Music *bgm_menu; // BGM ファイルを読み込む構造体

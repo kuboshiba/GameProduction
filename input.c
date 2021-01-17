@@ -808,12 +808,18 @@ void wiimote_func__multi_playing()
                         gPlayer.score += 2000;
                         break;
                     }
-                    c_data.target[i].type = 5; // 的を消す
-                    c_data.target[i].cnt  = 0; // カウンターを初期化
+                    c_data.target[i].type_buf = c_data.target[i].type;
+                    c_data.target[i].type     = 6; // 的を消す
+                    c_data.target[i].cnt      = 0; // カウンターを初期化
+
+                    c_data.target[i].c_myid = c_myid;
 
                     c_data.score[c_myid] = gPlayer.score;
                     c_data.command       = C_TO_S_TARGET_COMMAND;
                     client_send_data(&c_data, sizeof(c_data));
+
+                    timer_id_target_animation[i] = SDL_AddTimer(100, animation_target_func, NULL);
+
                     break;
                 }
             }

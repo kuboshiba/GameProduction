@@ -167,6 +167,9 @@ int server_control_requests()
                     s_data.target[i].cnt  = data.target[i].cnt;
                     s_data.target[i].x    = data.target[i].x;
                     s_data.target[i].y    = data.target[i].y;
+
+                    s_data.target[i].type_buf = data.target[i].type_buf;
+                    s_data.target[i].c_myid   = data.target[i].c_myid;
                 }
 
                 for (int i = 0; i < c_num_clients; i++) {

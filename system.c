@@ -219,6 +219,56 @@ void init_sdl2()
     image_target[3] = IMG_Load("./image/target/1000-1.png");
     image_target[4] = IMG_Load("./image/target/2000-1.png");
 
+    image_target_anime[0].frame[0] = IMG_Load("./image/target_effect/100/100-0.png");
+    image_target_anime[0].frame[1] = IMG_Load("./image/target_effect/100/100-1.png");
+    image_target_anime[0].frame[2] = IMG_Load("./image/target_effect/100/100-2.png");
+    image_target_anime[0].frame[3] = IMG_Load("./image/target_effect/100/100-3.png");
+    image_target_anime[0].frame[4] = IMG_Load("./image/target_effect/100/100-4.png");
+    image_target_anime[0].frame[5] = IMG_Load("./image/target_effect/100/100-5.png");
+    image_target_anime[0].frame[6] = IMG_Load("./image/target_effect/100/100-6.png");
+    image_target_anime[0].frame[7] = IMG_Load("./image/target_effect/100/100-7.png");
+    image_target_anime[0].frame[8] = IMG_Load("./image/target_effect/100/100-8.png");
+
+    image_target_anime[1].frame[0] = IMG_Load("./image/target_effect/200/200-0.png");
+    image_target_anime[1].frame[1] = IMG_Load("./image/target_effect/200/200-1.png");
+    image_target_anime[1].frame[2] = IMG_Load("./image/target_effect/200/200-2.png");
+    image_target_anime[1].frame[3] = IMG_Load("./image/target_effect/200/200-3.png");
+    image_target_anime[1].frame[4] = IMG_Load("./image/target_effect/200/200-4.png");
+    image_target_anime[1].frame[5] = IMG_Load("./image/target_effect/200/200-5.png");
+    image_target_anime[1].frame[6] = IMG_Load("./image/target_effect/200/200-6.png");
+    image_target_anime[1].frame[7] = IMG_Load("./image/target_effect/200/200-7.png");
+    image_target_anime[1].frame[8] = IMG_Load("./image/target_effect/200/200-8.png");
+
+    image_target_anime[2].frame[0] = IMG_Load("./image/target_effect/500/500-0.png");
+    image_target_anime[2].frame[1] = IMG_Load("./image/target_effect/500/500-1.png");
+    image_target_anime[2].frame[2] = IMG_Load("./image/target_effect/500/500-2.png");
+    image_target_anime[2].frame[3] = IMG_Load("./image/target_effect/500/500-3.png");
+    image_target_anime[2].frame[4] = IMG_Load("./image/target_effect/500/500-4.png");
+    image_target_anime[2].frame[5] = IMG_Load("./image/target_effect/500/500-5.png");
+    image_target_anime[2].frame[6] = IMG_Load("./image/target_effect/500/500-6.png");
+    image_target_anime[2].frame[7] = IMG_Load("./image/target_effect/500/500-7.png");
+    image_target_anime[2].frame[8] = IMG_Load("./image/target_effect/500/500-8.png");
+
+    image_target_anime[3].frame[0] = IMG_Load("./image/target_effect/1000/1000-0.png");
+    image_target_anime[3].frame[1] = IMG_Load("./image/target_effect/1000/1000-1.png");
+    image_target_anime[3].frame[2] = IMG_Load("./image/target_effect/1000/1000-2.png");
+    image_target_anime[3].frame[3] = IMG_Load("./image/target_effect/1000/1000-3.png");
+    image_target_anime[3].frame[4] = IMG_Load("./image/target_effect/1000/1000-4.png");
+    image_target_anime[3].frame[5] = IMG_Load("./image/target_effect/1000/1000-5.png");
+    image_target_anime[3].frame[6] = IMG_Load("./image/target_effect/1000/1000-6.png");
+    image_target_anime[3].frame[7] = IMG_Load("./image/target_effect/1000/1000-7.png");
+    image_target_anime[3].frame[8] = IMG_Load("./image/target_effect/1000/1000-8.png");
+
+    image_target_anime[4].frame[0] = IMG_Load("./image/target_effect/2000/2000-0.png");
+    image_target_anime[4].frame[1] = IMG_Load("./image/target_effect/2000/2000-1.png");
+    image_target_anime[4].frame[2] = IMG_Load("./image/target_effect/2000/2000-2.png");
+    image_target_anime[4].frame[3] = IMG_Load("./image/target_effect/2000/2000-3.png");
+    image_target_anime[4].frame[4] = IMG_Load("./image/target_effect/2000/2000-4.png");
+    image_target_anime[4].frame[5] = IMG_Load("./image/target_effect/2000/2000-5.png");
+    image_target_anime[4].frame[6] = IMG_Load("./image/target_effect/2000/2000-6.png");
+    image_target_anime[4].frame[7] = IMG_Load("./image/target_effect/2000/2000-7.png");
+    image_target_anime[4].frame[8] = IMG_Load("./image/target_effect/2000/2000-8.png");
+
     /* SDL初期化 */
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
         Error("SDLの初期化に失敗しました");
