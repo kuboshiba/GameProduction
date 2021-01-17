@@ -811,7 +811,8 @@ void wiimote_func__multi_playing()
                     c_data.target[i].type = 5; // 的を消す
                     c_data.target[i].cnt  = 0; // カウンターを初期化
 
-                    c_data.command = C_TO_S_TARGET_COMMAND;
+                    c_data.score[c_myid] = gPlayer.score;
+                    c_data.command       = C_TO_S_TARGET_COMMAND;
                     client_send_data(&c_data, sizeof(c_data));
                     break;
                 }

@@ -168,6 +168,11 @@ int server_control_requests()
                     s_data.target[i].x    = data.target[i].x;
                     s_data.target[i].y    = data.target[i].y;
                 }
+
+                for (int i = 0; i < c_num_clients; i++) {
+                    s_data.score[i] = data.score[i];
+                }
+
                 data.command = DATA_TARGET_COMMAND;
                 server_send_data(BROADCAST, &data, sizeof(CONTAINER));
                 break;

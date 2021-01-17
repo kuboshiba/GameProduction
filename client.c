@@ -190,6 +190,10 @@ int exe_command()
             c_data.target[i].x    = c_container.target[i].x;
             c_data.target[i].y    = c_container.target[i].y;
         }
+
+        for (int i = 0; i < c_num_clients; i++) {
+            c_data.score[i] = c_container.score[i];
+        }
         break;
     case SYNC_COMMAND:
         flag[MODE_MULTI_PLAYING_WAIT] = false;

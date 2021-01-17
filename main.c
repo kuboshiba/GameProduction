@@ -1408,6 +1408,11 @@ void mode_multi_client_setup()
 {
     network_client_thread = SDL_CreateThread(client_main, "network_client_thread", NULL);
 
+    // スコアの初期化
+    for (int i = 0; i < MAX_NUM_CLIENTS; i++) {
+        c_data.score[i] = 0;
+    }
+
     gGame.mode = MODE_MULTI_CLIENT_WAIT;
 }
 
@@ -1578,6 +1583,17 @@ void mode_multi_playing()
         txtRect   = (SDL_Rect) { 0, 0, iw, ih };
         pasteRect = (SDL_Rect) { 610, 70, iw, ih };
         SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+
+        /* 各プレイヤーのスコアを描画 */
+        for (int i = 0; i < c_num_clients; i++) {
+            sprintf(txt, "%s%d%s%d", "PLAYER", i + 1, "  ", c_data.score[i]);
+            surface = TTF_RenderUTF8_Blended(fonts.size15, txt, (SDL_Color) { 255, 0, 0, 255 });
+            texture = SDL_CreateTextureFromSurface(renderer, surface);
+            SDL_QueryTexture(texture, NULL, NULL, &iw, &ih);
+            txtRect   = (SDL_Rect) { 0, 0, iw, ih };
+            pasteRect = (SDL_Rect) { 700, 110 + 30 * i, iw, ih };
+            SDL_RenderCopy(renderer, texture, &txtRect, &pasteRect);
+        }
 
         /* 的を描画 */
         for (int i = 0; i < TARGET_NUM_MAX; i++) {

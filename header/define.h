@@ -115,7 +115,7 @@ typedef struct {
     int cid;
     char command;
     char message[MAX_LEN_BUFFER];
-    int score;
+    int score[MAX_NUM_CLIENTS];
     Target target[10];
 } CONTAINER; // コンテナの構造体
 extern CONTAINER data;
