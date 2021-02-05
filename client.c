@@ -42,8 +42,7 @@ void setup_client(char *server_name, u_short port)
 
     sv_addr.sin_family = AF_INET;     // アドレスの種類 = インターネット
     sv_addr.sin_port   = htons(port); // ポート番号 = port
-    // sv_addr.sin_addr.s_addr = *(u_int *)server->h_addr_list[0]; // 任意アドレスから受信可
-    inet_aton("192.168.64.88", &sv_addr.sin_addr);
+    inet_aton(SERVER_ADDR, &sv_addr.sin_addr);
 
     // サーバーへの通信リクエスト
     if (connect(c_sock, (struct sockaddr *)&sv_addr, sizeof(sv_addr)) != 0) {
@@ -51,20 +50,7 @@ void setup_client(char *server_name, u_short port)
         client_handle_error("connect()");
     }
 
-    // 名前の入力
-    fprintf(stderr, "Input your name: ");
-    char user_name[MAX_LEN_NAME];
-
-    // 名前の文字数チェック
-    if (fgets(user_name, sizeof(user_name), stdin) == NULL) {
-        // 異常終了
-        client_handle_error("fgets()");
-    }
-
-    gGame.mode = MD_MULTI_CLIENT_2;
-
-    user_name[strlen(user_name) - 1] = '\0';
-    client_send_data(user_name, MAX_LEN_NAME); // 名前を送信
+    client_send_data(gPlayer.name, MAX_LEN_NAME); // 名前を送信
 
     // 他のクライアントを待つ
     fprintf(stderr, "Waiting for other clients...\n");
@@ -72,6 +58,35 @@ void setup_client(char *server_name, u_short port)
     fprintf(stderr, "Number of clients = %d.\n", c_num_clients);
     client_receive_data(&c_myid, sizeof(int));
     fprintf(stderr, "Your ID = %d.\n", c_myid);
+
+    switch (c_myid) {
+    case 0:
+        wiimote.led.one   = 1;
+        wiimote.led.two   = 0;
+        wiimote.led.three = 0;
+        wiimote.led.four  = 0;
+        break;
+    case 1:
+        wiimote.led.one   = 0;
+        wiimote.led.two   = 1;
+        wiimote.led.three = 0;
+        wiimote.led.four  = 0;
+        break;
+    case 2:
+        wiimote.led.one   = 0;
+        wiimote.led.two   = 0;
+        wiimote.led.three = 1;
+        wiimote.led.four  = 0;
+        break;
+    case 3:
+        wiimote.led.one   = 0;
+        wiimote.led.two   = 0;
+        wiimote.led.three = 0;
+        wiimote.led.four  = 1;
+        break;
+    }
+    wiimote_update(&wiimote); // Wiiリモコンの状態更新
+
     int i;
     for (i = 0; i < c_num_clients; i++) {
         client_receive_data(&c_clients[i], sizeof(CLIENT));
@@ -146,30 +161,45 @@ int in_command()
 // コマンドを実行する関数
 int exe_command()
 {
+    CONTAINER c_container;
     int result = 1;
-    memset(&c_data, 0, sizeof(CONTAINER));
-    client_receive_data(&c_data, sizeof(c_data));
+    memset(&c_container, 0, sizeof(CONTAINER));
+    client_receive_data(&c_container, sizeof(c_container));
 
-    // data.command によって条件分岐
-    switch (c_data.command) {
+    // c_container.command によって条件分岐
+    switch (c_container.command) {
     // メッセージコマンドの場合
     case MESSAGE_COMMAND:
-        fprintf(stderr, "client[%d] %s: %s\n", c_data.cid, c_clients[c_data.cid].name, c_data.message);
+        fprintf(stderr, "client[%d] %s: %s\n", c_container.cid, c_clients[c_container.cid].name, c_container.message);
         result = 1;
         break;
     // 終了コマンドの場合
     case QUIT_COMMAND:
-        fprintf(stderr, "client[%d] %s sent quit command.\n", c_data.cid, c_clients[c_data.cid].name);
+        fprintf(stderr, "client[%d] %s sent quit command.\n", c_container.cid, c_clients[c_container.cid].name);
         result = 0;
         break;
+    // ゲーム開始コマンド
     case START_COMMAND:
-        gGame.mode = MD_MULTI_CLIENT_3;
+        flag[MODE_MULTI_CLIENT_WAIT] = false;
+        gGame.mode                   = MODE_MULTI_PLAYING;
         break;
-    case DATA_COMMAND:
-        for (int i = 0; i < 10; i++) {
-            printf("%d ", c_data.target[i].type);
+    case DATA_TARGET_COMMAND:
+        for (int i = 0; i < TARGET_NUM_MAX; i++) {
+            c_data.target[i].type = c_container.target[i].type;
+            c_data.target[i].cnt  = c_container.target[i].cnt;
+            c_data.target[i].x    = c_container.target[i].x;
+            c_data.target[i].y    = c_container.target[i].y;
+
+            c_data.target[i].type_buf = c_container.target[i].type_buf;
+            c_data.target[i].c_myid   = c_container.target[i].c_myid;
         }
-        printf("\n");
+
+        for (int i = 0; i < c_num_clients; i++) {
+            c_data.score[i] = c_container.score[i];
+        }
+        break;
+    case SYNC_COMMAND:
+        flag[MODE_MULTI_PLAYING_WAIT] = false;
         break;
     }
 
